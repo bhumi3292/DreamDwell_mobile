@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:dream_dwell/model/login_auth.dart';
+import 'dashboard.dart'; // make sure you have this file created
 
 class Login extends StatefulWidget {
   final String title;
@@ -14,6 +15,35 @@ class _LoginState extends State<Login> {
   String? selectedStakeholder;
   final List<String> stakeholders = ['Tenants', 'Landlord'];
   final Color navyBlue = const Color(0xFF003366);
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  String? errorMessage;
+
+  void _handleLogin() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    final isAuthenticated = LoginAuth.authenticate(
+      email: email,
+      password: password,
+      stakeholder: selectedStakeholder,
+    );
+//------------Authintacated----------
+    if (isAuthenticated) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Dashboard()),
+      );
+    } else {
+      setState(() {
+        errorMessage = 'Invalid credentials or missing stakeholder';
+      });
+    }
+  }
+
+  //--------design--------------------
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +61,7 @@ class _LoginState extends State<Login> {
                 Text(
                   "DreamDwell",
                   style: TextStyle(
+
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: navyBlue,
@@ -43,6 +74,7 @@ class _LoginState extends State<Login> {
                 ),
                 const SizedBox(height: 20),
                 TextField(
+                  controller: _emailController,
                   decoration: InputDecoration(
                     labelText: "E-mail",
                     border: OutlineInputBorder(
@@ -52,6 +84,7 @@ class _LoginState extends State<Login> {
                 ),
                 const SizedBox(height: 15),
                 TextField(
+                  controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
                     labelText: "Password",
@@ -92,15 +125,20 @@ class _LoginState extends State<Login> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: () {
-                      // Handle login action
-                    },
+                    onPressed: _handleLogin,
                     child: const Text(
                       "Login",
                       style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   ),
                 ),
+                if (errorMessage != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ],
                 const SizedBox(height: 10),
                 TextButton(
                   onPressed: () {
