@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dream_dwell/features/splash_screen/presentation/widgets/header_nav.dart';
 import 'package:dream_dwell/features/splash_screen/presentation/widgets/nav_bar.dart';
 
 class Dashboard extends StatelessWidget {
@@ -6,25 +7,23 @@ class Dashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-
-        child: Text(
-   //---------------body part
-          "Welcome to the Dashboard",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 34,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF003366),
-            // Changed for visibility
+    return SafeArea(
+      child: Scaffold(
+        appBar: const HeaderNav(),
+        backgroundColor: Colors.white,
+        body: const Center(
+          child: Text(
+            "Welcome to the Dashboard",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 34,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF003366),
+            ),
           ),
         ),
+        bottomNavigationBar: const NavBar(),
       ),
-
-      //navbar import -----------------
-      bottomNavigationBar: const NavBar(),
     );
   }
 }
