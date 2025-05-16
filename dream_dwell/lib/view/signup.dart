@@ -208,10 +208,30 @@ class _SignupState extends State<Signup> {
                           color: navyBlue,
                           fontWeight: FontWeight.bold,
                         ),
+
                       ),
+
                     ),
                   ],
                 ),
+                Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Connect with us",
+                    style: TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
+
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+
+                    Image.asset("assets/images/fb.png", height: 30,),
+                    Image.asset("assets/images/google.png",height: 30),
+
+                  ],
+                )
               ],
             ),
           ),

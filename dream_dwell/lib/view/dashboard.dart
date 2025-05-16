@@ -11,7 +11,7 @@ class Dashboard extends StatelessWidget {
       body: Center(
 
         child: Text(
-
+   //---------------body part
           "Welcome to the Dashboard",
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -23,6 +23,7 @@ class Dashboard extends StatelessWidget {
         ),
       ),
 
+      //navbar import -----------------
       bottomNavigationBar: const NavBar(),
     );
   }

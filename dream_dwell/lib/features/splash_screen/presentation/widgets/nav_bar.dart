@@ -18,23 +18,23 @@ class _NavBarState extends State<NavBar> {
 
     switch (index) {
       case 0:
-      // Navigate to Dashboard when Home is tapped
+      // dashboard
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const Dashboard()),
         );
         break;
       case 1:
-      // dashboard
+      // explore
         break;
       case 2:
       // favourite
         break;
       case 3:
-      // profile
+      // booking
         break;
       case 4:
-      //booking page
+      //profile
         break;
     }
   }

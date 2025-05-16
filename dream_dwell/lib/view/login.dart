@@ -19,8 +19,10 @@ class _LoginState extends State<Login> {
   final Color navyBlue = const Color(0xFF003366);
   String? errorMessage;
 
-  // Toggle for password visibility
+  // ------------- password visibility------
   bool _passwordVisible = false;
+
+  //------------username password handelling
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
@@ -53,6 +55,8 @@ class _LoginState extends State<Login> {
     }
   }
 
+
+  //-------------design-----
 
   @override
   Widget build(BuildContext context) {
@@ -189,6 +193,29 @@ class _LoginState extends State<Login> {
                     ),
                   ],
                 ),
+
+                Align(
+                  alignment: Alignment.center,
+                    child: Text(
+                      "Connect with us",
+                      style: TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
+
+                    ),
+                ),
+                const SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+
+                    Image.asset("assets/images/fb.png", height: 30,),
+                    Image.asset("assets/images/google.png",height: 30),
+
+                  ],
+                )
+
+
+
+
               ],
             ),
           ),
