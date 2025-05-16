@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dream_dwell/features/splash_screen/presentation/widgets/nav_bar.dart';
 
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
@@ -6,20 +7,23 @@ class Dashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF003366),
+      backgroundColor: Colors.white,
       body: Center(
 
         child: Text(
 
           "Welcome to the Dashboard",
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 34,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: const Color(0xFF003366),
             // Changed for visibility
           ),
         ),
       ),
+
+      bottomNavigationBar: const NavBar(),
     );
   }
 }
