@@ -1,9 +1,10 @@
 import 'package:dream_dwell/view/login.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
@@ -19,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void _navigateToHome() async {
     await Future.delayed(Duration(seconds: 3));
     Navigator.pushReplacement(context,
-      MaterialPageRoute(builder: (context) => Login(title: "Login")),
+      MaterialPageRoute(builder: (context) => Login()),
     );
   }
 

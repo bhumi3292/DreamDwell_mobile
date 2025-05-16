@@ -11,3 +11,4 @@ class LoginAuth {
         stakeholder != null;
   }
 }
+

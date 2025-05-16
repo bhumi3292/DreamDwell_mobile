@@ -1,6 +1,7 @@
-import 'package:dream_dwell/view/splash.dart';
 import 'package:flutter/material.dart';
+import 'package:dream_dwell/features/splash_screen/presentation/screen/splash.dart';
 import 'package:dream_dwell/view/login.dart';
+import 'package:dream_dwell/view/signup.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,29 +16,16 @@ class MyApp extends StatelessWidget {
       title: 'DreamDwell',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-
         primarySwatch: Colors.blue,
-        fontFamily: 'Roboto', // Optional: set a global font
+        fontFamily: 'Roboto',
       ),
-      home: SplashScreen(),
+      initialRoute: '/',
       routes: {
-        'Splash': (context) => const PlaceholderScreen(title: 'Splash'),
-
+        '/': (context) => const SplashScreen(),
+        '/login': (context) => const Login(),
+        '/signup': (context) => const Signup(),
+        '/forget': (context) => Scaffold(body: Center(child: Text('Forgot Password Screen'))), // Placeholder
       },
-    );
-  }
-}
-
-// Temporary placeholders for navigation targets
-class PlaceholderScreen extends StatelessWidget {
-  final String title;
-  const PlaceholderScreen({super.key, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(child: Text('This is the $title')),
     );
   }
 }
