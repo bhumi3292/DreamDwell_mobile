@@ -6,7 +6,7 @@ class LoginAuth {
     required String password,
     required String? stakeholder,
   }) {
-    return email == 'admin' &&
+    return email == 'admin123@gmail.com' &&
         password == 'admin123' &&
         stakeholder != null;
   }

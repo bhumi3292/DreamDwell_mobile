@@ -6,7 +6,7 @@ class HeaderNav extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: const Color(0xFF003366), // Navy blue
+      backgroundColor: const Color(0xFF003366),
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.menu, color: Colors.white),

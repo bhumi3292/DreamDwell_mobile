@@ -43,7 +43,7 @@ class _NavBarState extends State<NavBar> {
   Widget build(BuildContext context) {
 
     return BottomNavigationBar(
-      backgroundColor: Colors.grey,
+      backgroundColor: Color(0xFF807B7B),
       currentIndex: _selectedIndex,
       selectedItemColor: const Color(0xFF003366),
       unselectedItemColor: Colors.grey,
