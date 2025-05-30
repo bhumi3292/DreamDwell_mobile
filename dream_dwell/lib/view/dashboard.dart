@@ -26,3 +26,4 @@ class DashboardPage extends StatelessWidget {
     );
   }
 }
+
