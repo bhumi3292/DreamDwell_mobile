@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:dream_dwell/view/dashboard.dart';
+import 'package:dream_dwell/view/explore.dart';
+import 'package:dream_dwell/view/favourite.dart';
+import 'package:dream_dwell/view/booking.dart';
+import 'package:dream_dwell/view/profile.dart';
 
 class NavBar extends StatefulWidget {
   const NavBar({super.key});
@@ -12,38 +16,44 @@ class _NavBarState extends State<NavBar> {
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
+    if (_selectedIndex == index) return;
+
     setState(() {
       _selectedIndex = index;
     });
 
+    Widget nextPage;
+
     switch (index) {
       case 0:
-      // dashboard
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Dashboard()),
-        );
+        nextPage = const DashboardPage();
         break;
       case 1:
-      // explore
+        nextPage = const ExplorePage();
         break;
       case 2:
-      // favourite
+        nextPage = const FavouritePage();
         break;
       case 3:
-      // booking
+        nextPage = const BookingPage();
         break;
       case 4:
-      //profile
+        nextPage = const ProfilePage();
         break;
+      default:
+        return;
     }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => nextPage),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-
     return BottomNavigationBar(
-      backgroundColor: Color(0xFF807B7B),
+      backgroundColor: const Color(0xFF807B7B),
       currentIndex: _selectedIndex,
       selectedItemColor: const Color(0xFF003366),
       unselectedItemColor: Colors.grey,
@@ -73,3 +83,4 @@ class _NavBarState extends State<NavBar> {
     );
   }
 }
+

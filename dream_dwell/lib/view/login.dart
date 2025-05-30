@@ -1,3 +1,4 @@
+import 'package:dream_dwell/view/homeView.dart';
 import 'package:flutter/material.dart';
 import 'package:dream_dwell/model/login_auth.dart';
 import 'dashboard.dart';
@@ -16,13 +17,9 @@ class _LoginState extends State<Login> {
   final TextEditingController _passwordController = TextEditingController();
   String? selectedStakeholder;
   final List<String> stakeholders = ['Tenants', 'Landlord'];
-  final Color navyBlue = const Color(0xFF003366);
   String? errorMessage;
 
-  // ------------- password visibility------
   bool _passwordVisible = false;
-
-  //------------username password handelling
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
@@ -43,7 +40,7 @@ class _LoginState extends State<Login> {
         );
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const Dashboard()),
+          MaterialPageRoute(builder: (context) => const HomeView()),
         );
       } else {
         showMySnackbar(
@@ -55,11 +52,10 @@ class _LoginState extends State<Login> {
     }
   }
 
-
-  //-------------design-----
-
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).primaryColor;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
@@ -76,7 +72,7 @@ class _LoginState extends State<Login> {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: navyBlue,
+                    color: primaryColor,
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -92,7 +88,7 @@ class _LoginState extends State<Login> {
                 ),
                 const SizedBox(height: 15),
 
-                // Password Field with Toggle
+                // Password Field
                 TextFormField(
                   controller: _passwordController,
                   obscureText: !_passwordVisible,
@@ -137,20 +133,16 @@ class _LoginState extends State<Login> {
                 ),
                 const SizedBox(height: 25),
 
-                // Login Button
+                // Login Button (styled from global theme)
                 SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
                     onPressed: _handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: navyBlue,
-                      elevation: 5,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                    child: const Text(
+                      "Login",
+                      style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
-                    child: const Text("Login", style: TextStyle(fontSize: 18, color: Colors.white)),
                   ),
                 ),
 
@@ -170,7 +162,7 @@ class _LoginState extends State<Login> {
                     },
                     child: Text(
                       "Forgot Password?",
-                      style: TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: primaryColor, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -188,34 +180,29 @@ class _LoginState extends State<Login> {
                       },
                       child: Text(
                         "Signup",
-                        style: TextStyle(color: navyBlue, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
                 ),
 
+                const SizedBox(height: 10),
                 Align(
                   alignment: Alignment.center,
-                    child: Text(
-                      "Connect with us",
-                      style: TextStyle(color: navyBlue, fontWeight: FontWeight.w600),
-
-                    ),
+                  child: Text(
+                    "Connect with us",
+                    style: TextStyle(color: primaryColor, fontWeight: FontWeight.w600),
+                  ),
                 ),
                 const SizedBox(height: 5),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-
-                    Image.asset("assets/images/fb.png", height: 30,),
-                    Image.asset("assets/images/google.png",height: 30),
-
+                    Image.asset("assets/images/fb.png", height: 30),
+                    const SizedBox(width: 10),
+                    Image.asset("assets/images/google.png", height: 30),
                   ],
-                )
-
-
-
-
+                ),
               ],
             ),
           ),

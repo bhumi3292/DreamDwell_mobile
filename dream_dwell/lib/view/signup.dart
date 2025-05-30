@@ -177,19 +177,13 @@ class _SignupState extends State<Signup> {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: _handleSignup,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: navyBlue,
-                      elevation: 5,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
                     child: const Text(
-                      "Sign Up",
+                      "Signup",
                       style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   ),
                 ),
+
 
                 const SizedBox(height: 15),
 

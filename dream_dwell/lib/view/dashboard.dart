@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:dream_dwell/features/splash_screen/presentation/widgets/header_nav.dart';
 import 'package:dream_dwell/features/splash_screen/presentation/widgets/nav_bar.dart';
 
-class Dashboard extends StatelessWidget {
-  const Dashboard({super.key});
+class DashboardPage extends StatelessWidget {
+  const DashboardPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        appBar: const HeaderNav(),
         backgroundColor: Colors.white,
         body: const Center(
           child: Text(
@@ -22,7 +21,7 @@ class Dashboard extends StatelessWidget {
             ),
           ),
         ),
-        bottomNavigationBar: const NavBar(),
+
       ),
     );
   }

@@ -14,14 +14,6 @@ class HeaderNav extends StatelessWidget implements PreferredSizeWidget {
           // Open drawer or navigation
         },
       ),
-      title: const Text(
-        'Home',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-        ),
-      ),
       centerTitle: true,
       actions: [
         IconButton(
