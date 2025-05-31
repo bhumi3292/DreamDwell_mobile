@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-// Feature imports
 import 'package:dream_dwell/features/splash_screen/presentation/screen/splash.dart';
 import 'package:dream_dwell/features/splash_screen/presentation/widgets/theme.dart';
-import 'package:dream_dwell/features/splash_screen/presentation/widgets/nav_bar.dart';
-
-// View imports
 import 'package:dream_dwell/view/login.dart';
 import 'package:dream_dwell/view/signup.dart';
 import 'package:dream_dwell/view/forgetPassword.dart';

@@ -16,14 +16,6 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    DashboardPage(),
-    ExplorePage(),
-    FavouritePage(),
-    BookingPage(),
-    ProfilePage(),
-  ];
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -32,13 +24,21 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> pages = [
+      DashboardPage(onSeeAllTap: () => _onItemTapped(1)),
+      const ExplorePage(),
+      const FavouritePage(),
+      const BookingPage(),
+      const ProfilePage(),
+    ];
+
     return Scaffold(
       appBar: const HeaderNav(),
-      body: _pages[_selectedIndex],
+      body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         elevation: 12,
         currentIndex: _selectedIndex,
-        selectedItemColor: Color(0xFF003366),
+        selectedItemColor: const Color(0xFF003366),
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
         onTap: _onItemTapped,

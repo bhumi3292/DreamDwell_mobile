@@ -15,5 +15,6 @@ ThemeData getApplication() {
         ),
       ),
     ),
+    fontFamily: "Roboto",
   );
 }
