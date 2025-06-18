@@ -1,6 +1,6 @@
-import 'package:dream_dwell/view/login.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:dream_dwell/features/auth/presentation/view/login.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -10,20 +10,19 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-
   @override
   void initState() {
     super.initState();
-    _navigateToHome();
+    _navigateToLogin();
   }
 
-  void _navigateToHome() async {
-    await Future.delayed(Duration(seconds: 3));
-    Navigator.pushReplacement(context,
-      MaterialPageRoute(builder: (context) => Login()),
-    );
-  }
+  void _navigateToLogin() async {
+    await Future.delayed(const Duration(seconds: 3));
 
+    if (!mounted) return; // Avoid using context if widget is disposed
+
+    Navigator.pushReplacementNamed(context, '/login');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,13 +34,13 @@ class _SplashScreenState extends State<SplashScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Lottie.asset(
-                  "assets/animation/animation_123.json",
+                  'assets/animation/animation_123.json',
                   width: 300,
                   height: 300,
                   fit: BoxFit.contain,
                 ),
-                SizedBox(height: 20),
-                Text(
+                const SizedBox(height: 20),
+                const Text(
                   "DreamDwell",
                   style: TextStyle(
                     fontSize: 34,

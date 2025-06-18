@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:dream_dwell/features/splash_screen/presentation/widgets/theme.dart';
 
 class ForgetPassword extends StatefulWidget {
-  const ForgetPassword({Key? key}) : super(key: key);
+  const ForgetPassword({super.key});
 
   @override
   State<ForgetPassword> createState() => _ForgetPasswordState();

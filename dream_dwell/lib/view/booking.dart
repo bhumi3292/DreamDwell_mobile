@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:dream_dwell/features/splash_screen/presentation/widgets/header_nav.dart';
-import 'package:dream_dwell/features/splash_screen/presentation/widgets/nav_bar.dart';
 
 class BookingPage extends StatelessWidget {
   const BookingPage({super.key});

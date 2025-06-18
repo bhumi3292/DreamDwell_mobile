@@ -7,7 +7,7 @@ import 'package:dream_dwell/view/booking.dart';
 import 'package:dream_dwell/view/profile.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({Key? key}) : super(key: key);
+  const HomeView({super.key});
 
   @override
   State<HomeView> createState() => _HomeViewState();
@@ -54,3 +54,4 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 }
+
