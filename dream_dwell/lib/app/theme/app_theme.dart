@@ -6,23 +6,20 @@ class AppTheme {
 
   static ThemeData getApplicationTheme({required bool isDarkMode}) {
     return ThemeData(
-      // change the theme according to the user preference
       colorScheme: isDarkMode
           ? const ColorScheme.dark(primary: ThemeConstant.darkPrimaryColor)
           : const ColorScheme.light(primary: ThemeConstant.primaryColor),
       brightness: isDarkMode ? Brightness.dark : Brightness.light,
       fontFamily: 'Montserrat',
-      useMaterial3: true,
-      // Change app bar color
+      useMaterial3: false,
       appBarTheme: const AppBarTheme(
         elevation: 0,
         backgroundColor: ThemeConstant.appBarColor,
         centerTitle: true,
         titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
       ),
-      // Scaffold theme
       scaffoldBackgroundColor: isDarkMode ? Colors.black : Colors.white,
-      // Change elevated button theme
+
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
@@ -34,7 +31,7 @@ class AppTheme {
           ),
         ),
       ),
-      // Change text field theme
+
       inputDecorationTheme: const InputDecorationTheme(
         contentPadding: EdgeInsets.all(15),
         border: OutlineInputBorder(),
@@ -46,11 +43,11 @@ class AppTheme {
           borderSide: BorderSide(color: ThemeConstant.primaryColor),
         ),
       ),
-      // Circular progress bar theme
+
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: ThemeConstant.primaryColor,
       ),
-      //Bottom navigation bar theme
+
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: ThemeConstant.primaryColor,
         selectedItemColor: Colors.white,
@@ -58,6 +55,13 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
+
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: Colors.black, // fallback
+        behavior: SnackBarBehavior.floating,
+        contentTextStyle: TextStyle(color: Colors.white),
+      ),
     );
+
   }
 }

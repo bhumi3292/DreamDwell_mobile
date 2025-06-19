@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dream_dwell/features/splash_screen/presentation/widgets/header_nav.dart';
-import 'package:dream_dwell/view/dashboard.dart';
+import 'package:dream_dwell/features/dashbaord/dashboard.dart';
 import 'package:dream_dwell/view/explore.dart';
 import 'package:dream_dwell/view/favourite.dart';
 import 'package:dream_dwell/view/booking.dart';

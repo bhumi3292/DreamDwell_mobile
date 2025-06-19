@@ -3,7 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../app/constant/hive_table_const.dart';
+import '../../../../app/constant/hive_table_const.dart' show HiveTableConstant;
 
 part 'user_hive_model.g.dart';
 

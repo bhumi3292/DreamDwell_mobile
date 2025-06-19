@@ -1,22 +1,15 @@
 class HiveTableConstant {
-  HiveTableConstant._();
+  HiveTableConstant._(); // Private constructor to prevent instantiation
 
-  static const int dashboardTableId = 0;
-  static const String dashboardBox = 'dashboardBox';
-
-  static const int exploreTableId = 1;
-  static const String exploreBox = 'exploreBox';
-
-  static const int favouriteTableId = 2;
-  static const String favouriteBox = 'favouriteBox';
-
-  static const int bookingTableId = 3;
-  static const String bookingBox = 'bookingBox';
-
-  static const int profileTableId = 4;
-  static const String profileBox = 'profileBox';
-
-  // Add this for user
-  static const int userTableId = 5;
+  // Table (typeId) and Box name for User
+  static const int userTableId = 0;
   static const String userBox = 'userBox';
+
+// You can add more boxes as your app grows
+// Example:
+// static const int propertyTableId = 1;
+// static const String propertyBox = 'propertyBox';
+
+// static const int bookingTableId = 2;
+// static const String bookingBox = 'bookingBox';
 }

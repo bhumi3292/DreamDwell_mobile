@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dartz/dartz.dart';
 import 'package:dream_dwell/cores/error/failure.dart';
 import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
@@ -12,7 +10,6 @@ abstract interface class IUserRepository {
       String password,
       String stakeholder,
       );
-
 
   Future<Either<Failure, UserEntity>> getCurrentUser();
 }

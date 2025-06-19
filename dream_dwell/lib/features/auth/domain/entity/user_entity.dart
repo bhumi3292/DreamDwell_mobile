@@ -9,7 +9,6 @@ class UserEntity extends Equatable {
   final String password;
   final String confirmPassword;
 
-
   const UserEntity({
     this.userId,
     required this.fullName,
@@ -18,7 +17,6 @@ class UserEntity extends Equatable {
     required this.stakeholder,
     required this.password,
     required this.confirmPassword,
-
   });
 
   @override
