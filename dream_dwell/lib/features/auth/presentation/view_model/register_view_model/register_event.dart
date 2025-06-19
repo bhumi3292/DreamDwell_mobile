@@ -1,6 +1,5 @@
-// features/auth/presentation/view_model/register_view_model/register_event.dart
 import 'package:equatable/equatable.dart';
-// import 'package:flutter/material.dart'; // No longer needed here
+import 'package:flutter/material.dart';
 
 abstract class RegisterUserEvent extends Equatable {
   const RegisterUserEvent();
@@ -10,13 +9,13 @@ abstract class RegisterUserEvent extends Equatable {
 }
 
 class RegisterNewUserEvent extends RegisterUserEvent {
-  // Removed BuildContext context: The BLoC should not directly interact with UI context.
   final String fullName;
   final String email;
   final String phone;
   final String stakeholder;
   final String password;
   final String confirmPassword;
+  final BuildContext? context; // optional, for snackbar
 
   const RegisterNewUserEvent({
     required this.fullName,
@@ -25,6 +24,7 @@ class RegisterNewUserEvent extends RegisterUserEvent {
     required this.stakeholder,
     required this.password,
     required this.confirmPassword,
+    this.context,
   });
 
   @override
@@ -35,10 +35,10 @@ class RegisterNewUserEvent extends RegisterUserEvent {
     stakeholder,
     password,
     confirmPassword,
+    context,
   ];
 }
 
-// New event to clear any success/error messages after the UI has displayed them.
 class ClearRegisterMessageEvent extends RegisterUserEvent {
   const ClearRegisterMessageEvent();
 
