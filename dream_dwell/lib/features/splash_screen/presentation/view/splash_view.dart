@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:dream_dwell/features/auth/presentation/view/login.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
