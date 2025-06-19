@@ -31,7 +31,7 @@ class UserApiModel extends Equatable {
 
   Map<String, dynamic> toJson() => _$UserApiModelToJson(this);
 
-  /// Convert to domain entity
+  //to domain entity
   UserEntity toEntity() {
     return UserEntity(
       userId: userId ?? '',
