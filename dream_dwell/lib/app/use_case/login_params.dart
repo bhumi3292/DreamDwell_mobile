@@ -1,3 +1,4 @@
+// path: lib/features/auth/domain/usecases/login_params.dart
 import 'package:equatable/equatable.dart';
 
 class LoginParams extends Equatable {

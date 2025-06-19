@@ -1,9 +1,9 @@
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_event.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_state.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
-import 'package:dream_dwell/features/home/homeView.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dream_dwell/view/homeView.dart';
 import 'package:dream_dwell/cores/common/snackbar/snackbar.dart';
 
 class Login extends StatefulWidget {

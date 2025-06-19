@@ -34,31 +34,34 @@ class RegisterUserParams extends Equatable {
   ];
 }
 
-// /// Concrete failure for validation errors
-// class ValidationFailure extends Failure {
-//   const ValidationFailure({required super.message});
-// }
+/// Concrete failure for validation errors
+class ValidationFailure extends Failure {
+  const ValidationFailure({required super.message});
+}
 
 /// User Registration Use Case
-class UserRegisterUsecase
+class UserRegisterUseCase
     implements UsecaseWithParams<void, RegisterUserParams> {
   final IUserRepository _userRepository;
 
-  UserRegisterUsecase({required IUserRepository userRepository})
+  UserRegisterUseCase({required IUserRepository userRepository})
       : _userRepository = userRepository;
 
   @override
   Future<Either<Failure, void>> call(RegisterUserParams params) {
-    print("calling from register usecase");
-    final userEntity = UserEntity(
-        fullName:params.fullName,
-        email:params.email,
-        phone:params.phone,
-        stakeholder: params.stakeholder,
-        password: params.password,
-        confirmPassword: params.confirmPassword
+    if (params.password != params.confirmPassword) {
+      return Future.value(Left(ValidationFailure(message: "Passwords do not match")));
+    }
 
+    final userEntity = UserEntity(
+      fullName: params.fullName,
+      email: params.email,
+      phone: params.phone,
+      stakeholder: params.stakeholder,
+      password: params.password,
+      confirmPassword: params.confirmPassword,
     );
+
     return _userRepository.registerUser(userEntity);
   }
 }

@@ -1,13 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dream_dwell/cores/common/snackbar/snackbar.dart';
-
-import 'register_event.dart';
-import 'register_state.dart';
+// features/auth/presentation/view_model/register_view_model/register_user_view_model.dart
+import 'package:bloc/bloc.dart';
 import 'package:dream_dwell/features/auth/domain/use_case/user_register_usecase.dart';
+import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_event.dart';
+import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_state.dart';
+
 
 class RegisterUserViewModel extends Bloc<RegisterUserEvent, RegisterUserState> {
-  final UserRegisterUsecase _userRegisterUseCase;
+  final UserRegisterUseCase _userRegisterUseCase;
 
   RegisterUserViewModel(this._userRegisterUseCase)
       : super(const RegisterUserState.initial()) {
@@ -15,29 +14,24 @@ class RegisterUserViewModel extends Bloc<RegisterUserEvent, RegisterUserState> {
     on<ClearRegisterMessageEvent>(_onClearMessage);
   }
 
+
   void _onClearMessage(
-      ClearRegisterMessageEvent event,
-      Emitter<RegisterUserState> emit,
-      ) {
-    emit(state.copyWith(
-      errorMessage: null,
-      successMessage: null,
-      isSuccess: false,
-    ));
+      ClearRegisterMessageEvent event, Emitter<RegisterUserState> emit) {
+    emit(state.copyWith(errorMessage: null, successMessage: null));
   }
 
   Future<void> _onRegisterUser(
       RegisterNewUserEvent event,
       Emitter<RegisterUserState> emit,
       ) async {
-    print("calling from register viewmodel");
+
     emit(state.copyWith(
       isLoading: true,
       errorMessage: null,
       successMessage: null,
-      isSuccess: false,
     ));
 
+    // 2. Execute the registration use case
     final result = await _userRegisterUseCase(
       RegisterUserParams(
         fullName: event.fullName,
@@ -49,34 +43,24 @@ class RegisterUserViewModel extends Bloc<RegisterUserEvent, RegisterUserState> {
       ),
     );
 
+
     result.fold(
           (failure) {
+
         emit(state.copyWith(
           isLoading: false,
-          errorMessage: failure.message,
           isSuccess: false,
+          errorMessage: failure.message,
         ));
-        if (event.context != null) {
-          showMySnackbar(
-            context: event.context!,
-            content: failure.message,
-            isSuccess: false,
-          );
-        }
+
       },
           (_) {
+
         emit(state.copyWith(
           isLoading: false,
-          successMessage: "User registration successful",
           isSuccess: true,
+          successMessage: "User registration successful",
         ));
-        if (event.context != null) {
-          showMySnackbar(
-            context: event.context!,
-            content: "User registration successful",
-            isSuccess: true,
-          );
-        }
       },
     );
   }

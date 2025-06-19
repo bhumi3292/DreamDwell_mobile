@@ -1,6 +1,4 @@
 // app.dart
-import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
-import 'package:dream_dwell/features/home/homeView.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
@@ -11,6 +9,7 @@ import 'package:dream_dwell/features/splash_screen/presentation/widgets/theme.da
 import 'package:dream_dwell/features/auth/presentation/view/login.dart';
 import 'package:dream_dwell/features/auth/presentation/view/signup.dart';
 import 'package:dream_dwell/view/forgetPassword.dart';
+import 'package:dream_dwell/view/homeView.dart';
 import 'package:dream_dwell/features/dashbaord/dashboard.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
 
@@ -23,9 +22,6 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<LoginViewModel>(
           create: (_) => serviceLocator<LoginViewModel>(),
-        ),
-        BlocProvider<RegisterUserViewModel>(
-          create: (_) => serviceLocator<RegisterUserViewModel>(),
         ),
         // Add other BlocProviders if needed
       ],
