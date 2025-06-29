@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 
 import 'package:dream_dwell/app/use_case/usecase.dart';
 import 'package:dream_dwell/cores/error/failure.dart';
-import 'package:dream_dwell/features/auth/data/repository/local_repository/user_local_repository.dart';
+import 'package:dream_dwell/features/auth/domain/repository/user_repository.dart'; // <- Updated
 
 /// Parameters required for user login
 class LoginParams extends Equatable {
@@ -29,9 +29,9 @@ class LoginParams extends Equatable {
 
 /// Use case to handle user login functionality
 class UserLoginUsecase implements UsecaseWithParams<String, LoginParams> {
-  final UserLocalRepository _userRepository;
+  final IUserRepository _userRepository; // ✅ Use interface
 
-  UserLoginUsecase({required UserLocalRepository userRepository})
+  UserLoginUsecase({required IUserRepository userRepository})
       : _userRepository = userRepository;
 
   @override

@@ -11,16 +11,16 @@ abstract class RegisterUserEvent extends Equatable {
 class RegisterNewUserEvent extends RegisterUserEvent {
   final String fullName;
   final String email;
-  final String phone;
+  final String phoneNumber;
   final String stakeholder;
   final String password;
   final String confirmPassword;
-  final BuildContext? context; // optional, for snackbar
+  final BuildContext? context;
 
   const RegisterNewUserEvent({
     required this.fullName,
     required this.email,
-    required this.phone,
+    required this.phoneNumber,
     required this.stakeholder,
     required this.password,
     required this.confirmPassword,
@@ -31,7 +31,7 @@ class RegisterNewUserEvent extends RegisterUserEvent {
   List<Object?> get props => [
     fullName,
     email,
-    phone,
+    phoneNumber,
     stakeholder,
     password,
     confirmPassword,

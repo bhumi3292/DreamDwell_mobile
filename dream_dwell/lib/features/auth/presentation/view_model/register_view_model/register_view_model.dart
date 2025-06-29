@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/cores/common/snackbar/snackbar.dart';
 
@@ -6,8 +5,11 @@ import 'register_event.dart';
 import 'register_state.dart';
 import 'package:dream_dwell/features/auth/domain/use_case/user_register_usecase.dart';
 
+/// `RegisterUserViewModel` manages the state and logic for user registration.
+/// It extends `Bloc` to handle `RegisterUserEvent` and emit `RegisterUserState`.
 class RegisterUserViewModel extends Bloc<RegisterUserEvent, RegisterUserState> {
   final UserRegisterUsecase _userRegisterUseCase;
+
 
   RegisterUserViewModel(this._userRegisterUseCase)
       : super(const RegisterUserState.initial()) {
@@ -26,6 +28,7 @@ class RegisterUserViewModel extends Bloc<RegisterUserEvent, RegisterUserState> {
     ));
   }
 
+
   Future<void> _onRegisterUser(
       RegisterNewUserEvent event,
       Emitter<RegisterUserState> emit,
@@ -38,11 +41,12 @@ class RegisterUserViewModel extends Bloc<RegisterUserEvent, RegisterUserState> {
       isSuccess: false,
     ));
 
+
     final result = await _userRegisterUseCase(
       RegisterUserParams(
         fullName: event.fullName,
         email: event.email,
-        phone: event.phone,
+        phoneNumber: event.phoneNumber,
         stakeholder: event.stakeholder,
         password: event.password,
         confirmPassword: event.confirmPassword,

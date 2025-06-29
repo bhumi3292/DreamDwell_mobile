@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:dream_dwell/cores/error/failure.dart';
@@ -27,9 +26,9 @@ class UserLocalRepository implements IUserRepository {
       ) async {
     try {
       final result = await _userLocalDatasource.loginUser(
-          username,
-          password,
-          stakeholder
+        username,
+        password,
+        stakeholder
       );
       return Right(result);
     } catch (e) {
