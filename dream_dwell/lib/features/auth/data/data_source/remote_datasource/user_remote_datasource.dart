@@ -21,12 +21,10 @@ class UserRemoteDatasource implements IUserDataSource {
         data: model.toJson(),
       );
 
-      // Check for success status code (201 Created)
       if (response.statusCode != 201) {
         throw Exception('Registration failed with status code: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      // The DioErrorInterceptor should provide a more friendly error message in e.error
       throw Exception('Failed to register user: ${e.error}');
     } catch (e) {
       throw Exception('An unexpected error occurred: $e');
@@ -45,7 +43,6 @@ class UserRemoteDatasource implements IUserDataSource {
         },
       );
 
-      // CORRECTED: Handle a successful response and extract the token
       if (response.statusCode == 200) {
         final token = response.data['token'];
         if (token == null || (token as String).isEmpty) {
@@ -56,7 +53,6 @@ class UserRemoteDatasource implements IUserDataSource {
         throw Exception("Login failed: ${response.statusCode} ${response.statusMessage}");
       }
     } on DioException catch (e) {
-      // Use the custom error message provided by the interceptor
       throw Exception('Failed to login: ${e.error}');
     } catch (e) {
       throw Exception('An unexpected error occurred: $e');
@@ -66,7 +62,6 @@ class UserRemoteDatasource implements IUserDataSource {
   @override
   Future<UserEntity> getCurrentUser() async {
     try {
-      // This will now automatically include the Authorization header thanks to the interceptor
       final response = await _apiService.dio.get(ApiEndpoints.getCurrentUser);
 
       if (response.statusCode == 200) {

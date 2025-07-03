@@ -19,7 +19,6 @@ class UserHiveModel extends Equatable {
   final String email;
 
   @HiveField(3)
-  // CORRECTED: Changed 'phone' to 'phoneNumber' for consistency
   final String phoneNumber;
 
   @HiveField(4)
@@ -35,7 +34,7 @@ class UserHiveModel extends Equatable {
     String? userId,
     required this.fullName,
     required this.email,
-    required this.phoneNumber, // Updated here
+    required this.phoneNumber,
     required this.stakeholder,
     required this.password,
     required this.confirmPassword,
@@ -46,7 +45,7 @@ class UserHiveModel extends Equatable {
       : userId = '',
         fullName = '',
         email = '',
-        phoneNumber = '', // Updated here
+        phoneNumber = '',
         stakeholder = '',
         password = '',
         confirmPassword = '';
@@ -57,7 +56,7 @@ class UserHiveModel extends Equatable {
       userId: entity.userId,
       fullName: entity.fullName,
       email: entity.email,
-      phoneNumber: entity.phoneNumber, // Updated here
+      phoneNumber: entity.phoneNumber,
       stakeholder: entity.stakeholder,
       password: entity.password,
       confirmPassword: entity.confirmPassword,
@@ -70,7 +69,7 @@ class UserHiveModel extends Equatable {
       userId: userId,
       fullName: fullName,
       email: email,
-      phoneNumber: phoneNumber, // Updated here
+      phoneNumber: phoneNumber,
       stakeholder: stakeholder,
       password: password,
       confirmPassword: confirmPassword,
@@ -82,7 +81,7 @@ class UserHiveModel extends Equatable {
     userId,
     fullName,
     email,
-    phoneNumber, // Updated here
+    phoneNumber,
     stakeholder,
     password,
     confirmPassword,

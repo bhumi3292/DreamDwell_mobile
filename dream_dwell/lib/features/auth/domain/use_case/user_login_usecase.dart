@@ -3,9 +3,8 @@ import 'package:equatable/equatable.dart';
 
 import 'package:dream_dwell/app/use_case/usecase.dart';
 import 'package:dream_dwell/cores/error/failure.dart';
-import 'package:dream_dwell/features/auth/domain/repository/user_repository.dart'; // <- Updated
+import 'package:dream_dwell/features/auth/domain/repository/user_repository.dart';
 
-/// Parameters required for user login
 class LoginParams extends Equatable {
   final String email;
   final String password;
@@ -17,7 +16,6 @@ class LoginParams extends Equatable {
     required this.stakeholder,
   });
 
-  /// Initial default state (empty credentials)
   const LoginParams.initial()
       : email = '',
         password = '',
@@ -27,9 +25,8 @@ class LoginParams extends Equatable {
   List<Object?> get props => [email, password, stakeholder];
 }
 
-/// Use case to handle user login functionality
 class UserLoginUsecase implements UsecaseWithParams<String, LoginParams> {
-  final IUserRepository _userRepository; // ✅ Use interface
+  final IUserRepository _userRepository;
 
   UserLoginUsecase({required IUserRepository userRepository})
       : _userRepository = userRepository;

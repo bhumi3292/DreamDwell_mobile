@@ -5,8 +5,6 @@ import 'register_event.dart';
 import 'register_state.dart';
 import 'package:dream_dwell/features/auth/domain/use_case/user_register_usecase.dart';
 
-/// `RegisterUserViewModel` manages the state and logic for user registration.
-/// It extends `Bloc` to handle `RegisterUserEvent` and emit `RegisterUserState`.
 class RegisterUserViewModel extends Bloc<RegisterUserEvent, RegisterUserState> {
   final UserRegisterUsecase _userRegisterUseCase;
 

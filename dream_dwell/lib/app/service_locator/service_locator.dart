@@ -18,8 +18,8 @@ import 'package:dream_dwell/features/auth/presentation/view_model/register_view_
 final serviceLocator = GetIt.instance;
 
 Future<void> initDependencies() async {
-  await _initHiveService(); // Ensure HiveService is initialized first
-  _initApiService();        // Then initialize ApiService, which needs HiveService
+  await _initHiveService(); // Ensure HiveService is initialized
+  _initApiService();
   _initAuthModule();
 }
 
@@ -31,11 +31,10 @@ Future<void> _initHiveService() async {
 
 void _initApiService() {
   serviceLocator.registerLazySingleton<Dio>(() => Dio());
-  // CORRECTED: Pass both Dio and HiveService instances to ApiService
   serviceLocator.registerLazySingleton<ApiService>(
         () => ApiService(
-      serviceLocator<Dio>(),        // First argument: Dio instance
-      serviceLocator<HiveService>(), // Second argument: HiveService instance
+      serviceLocator<Dio>(),
+      serviceLocator<HiveService>(),
     ),
   );
 }

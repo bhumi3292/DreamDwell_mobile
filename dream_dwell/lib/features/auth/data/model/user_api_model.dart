@@ -30,11 +30,9 @@ class UserApiModel extends Equatable {
   factory UserApiModel.fromJson(Map<String, dynamic> json) =>
       _$UserApiModelFromJson(json);
 
-  /// Serialize to JSON (API)
-  /// This method will now correctly send 'phoneNumber' to the backend.
+
   Map<String, dynamic> toJson() => _$UserApiModelToJson(this);
 
-  /// Convert to domain entity
   UserEntity toEntity() {
     return UserEntity(
       userId: userId ?? '',
@@ -65,7 +63,7 @@ class UserApiModel extends Equatable {
     userId,
     fullName,
     email,
-    phoneNumber, // Updated here
+    phoneNumber,
     stakeholder,
     password,
     confirmPassword,

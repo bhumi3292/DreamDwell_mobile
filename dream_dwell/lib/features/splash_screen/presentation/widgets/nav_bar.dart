@@ -3,7 +3,7 @@ import 'package:dream_dwell/features/dashbaord/dashboard.dart';
 import 'package:dream_dwell/view/explore.dart';
 import 'package:dream_dwell/view/favourite.dart';
 import 'package:dream_dwell/view/booking.dart';
-import 'package:dream_dwell/view/profile.dart';
+import 'package:dream_dwell/features/profile/presentation/view/profile.dart';
 
 class NavBar extends StatefulWidget {
   const NavBar({super.key});
