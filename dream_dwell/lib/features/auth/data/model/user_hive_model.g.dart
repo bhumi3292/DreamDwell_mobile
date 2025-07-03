@@ -20,7 +20,7 @@ class UserHiveModelAdapter extends TypeAdapter<UserHiveModel> {
       userId: fields[0] as String?,
       fullName: fields[1] as String,
       email: fields[2] as String,
-      phone: fields[3] as String,
+      phoneNumber: fields[3] as String,
       stakeholder: fields[4] as String,
       password: fields[5] as String,
       confirmPassword: fields[6] as String,
@@ -38,7 +38,7 @@ class UserHiveModelAdapter extends TypeAdapter<UserHiveModel> {
       ..writeByte(2)
       ..write(obj.email)
       ..writeByte(3)
-      ..write(obj.phone)
+      ..write(obj.phoneNumber)
       ..writeByte(4)
       ..write(obj.stakeholder)
       ..writeByte(5)

@@ -8,12 +8,12 @@ import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
 class UserRemoteDatasource implements IUserDataSource {
   final ApiService _apiService;
 
-  UserRemoteDatasource({required ApiService apiService}) : _apiService = apiService;
+  UserRemoteDatasource({required ApiService apiService})
+      : _apiService = apiService;
 
   @override
   Future<void> registerUser(UserEntity user) async {
     try {
-
       final model = UserApiModel.fromEntity(user);
 
       final response = await _apiService.dio.post(
@@ -22,10 +22,10 @@ class UserRemoteDatasource implements IUserDataSource {
       );
 
       if (response.statusCode != 201) {
-        throw Exception('Registration failed: ${response.statusCode}');
+        throw Exception('Registration failed with status code: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      throw Exception('Failed to register user: ${e.response?.data ?? e.message}');
+      throw Exception('Failed to register user: ${e.error}');
     } catch (e) {
       throw Exception('An unexpected error occurred: $e');
     }
@@ -34,19 +34,26 @@ class UserRemoteDatasource implements IUserDataSource {
   @override
   Future<String> loginUser(String email, String password, String stakeholder) async {
     try {
-      final response = await _apiService.dio.post(ApiEndpoints.login, data: {
-        "email": email,
-        "password": password,
-        "stakeholder": stakeholder,
-      });
+      final response = await _apiService.dio.post(
+        ApiEndpoints.login,
+        data: {
+          "email": email,
+          "password": password,
+          "stakeholder": stakeholder,
+        },
+      );
 
       if (response.statusCode == 200) {
-        return response.data['token'];
+        final token = response.data['token'];
+        if (token == null || (token as String).isEmpty) {
+          throw Exception("Login successful but no token was received.");
+        }
+        return token;
       } else {
         throw Exception("Login failed: ${response.statusCode} ${response.statusMessage}");
       }
     } on DioException catch (e) {
-      throw Exception('Failed to login: ${e.response?.data ?? e.message}');
+      throw Exception('Failed to login: ${e.error}');
     } catch (e) {
       throw Exception('An unexpected error occurred: $e');
     }
@@ -58,12 +65,14 @@ class UserRemoteDatasource implements IUserDataSource {
       final response = await _apiService.dio.get(ApiEndpoints.getCurrentUser);
 
       if (response.statusCode == 200) {
-        return UserApiModel.fromJson(response.data).toEntity();
+        // Assume the response body is a JSON object representing the user
+        final userApiModel = UserApiModel.fromJson(response.data);
+        return userApiModel.toEntity();
       } else {
         throw Exception("Failed to fetch user: ${response.statusCode} ${response.statusMessage}");
       }
     } on DioException catch (e) {
-      throw Exception('Failed to fetch user: ${e.response?.data ?? e.message}');
+      throw Exception('Failed to fetch user: ${e.error}');
     } catch (e) {
       throw Exception('An unexpected error occurred: $e');
     }
