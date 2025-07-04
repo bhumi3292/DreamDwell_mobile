@@ -29,12 +29,14 @@ class _LoginState extends State<Login> {
 
       if (stakeholder != null) {
         context.read<LoginViewModel>().add(
-          LoginButtonPressed(
-            email: email,
+          LoginWithEmailAndPasswordEvent(
+            context: context,
+            username: email,
             password: password,
             stakeholder: stakeholder,
           ),
         );
+
       } else {
         showMySnackbar(
           context: context,

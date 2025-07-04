@@ -1,5 +1,5 @@
 class HiveTableConstant {
-  HiveTableConstant._(); // Private constructor to prevent instantiation
+  HiveTableConstant._();
 
   // Table (typeId) and Box name for User
   static const int userTableId = 0;

@@ -1,76 +1,109 @@
-import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
+import 'package:dream_dwell/features/auth/data/data_source/remote_datasource/user_remote_datasource.dart';
+import 'package:dream_dwell/features/auth/data/repository/remote_repository/register_remote_repository.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 
 import 'package:dream_dwell/cores/network/api_service.dart';
 import 'package:dream_dwell/cores/network/hive_service.dart';
+
+// Auth
 import 'package:dream_dwell/features/auth/data/data_source/local_datasource/user_local_datasource.dart';
 import 'package:dream_dwell/features/auth/data/repository/local_repository/user_local_repository.dart';
+
+import 'package:dream_dwell/features/auth/domain/repository/user_repository.dart';
+
 import 'package:dream_dwell/features/auth/domain/use_case/user_login_usecase.dart';
 import 'package:dream_dwell/features/auth/domain/use_case/user_register_usecase.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
+import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
 
 final serviceLocator = GetIt.instance;
 
+
 Future<void> initDependencies() async {
-  _registerCoreServices();
-  await serviceLocator<HiveService>().init();
-
-  // 3. Initialize feature-specific modules.
+  // Initialize HiveService first as it's a core dependency
+  await _initHiveService();
+  // Initialize ApiService which depends on Dio and HiveService
+  _initApiService();
+  // Initialize authentication-related modules
   _initAuthModule();
-
-
 }
 
-/// Registers core application services that are typically singletons.
-void _registerCoreServices() {
+/// Initializes and registers the [HiveService] as a singleton.
+Future<void> _initHiveService() async {
+  final hiveService = HiveService();
+  await hiveService.init(); // Ensure Hive is initialized before registration
+  serviceLocator.registerSingleton<HiveService>(hiveService);
+}
+
+/// Initializes and registers [Dio] and [ApiService].
+void _initApiService() {
+  // Register Dio as a lazy singleton, creating it only when first accessed
   serviceLocator.registerLazySingleton<Dio>(() => Dio());
+  // Register ApiService as a lazy singleton, injecting Dio and HiveService
   serviceLocator.registerLazySingleton<ApiService>(
-        () => ApiService(serviceLocator<Dio>()),
+        () => ApiService(
+      serviceLocator<Dio>(),
+      serviceLocator<HiveService>(),
+    ),
   );
-  serviceLocator.registerLazySingleton<HiveService>(() => HiveService());
 }
 
-/// Initializes dependencies for the authentication module.
 void _initAuthModule() {
-  // Data Sources
-  // UserLocalDatasource depends on HiveService to interact with local storage.
+  // --- Data Sources ---
+  // Register UserLocalDatasource, depends on HiveService
   serviceLocator.registerFactory<UserLocalDatasource>(
         () => UserLocalDatasource(hiveService: serviceLocator<HiveService>()),
   );
+  // Register UserRemoteDatasource, depends on ApiService
+  serviceLocator.registerFactory<UserRemoteDatasource>(
+        () => UserRemoteDatasource(apiService: serviceLocator<ApiService>()),
+  );
 
-  // If you had a remote data source, you'd register it here:
-  // serviceLocator.registerFactory<UserRemoteDatasource>(
-  //   () => UserRemoteDatasource(apiService: serviceLocator<ApiService>()),
-  // );
-
-  // Repositories
-  // UserLocalRepository depends on UserLocalDatasource to handle data operations.
+  // --- Repositories ---
+  // Register UserLocalRepository, depends on UserLocalDatasource
   serviceLocator.registerFactory<UserLocalRepository>(
         () => UserLocalRepository(
       userLocalDatasource: serviceLocator<UserLocalDatasource>(),
     ),
   );
+  // Register UserRemoteRepository, depends on UserRemoteDatasource
+  serviceLocator.registerFactory<UserRemoteRepository>(
+        () => UserRemoteRepository(
+      dataSource: serviceLocator<UserRemoteDatasource>(),
+    ),
+  );
 
+  // --- Repository Selection ---
+  // Register the concrete implementation for the IUserRepository interface.
+  // Here, we are choosing to use the UserRemoteRepository.
+  serviceLocator.registerFactory<IUserRepository>(
+        () => serviceLocator<UserRemoteRepository>(),
+  );
+
+  // --- Usecases ---
+  // Register UserLoginUsecase, depends on IUserRepository
   serviceLocator.registerFactory<UserLoginUsecase>(
-        () => UserLoginUsecase(userRepository: serviceLocator<UserLocalRepository>()),
+        () => UserLoginUsecase(
+      userRepository: serviceLocator<IUserRepository>(),
+    ),
+  );
+  // Register UserRegisterUsecase, depends on IUserRepository
+  serviceLocator.registerFactory<UserRegisterUsecase>(
+        () => UserRegisterUsecase(
+      userRepository: serviceLocator<IUserRepository>(),
+    ),
   );
 
-  // UserRegisterUseCase also depends on a UserRepository.
-  serviceLocator.registerFactory<UserRegisterUseCase>(
-        () => UserRegisterUseCase(userRepository: serviceLocator<UserLocalRepository>()),
-  );
-
-  // You would register other auth-related use cases (e.g., GetCurrentUserUsecase) here.
-
-  // View Models
-  // LoginViewModel depends on UserLoginUsecase to perform login logic.
+  // --- ViewModels ---
+  // Register LoginViewModel, depends on UserLoginUsecase
   serviceLocator.registerFactory<LoginViewModel>(
-        () => LoginViewModel(loginUserUseCase: serviceLocator<UserLoginUsecase>()),
+        () => LoginViewModel(
+      loginUserUseCase: serviceLocator<UserLoginUsecase>(),
+    ),
   );
-
-  // RegisterUserViewModel depends on UserRegisterUseCase to handle registration.
-  serviceLocator.registerFactory<RegisterUserViewModel>( // Correct class name
-        () => RegisterUserViewModel(serviceLocator<UserRegisterUseCase>()),
+  // Register RegisterUserViewModel, depends on UserRegisterUsecase
+  serviceLocator.registerFactory<RegisterUserViewModel>(
+        () => RegisterUserViewModel(serviceLocator<UserRegisterUsecase>()),
   );
 }

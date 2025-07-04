@@ -1,4 +1,4 @@
-// app.dart
+import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
@@ -23,7 +23,10 @@ class MyApp extends StatelessWidget {
         BlocProvider<LoginViewModel>(
           create: (_) => serviceLocator<LoginViewModel>(),
         ),
-        // Add other BlocProviders if needed
+        BlocProvider<RegisterUserViewModel>(
+          create: (_) => serviceLocator<RegisterUserViewModel>(),
+        ),
+
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
