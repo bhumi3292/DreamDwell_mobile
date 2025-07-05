@@ -7,7 +7,4 @@ class HiveTableConstant {
 
   static const int propertyTableId = 1;
   static const String propertyBox = 'propertyBox';
-
-
-
 }

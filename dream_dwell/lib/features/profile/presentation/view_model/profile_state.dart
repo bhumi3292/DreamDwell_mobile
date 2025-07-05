@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart'; // Assuming your UserEntity path
+import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
 
 /// Represents the state of the user profile view.
 class ProfileState extends Equatable {
@@ -29,8 +29,8 @@ class ProfileState extends Equatable {
   ProfileState copyWith({
     bool? isLoading,
     UserEntity? user,
-    String? errorMessage, // Make nullable for clearing
-    String? successMessage, // Make nullable for clearing
+    String? errorMessage, // Nullable to explicitly clear
+    String? successMessage, // Nullable to explicitly clear
     bool? isLogoutSuccess,
   }) {
     return ProfileState(

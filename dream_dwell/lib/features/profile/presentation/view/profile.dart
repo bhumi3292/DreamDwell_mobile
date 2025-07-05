@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart'; // Assuming UserEntity path
-import 'package:dream_dwell/cores/common/snackbar/snackbar.dart'; // For snackbar utility
+import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
+import 'package:dream_dwell/cores/common/snackbar/snackbar.dart';
 
 // Imports for your Profile BLoC
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_state.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
-
-// Assuming you have a login page route
-// import 'package:dream_dwell/features/auth/presentation/view/login.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -23,6 +20,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     // Dispatch an event to fetch user profile data when the page initializes.
+    // The context is passed to allow the ViewModel to show snackbars.
     context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
   }
 
@@ -35,8 +33,7 @@ class _ProfilePageState extends State<ProfilePage> {
         listener: (context, state) {
           // Listen for logout success to navigate to the login page
           if (state.isLogoutSuccess) {
-            // Optional: You can also show a snackbar here if not already handled by ViewModel
-            // showMySnackbar(context: context, content: state.successMessage!, isSuccess: true);
+            // SnackBar already shown by ViewModel based on your ViewModel code
             Navigator.of(context).pushReplacementNamed('/login'); // Navigate to login page
           }
           // Listen for errors from fetching profile or other operations
@@ -68,7 +65,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () {
-                        // Retry fetching profile
+                        // Retry fetching profile, pass context
                         context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
                       },
                       child: const Text("Retry"),
@@ -110,7 +107,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         children: [
                           const SizedBox(height: 8),
                           Text(
-                            user.fullName, // Dynamic full name
+                            user.fullName, // Dynamic full name from UserEntity
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -118,23 +115,23 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            user.email, // Dynamic email
+                            user.email, // Dynamic email from UserEntity
                             style: const TextStyle(
                               color: Colors.grey,
                             ),
                           ),
                           // Optionally display phone number or stakeholder
-                          if (user.phoneNumber.isNotEmpty) ...[
+                          if (user.phoneNumber != null && user.phoneNumber!.isNotEmpty) ...[
                             const SizedBox(height: 4),
                             Text(
-                              user.phoneNumber,
+                              user.phoneNumber!,
                               style: const TextStyle(color: Colors.grey),
                             ),
                           ],
-                          if (user.stakeholder.isNotEmpty) ...[
+                          if (user.stakeholder != null && user.stakeholder!.isNotEmpty) ...[
                             const SizedBox(height: 4),
                             Text(
-                              user.stakeholder,
+                              user.stakeholder!,
                               style: const TextStyle(color: Colors.grey),
                             ),
                           ],
@@ -189,8 +186,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           TextButton(
                             onPressed: () {
                               Navigator.pop(dialogContext); // Close dialog
-                              // Dispatch LogoutEvent to the BLoC
-                              // The BlocConsumer listener will handle the actual navigation
+                              // Dispatch LogoutEvent to the BLoC, pass context
                               context.read<ProfileViewModel>().add(LogoutEvent(context: context));
                             },
                             child: const Text("Yes"),

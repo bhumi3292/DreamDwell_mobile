@@ -1,19 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
-// These are imports from your project structure
 import 'package:dream_dwell/app/constant/api_endpoints.dart';
 import 'package:dream_dwell/cores/network/dio_error_interceptor.dart';
 import 'package:dream_dwell/cores/network/hive_service.dart';
 
 class ApiService {
   final Dio _dio;
-  // This is the dependency responsible for securely storing and retrieving
-  // data locally, including the authentication token.
-  final HiveService _hiveService;
+  final HiveService _hiveService; // Inject HiveService
 
   Dio get dio => _dio;
-
 
   ApiService(this._dio, this._hiveService) {
     _dio

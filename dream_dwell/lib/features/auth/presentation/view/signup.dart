@@ -1,10 +1,10 @@
 import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_event.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_state.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
-import 'package:dream_dwell/cores/common/snackbar/snackbar.dart'; // Make sure this path is correct
+import 'package:dream_dwell/cores/common/snackbar/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dream_dwell/view/homeView.dart'; // Assuming this is used after successful registration
+import 'package:dream_dwell/view/homeView.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -24,7 +24,7 @@ class _SignupState extends State<Signup> {
   final TextEditingController _confirmPasswordController = TextEditingController();
 
   String? _selectedStakeholder;
-  String? _errorMessage; // For local validation messages like password mismatch
+  String? _errorMessage;
   bool _passwordVisible = false;
   bool _confirmPasswordVisible = false;
 
