@@ -23,18 +23,65 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    // Dispatch an event to fetch user profile data when the page initializes.
+    // The context is passed to allow the ViewModel to show snackbars.
     context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
   }
 
-  Future<void> _pickImage(BuildContext context) async {
+  // --- Image Picker Functionality ---
+  // Method to show camera/gallery options as a bottom sheet
+  Future<void> _showImagePickerDialog(BuildContext context) async {
+    if (!mounted) return;
+
+    return showModalBottomSheet(
+      context: context,
+      builder: (BuildContext bc) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Photo Library'),
+                onTap: () {
+                  Navigator.of(bc).pop(); // Close the bottom sheet
+                  _pickImage(ImageSource.gallery, context); // Call pick image from gallery
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Camera'),
+                onTap: () {
+                  Navigator.of(bc).pop(); // Close the bottom sheet
+                  _pickImage(ImageSource.camera, context); // Call pick image from camera
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Method to pick image from chosen source (gallery or camera)
+  Future<void> _pickImage(ImageSource source, BuildContext context) async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      final XFile? pickedFile = await _picker.pickImage(source: source);
+      if (!mounted) return; // Check mounted after async operation
+
       if (pickedFile != null) {
         context.read<ProfileViewModel>().add(
           UploadProfilePictureEvent(imageFile: File(pickedFile.path), context: context),
         );
+      } else {
+        showMySnackbar(
+          context: context,
+          content: 'Image picking cancelled.',
+          isSuccess: false,
+        );
       }
     } catch (e) {
+      if (!mounted) return; // Check mounted after async operation
+
       showMySnackbar(
         context: context,
         content: 'Failed to pick image: ${e.toString()}',
@@ -42,6 +89,7 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
   }
+  // --- End Image Picker Functionality ---
 
   @override
   Widget build(BuildContext context) {
@@ -56,10 +104,25 @@ class _ProfilePageState extends State<ProfilePage> {
       body: BlocConsumer<ProfileViewModel, ProfileState>(
         listener: (context, state) {
           if (state.isLogoutSuccess) {
-            Navigator.of(context).pushReplacementNamed('/login');
+            if (mounted) {
+              Navigator.of(context).pushReplacementNamed('/login');
+            }
           }
           if (state.errorMessage != null && !state.isLoading) {
-            print("Profile Page Error: ${state.errorMessage}");
+            if (mounted) {
+              print("Profile Page Error: ${state.errorMessage}");
+              // showMySnackbar(context: context, content: state.errorMessage!, isSuccess: false); // Optional: if ViewModel doesn't handle it
+            }
+          }
+          if (!state.isUploadingImage && state.successMessage != null && state.successMessage!.contains('Profile picture updated')) {
+            if (mounted) {
+              showMySnackbar(
+                context: context,
+                content: 'Profile picture updated successfully!',
+                isSuccess: true,
+              );
+              context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
+            }
           }
         },
         builder: (context, state) {
@@ -100,83 +163,121 @@ class _ProfilePageState extends State<ProfilePage> {
             );
           }
 
-          return SingleChildScrollView(
+          return Padding( // Changed SingleChildScrollView back to Padding as per image (fixed height header)
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 40),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start, // Align content to start
               children: [
-                GestureDetector(
-                  onTap: () => _pickImage(context), // Tap to pick image
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CircleAvatar(
-                        radius: 70,
-                        backgroundColor: Colors.grey.shade200,
-                        // Use NetworkImage if profilePicture is available and not empty
-                        backgroundImage: (user.profilePicture != null && user.profilePicture!.isNotEmpty)
-                            ? NetworkImage(user.profilePicture!) as ImageProvider<Object>?
-                            : null, // No image, no backgroundImage
-                        child: (user.profilePicture == null || user.profilePicture!.isEmpty)
-                            ? Icon(
-                          Icons.person,
-                          size: 80,
-                          color: Colors.grey.shade600,
-                        )
-                            : null, // If image exists, no child icon
+                // Avatar & Profile Info Row - MATCHING THE IMAGE LAYOUT
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start, // Align children to the start of their cross axis
+                  children: [
+                    // Profile Picture with tap detection
+                    GestureDetector(
+                      onTap: () => _showImagePickerDialog(context),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 35, // Smaller radius as per image
+                            backgroundColor: Colors.grey.shade200,
+                            backgroundImage: (user.profilePicture != null && user.profilePicture!.isNotEmpty)
+                                ? NetworkImage(user.profilePicture!) as ImageProvider<Object>?
+                                : null,
+                            child: (user.profilePicture == null || user.profilePicture!.isEmpty)
+                                ? Icon(
+                              Icons.person,
+                              size: 40, // Adjusted size for smaller avatar
+                              color: Colors.grey.shade600,
+                            )
+                                : null,
+                          ),
+                          if (state.isUploadingImage)
+                            const CircularProgressIndicator(),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: CircleAvatar(
+                              radius: 12, // Smaller camera icon
+                              backgroundColor: Theme.of(context).primaryColor,
+                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 12),
+                            ),
+                          ),
+                        ],
                       ),
-                      if (state.isUploadingImage) // Show loading indicator during upload
-                        const CircularProgressIndicator(),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: CircleAvatar(
-                          radius: 20,
-                          backgroundColor: Theme.of(context).primaryColor,
-                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Card(
-                  elevation: 2,
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        _buildProfileInfoRow(
-                          icon: Icons.person_outline,
-                          label: 'Full Name',
-                          value: user.fullName,
-                        ),
-                        const Divider(),
-                        _buildProfileInfoRow(
-                          icon: Icons.email_outlined,
-                          label: 'Email',
-                          value: user.email,
-                        ),
-                        const Divider(),
-                        _buildProfileInfoRow(
-                          icon: Icons.phone,
-                          label: 'Phone Number',
-                          value: user.phoneNumber ?? 'N/A', // Handle nullable
-                        ),
-                        const Divider(),
-                        _buildProfileInfoRow(
-                          icon: Icons.assignment_ind_outlined,
-                          label: 'Stakeholder',
-                          value: user.stakeholder ?? 'N/A', // Handle nullable
-                        ),
-                      ],
                     ),
-                  ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 8), // Small space for alignment
+                          Text(
+                            user.fullName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user.email,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                            ),
+                          ),
+                          if (user.phoneNumber != null && user.phoneNumber!.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              user.phoneNumber!,
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                          if (user.stakeholder != null && user.stakeholder!.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              user.stakeholder!,
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.purple),
+                      onPressed: () {
+                        print("Edit button clicked");
+                        showMySnackbar(context: context, content: "Edit profile tapped!", isSuccess: true);
+                        // TODO: Dispatch an event to navigate to an edit profile page
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: () {
+
+                const SizedBox(height: 30),
+
+                // Profile Options
+                _buildListItem(Icons.settings, "Settings", onTap: () {
+                  print("Settings clicked");
+                  showMySnackbar(context: context, content: "Settings tapped!", isSuccess: true);
+                }),
+                _buildListItem(Icons.payment, "Payments", onTap: () {
+                  print("Payments clicked");
+                  showMySnackbar(context: context, content: "Payments tapped!", isSuccess: true);
+                }),
+                _buildListItem(Icons.receipt_long, "Billing Details", onTap: () {
+                  print("Billing Details clicked");
+                  showMySnackbar(context: context, content: "Billing Details tapped!", isSuccess: true);
+                }),
+                _buildListItem(Icons.person_outline, "My Account", onTap: () {
+                  print("My Account clicked");
+                  showMySnackbar(context: context, content: "My Account tapped!", isSuccess: true);
+                }),
+                _buildListItem(
+                  Icons.logout,
+                  "Logout",
+                  isLogout: true,
+                  onTap: () {
                     showDialog(
                       context: context,
                       builder: (dialogContext) => AlertDialog(
@@ -198,15 +299,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     );
                   },
-                  icon: const Icon(Icons.logout, color: Colors.white),
-                  label: const Text('Logout', style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -216,31 +308,26 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildProfileInfoRow({required IconData icon, required String label, required String value}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: Theme.of(context).primaryColor),
-          const SizedBox(width: 16),
-          Expanded(
-            flex: 1,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 16),
-              textAlign: TextAlign.end,
-            ),
-          ),
-        ],
+  /// Helper method to build consistent list tiles for profile options.
+  Widget _buildListItem(
+      IconData icon,
+      String title, {
+        bool isLogout = false,
+        VoidCallback? onTap,
+      }) {
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: Colors.grey.shade200,
+        child: Icon(icon, color: isLogout ? Colors.red : Colors.black),
       ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: FontWeight.w500,
+          color: isLogout ? Colors.red : Colors.black,
+        ),
+      ),
+      onTap: onTap,
     );
   }
 }

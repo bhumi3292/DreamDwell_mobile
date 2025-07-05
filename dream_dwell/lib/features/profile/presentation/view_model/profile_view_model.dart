@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dream_dwell/cores/common/snackbar/snackbar.dart';
+// import 'package:dream_dwell/cores/common/snackbar/snackbar.dart'; // No longer needed here if snackbar is handled in UI
 import 'package:dream_dwell/cores/network/hive_service.dart';
 import 'package:dream_dwell/features/auth/domain/use_case/user_get_current_usecase.dart';
 import 'package:dream_dwell/features/profile/domain/use_case/upload_profile_picture_usecase.dart';
@@ -31,11 +31,7 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
     result.fold(
           (failure) {
         emit(state.copyWith(isLoading: false, errorMessage: failure.message));
-        showMySnackbar(
-          context: event.context,
-          content: 'Failed to load profile: ${failure.message}',
-          isSuccess: false,
-        );
+        // Removed showMySnackbar here. UI will react to errorMessage.
       },
           (userEntity) {
         emit(state.copyWith(isLoading: false, user: userEntity));
@@ -52,24 +48,16 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
     result.fold(
           (failure) {
         emit(state.copyWith(isUploadingImage: false, errorMessage: failure.message));
-        showMySnackbar(
-          context: event.context,
-          content: 'Failed to upload image: ${failure.message}',
-          isSuccess: false,
-        );
+        // Removed showMySnackbar here. UI will react to errorMessage.
       },
           (newProfilePictureUrl) {
         final updatedUser = state.user?.copyWith(profilePicture: newProfilePictureUrl);
         emit(state.copyWith(
           isUploadingImage: false,
           user: updatedUser,
-          successMessage: 'Profile picture updated!',
+          successMessage: 'Profile picture updated!', // Set success message
         ));
-        showMySnackbar(
-          context: event.context,
-          content: 'Profile picture updated successfully!',
-          isSuccess: true,
-        );
+        // Removed showMySnackbar here. UI will react to successMessage.
       },
     );
   }
@@ -89,25 +77,17 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
       emit(state.copyWith(
         isLoading: false,
         isLogoutSuccess: true,
-        user: null,
+        user: null, // Clear user data on logout
         successMessage: "Logged out successfully!",
       ));
-      showMySnackbar(
-        context: event.context,
-        content: 'Logged out successfully!',
-        isSuccess: true,
-      );
+      // Removed showMySnackbar here. UI will react to isLogoutSuccess and successMessage.
     } catch (e) {
       emit(state.copyWith(
         isLoading: false,
         isLogoutSuccess: false,
         errorMessage: 'Logout failed: $e',
       ));
-      showMySnackbar(
-        context: event.context,
-        content: 'Logout failed: $e',
-        isSuccess: false,
-      );
+      // Removed showMySnackbar here. UI will react to errorMessage.
     }
   }
 }

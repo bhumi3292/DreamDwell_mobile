@@ -27,7 +27,6 @@ import 'package:dream_dwell/features/profile/presentation/view_model/profile_vie
 
 final serviceLocator = GetIt.instance;
 
-/// Initializes all application dependencies.
 Future<void> initDependencies() async {
   await _initHiveService();
   _initApiService();

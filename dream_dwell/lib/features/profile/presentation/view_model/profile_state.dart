@@ -6,7 +6,7 @@ class ProfileState extends Equatable {
   final bool isLoading;
   final String? errorMessage;
   final String? successMessage;
-  final bool isUploadingImage;
+  final bool isUploadingImage; // This is the property that exists
   final bool isLogoutSuccess;
 
   const ProfileState({
