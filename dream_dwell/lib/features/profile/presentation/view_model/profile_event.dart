@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart'; // Required for BuildContext
+import 'package:flutter/material.dart';
+import 'dart:io';
 
-/// Abstract base class for all profile-related events.
 abstract class ProfileEvent extends Equatable {
   const ProfileEvent();
 
@@ -9,23 +9,42 @@ abstract class ProfileEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Event to request fetching the current user's profile data.
-/// [context] is optional, useful for showing UI feedback like snackbars directly from the BLoC.
 class FetchUserProfileEvent extends ProfileEvent {
-  final BuildContext? context;
+  final BuildContext context;
 
-  const FetchUserProfileEvent({this.context});
+  const FetchUserProfileEvent({required this.context});
 
   @override
   List<Object?> get props => [context];
 }
 
-/// Event to initiate the user logout process.
-/// [context] is optional, useful for navigation or showing UI feedback.
-class LogoutEvent extends ProfileEvent {
-  final BuildContext? context;
+class UploadProfilePictureEvent extends ProfileEvent {
+  final File imageFile;
+  final BuildContext context;
 
-  const LogoutEvent({this.context});
+  const UploadProfilePictureEvent({
+    required this.imageFile,
+    required this.context,
+  });
+
+  @override
+  List<Object?> get props => [imageFile, context];
+}
+
+class UpdateLocalUserEvent extends ProfileEvent {
+  final String? profilePictureUrl;
+  final BuildContext context;
+
+  const UpdateLocalUserEvent({this.profilePictureUrl, required this.context});
+
+  @override
+  List<Object?> get props => [profilePictureUrl, context];
+}
+
+class LogoutEvent extends ProfileEvent {
+  final BuildContext context;
+
+  const LogoutEvent({required this.context});
 
   @override
   List<Object?> get props => [context];

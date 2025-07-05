@@ -1,30 +1,24 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dream_dwell/app/constant/hive_table_const.dart';
-import 'package:dream_dwell/features/auth/data/model/user_hive_model.dart'; // Ensure this path is correct
+import 'package:dream_dwell/features/auth/data/model/user_hive_model.dart';
 
 class HiveService {
   Future<void> init() async {
     final directory = await getApplicationDocumentsDirectory();
     final path = '${directory.path}/dream_dwell.db';
     Hive.init(path);
-    // Register the UserHiveModelAdapter if it hasn't been registered yet.
     if (!Hive.isAdapterRegistered(HiveTableConstant.userTableId)) {
       Hive.registerAdapter(UserHiveModelAdapter());
     }
   }
 
-  // ========== Authentication Token Management Methods ==========
-
-  /// Saves the authentication token to the Hive box.
   Future<void> saveToken(String token) async {
     final box = await Hive.openBox<String>(HiveTableConstant.userBox);
     await box.put('authToken', token);
     await box.close();
   }
 
-  /// Retrieves the authentication token from the Hive box.
-  /// Returns `null` if no token is found.
   Future<String?> getToken() async {
     final box = await Hive.openBox<String>(HiveTableConstant.userBox);
     final token = box.get('authToken');
@@ -32,21 +26,17 @@ class HiveService {
     return token;
   }
 
-  /// Deletes the stored authentication token from the Hive box.
-  /// This should typically be called during logout.
   Future<void> deleteToken() async {
     final box = await Hive.openBox<String>(HiveTableConstant.userBox);
     await box.delete('authToken');
     await box.close();
   }
 
-  // ========== Existing User Data Management Methods ==========
-
   Future<void> registerUser(UserHiveModel user) async {
     print(user);
     print("call hive register");
     final box = await Hive.openBox<UserHiveModel>(HiveTableConstant.userBox);
-    await box.put(user.userId, user); // Store user data with userId as key
+    await box.put(user.userId, user);
     await box.close();
   }
 
@@ -55,13 +45,11 @@ class HiveService {
     try {
       print("All users in box:");
       for (var user in box.values) {
-        print(user); // Assumes UserHiveModel has a useful toString()
+        print(user);
       }
-
       final customer = box.values.firstWhere(
             (element) => element.email == email && element.password == password,
       );
-
       print("Login success: $customer");
       return customer;
     } catch (e) {
@@ -89,6 +77,13 @@ class HiveService {
     final box = await Hive.openBox<UserHiveModel>(HiveTableConstant.userBox);
     await box.clear();
     await box.close();
+    print('HiveService: User data box cleared.');
+  }
+
+  Future<void> clearUserData() async {
+    await deleteToken();
+    print('HiveService: Auth token deleted.');
+    await clearAll();
   }
 
   Future<void> close() async {

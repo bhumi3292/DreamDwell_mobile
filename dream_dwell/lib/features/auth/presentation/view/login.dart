@@ -18,7 +18,7 @@ class _LoginState extends State<Login> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? selectedStakeholder;
-  final List<String> stakeholders = ['Tenants', 'Landlord'];
+  final List<String> stakeholders = ['Landlord', 'Tenant']; // Corrected roles
   bool _passwordVisible = false;
 
   void _handleLogin() {
@@ -62,11 +62,20 @@ class _LoginState extends State<Login> {
               MaterialPageRoute(builder: (context) => const HomeView()),
             );
           } else if (!state.isLoading && !state.isSuccess) {
-            showMySnackbar(
-              context: context,
-              content: '⚠️ Invalid credentials or missing stakeholder.',
-              isSuccess: false,
-            );
+            // Check if error message is not null before displaying
+            if (state.error != null) {
+              showMySnackbar(
+                context: context,
+                content: '⚠️ ${state.error}',
+                isSuccess: false,
+              );
+            } else {
+              showMySnackbar(
+                context: context,
+                content: '⚠️ Invalid credentials or missing stakeholder.',
+                isSuccess: false,
+              );
+            }
           }
         },
         builder: (context, state) {

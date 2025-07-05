@@ -1,9 +1,9 @@
-
 import 'package:dartz/dartz.dart';
 import 'package:dream_dwell/cores/error/failure.dart';
 import 'package:dream_dwell/features/auth/data/data_source/local_datasource/user_local_datasource.dart';
 import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
 import 'package:dream_dwell/features/auth/domain/repository/user_repository.dart';
+import 'dart:io'; // For File, if you want to add uploadProfilePicture to local repo
 
 class UserLocalRepository implements IUserRepository {
   final UserLocalDatasource _userLocalDatasource;
@@ -14,21 +14,25 @@ class UserLocalRepository implements IUserRepository {
 
   @override
   Future<Either<Failure, UserEntity>> getCurrentUser() async {
-    // TODO: implement loginStudent
-    throw UnimplementedError();
+    try {
+      final user = await _userLocalDatasource.getCurrentUser();
+      return Right(user);
+    } catch (e) {
+      return Left(LocalDatabaseFailure(message: "Failed to get current user from local: $e"));
+    }
   }
 
   @override
   Future<Either<Failure, String>> loginUser(
-      String username,
+      String email,
       String password,
       String stakeholder,
       ) async {
     try {
       final result = await _userLocalDatasource.loginUser(
-        username,
+        email,
         password,
-        stakeholder
+        stakeholder,
       );
       return Right(result);
     } catch (e) {
@@ -46,7 +50,10 @@ class UserLocalRepository implements IUserRepository {
     }
   }
 
-
-
-
+  @override
+  Future<Either<Failure, String>> uploadProfilePicture(File imageFile) {
+    // This is a local repository. It typically doesn't handle image uploads.
+    // You might return an UnimplementedError or a specific failure.
+    return Future.value(Left(LocalDatabaseFailure(message: "Image upload not supported by local repository")));
+  }
 }

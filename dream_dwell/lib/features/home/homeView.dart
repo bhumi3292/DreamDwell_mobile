@@ -44,7 +44,8 @@ class _HomeViewState extends State<HomeView> {
     // Dispatch an event to fetch the current user's profile data
     // This ensures that `ProfileViewModel` has the user data when `HeaderNav` needs it.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProfileViewModel>().add(const FetchUserProfileEvent());
+      // ⭐⭐⭐ FIX: Pass context to FetchUserProfileEvent ⭐⭐⭐
+      context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
     });
   }
 

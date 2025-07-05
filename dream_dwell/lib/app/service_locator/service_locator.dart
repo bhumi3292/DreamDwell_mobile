@@ -14,37 +14,34 @@ import 'package:dream_dwell/features/auth/domain/repository/user_repository.dart
 
 import 'package:dream_dwell/features/auth/domain/use_case/user_login_usecase.dart';
 import 'package:dream_dwell/features/auth/domain/use_case/user_register_usecase.dart';
-import 'package:dream_dwell/features/auth/domain/use_case/user_get_current_usecase.dart'; // NEW
+import 'package:dream_dwell/features/auth/domain/use_case/user_get_current_usecase.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
 
 // Profile
-import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart'; // NEW
+import 'package:dream_dwell/features/profile/domain/use_case/upload_profile_picture_usecase.dart'; // ⭐ NEW: Import UploadProfilePictureUsecase ⭐
+import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
+
+
+
 
 final serviceLocator = GetIt.instance;
 
 /// Initializes all application dependencies.
 Future<void> initDependencies() async {
-  // Initialize HiveService first as it's a core dependency
   await _initHiveService();
-  // Initialize ApiService which depends on Dio and HiveService
   _initApiService();
-  // Initialize authentication and profile related modules
   _initAuthAndProfileModules();
 }
 
-/// Initializes and registers the [HiveService] as a singleton.
 Future<void> _initHiveService() async {
   final hiveService = HiveService();
-  await hiveService.init(); // Ensure Hive is initialized before registration
+  await hiveService.init();
   serviceLocator.registerSingleton<HiveService>(hiveService);
 }
 
-/// Initializes and registers [Dio] and [ApiService].
 void _initApiService() {
-  // Register Dio as a lazy singleton, creating it only when first accessed
   serviceLocator.registerLazySingleton<Dio>(() => Dio());
-  // Register ApiService as a lazy singleton, injecting Dio and HiveService
   serviceLocator.registerLazySingleton<ApiService>(
         () => ApiService(
       serviceLocator<Dio>(),
@@ -53,75 +50,69 @@ void _initApiService() {
   );
 }
 
-/// Initializes and registers all authentication and profile-related dependencies.
 void _initAuthAndProfileModules() {
   // --- Data Sources ---
-  // Register UserLocalDatasource, depends on HiveService
   serviceLocator.registerFactory<UserLocalDatasource>(
         () => UserLocalDatasource(hiveService: serviceLocator<HiveService>()),
   );
-  // Register UserRemoteDatasource, depends on ApiService
   serviceLocator.registerFactory<UserRemoteDatasource>(
         () => UserRemoteDatasource(apiService: serviceLocator<ApiService>()),
   );
 
   // --- Repositories ---
-  // Register UserLocalRepository, depends on UserLocalDatasource
   serviceLocator.registerFactory<UserLocalRepository>(
         () => UserLocalRepository(
       userLocalDatasource: serviceLocator<UserLocalDatasource>(),
     ),
   );
-  // Register UserRemoteRepository, depends on UserRemoteDatasource
-  // Assuming 'RegisterRemoteRepository' is actually 'UserRemoteRepository'
+  // ⭐ CORE FIX: Provide 'hiveService' to UserRemoteRepository here ⭐
   serviceLocator.registerFactory<UserRemoteRepository>(
         () => UserRemoteRepository(
       dataSource: serviceLocator<UserRemoteDatasource>(),
+      hiveService: serviceLocator<HiveService>(), // ⭐ ADD THIS LINE ⭐
     ),
   );
 
   // --- Repository Selection (Concrete Implementation for Interface) ---
-  // Here, we are choosing to use the UserRemoteRepository as the primary
-  // implementation for IUserRepository.
   serviceLocator.registerFactory<IUserRepository>(
         () => serviceLocator<UserRemoteRepository>(),
   );
 
   // --- Usecases ---
-  // User Login Usecase
   serviceLocator.registerFactory<UserLoginUsecase>(
         () => UserLoginUsecase(
       userRepository: serviceLocator<IUserRepository>(),
     ),
   );
-  // User Register Usecase
   serviceLocator.registerFactory<UserRegisterUsecase>(
         () => UserRegisterUsecase(
       userRepository: serviceLocator<IUserRepository>(),
     ),
   );
-  // User Get Current Usecase (NEW)
   serviceLocator.registerFactory<UserGetCurrentUsecase>(
         () => UserGetCurrentUsecase(
       userRepository: serviceLocator<IUserRepository>(),
     ),
   );
+  serviceLocator.registerFactory<UploadProfilePictureUsecase>(
+        () => UploadProfilePictureUsecase(
+      userRepository: serviceLocator<IUserRepository>(),
+    ),
+  );
 
   // --- ViewModels ---
-  // Login ViewModel
   serviceLocator.registerFactory<LoginViewModel>(
         () => LoginViewModel(
       loginUserUseCase: serviceLocator<UserLoginUsecase>(),
     ),
   );
-  // Register ViewModel
   serviceLocator.registerFactory<RegisterUserViewModel>(
         () => RegisterUserViewModel(serviceLocator<UserRegisterUsecase>()),
   );
-  // Profile ViewModel (NEW)
   serviceLocator.registerFactory<ProfileViewModel>(
         () => ProfileViewModel(
       userGetCurrentUsecase: serviceLocator<UserGetCurrentUsecase>(),
+      uploadProfilePictureUsecase: serviceLocator<UploadProfilePictureUsecase>(),
       hiveService: serviceLocator<HiveService>(),
     ),
   );

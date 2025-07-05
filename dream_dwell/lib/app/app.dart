@@ -15,7 +15,14 @@ import 'package:dream_dwell/features/dashbaord/dashboard.dart'; // Make sure thi
 // ViewModels
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
-import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart'; // NEW
+import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
+
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initDependencies(); // Initialize all dependencies
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -24,21 +31,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<LoginViewModel>(
-          create: (_) => serviceLocator<LoginViewModel>(),
-        ),
-        BlocProvider<RegisterUserViewModel>(
-          create: (_) => serviceLocator<RegisterUserViewModel>(),
-        ),
-        // Provide ProfileViewModel to the widget tree
-        BlocProvider<ProfileViewModel>( // NEW
-          create: (_) => serviceLocator<ProfileViewModel>(),
-        ),
+        BlocProvider(create: (_) => serviceLocator<LoginViewModel>()),
+        BlocProvider(create: (_) => serviceLocator<RegisterUserViewModel>()),
+        BlocProvider(create: (_) => serviceLocator<ProfileViewModel>()),
       ],
       child: GetMaterialApp(
+        title: 'DreamDwell',
         debugShowCheckedModeBanner: false,
         theme: getApplication(), // This uses the theme from splash_screen/presentation/widgets/theme.dart
-        initialRoute: '/',
+        initialRoute: '/login', // Set your initial route
         getPages: [
           GetPage(name: '/', page: () => const SplashScreen()),
           GetPage(name: '/login', page: () => const Login()),

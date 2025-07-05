@@ -11,19 +11,23 @@ class UserApiModel extends Equatable {
 
   final String fullName;
   final String email;
-  final String phoneNumber;
-  final String stakeholder;
-  final String password;
+  final String? phoneNumber;
+  @JsonKey(name: 'role')
+  final String? stakeholder;
+  final String? password;
   final String? confirmPassword;
+  final String? profilePicture;
+
 
   const UserApiModel({
     this.userId,
     required this.fullName,
     required this.email,
-    required this.phoneNumber,
-    required this.stakeholder,
-    required this.password,
+    this.phoneNumber,
+    this.stakeholder,
+    this.password,
     this.confirmPassword,
+    this.profilePicture,
   });
 
 
@@ -33,28 +37,30 @@ class UserApiModel extends Equatable {
 
   Map<String, dynamic> toJson() => _$UserApiModelToJson(this);
 
+  // When converting FROM ApiModel TO UserEntity (e.g., after fetching profile)
   UserEntity toEntity() {
     return UserEntity(
-      userId: userId ?? '',
+      userId: userId,
       fullName: fullName,
       email: email,
       phoneNumber: phoneNumber,
       stakeholder: stakeholder,
-      password: password,
-      confirmPassword: confirmPassword ?? '',
+      password: null,
+      confirmPassword: null,
+      profilePicture: profilePicture,
     );
   }
 
-  //Create from domain entity
   factory UserApiModel.fromEntity(UserEntity entity) {
     return UserApiModel(
-      userId: (entity.userId?.isEmpty ?? true) ? null : entity.userId,
+      userId: entity.userId,
       fullName: entity.fullName,
       email: entity.email,
       phoneNumber: entity.phoneNumber,
       stakeholder: entity.stakeholder,
       password: entity.password,
-      confirmPassword: entity.confirmPassword.isEmpty ? null : entity.confirmPassword,
+      confirmPassword: entity.confirmPassword,
+      profilePicture: entity.profilePicture,
     );
   }
 
@@ -67,5 +73,6 @@ class UserApiModel extends Equatable {
     stakeholder,
     password,
     confirmPassword,
+    profilePicture,
   ];
 }

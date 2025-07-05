@@ -5,6 +5,7 @@ import 'package:dream_dwell/cores/error/failure.dart';
 import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
 import 'package:dream_dwell/features/auth/domain/repository/user_repository.dart';
 
+
 class RegisterUserParams extends Equatable {
   final String fullName;
   final String email;
@@ -45,7 +46,7 @@ class UserRegisterUsecase
   Future<Either<Failure, void>> call(RegisterUserParams params) {
     print("calling from register usecase");
 
-
+    // When registering, password and confirmPassword are required
     final userEntity = UserEntity(
         fullName: params.fullName,
         email: params.email,

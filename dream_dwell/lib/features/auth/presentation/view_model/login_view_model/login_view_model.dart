@@ -8,26 +8,23 @@ class LoginViewModel extends Bloc<LoginEvent, LoginState> {
   final UserLoginUsecase loginUserUseCase;
 
   LoginViewModel({required this.loginUserUseCase}) : super(LoginState.initial()) {
-    // Add the event handler registration here
     on<LoginWithEmailAndPasswordEvent>(_onLoginWithEmailAndPassword);
   }
 
-  // Define the actual event handler method here
   void _onLoginWithEmailAndPassword(
       LoginWithEmailAndPasswordEvent event,
       Emitter<LoginState> emit,
       ) async {
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, error: null)); // Clear previous error
 
     try {
       final result = await loginUserUseCase.call(
         LoginParams(
           email: event.username,
           password: event.password,
-          stakeholder: 'user', // or event.stakeholder if available
+          stakeholder: event.stakeholder, // Use the stakeholder from the event
         ),
       );
-      print(result);
 
       result.fold(
             (error) {
@@ -36,8 +33,6 @@ class LoginViewModel extends Bloc<LoginEvent, LoginState> {
             isSuccess: false,
             error: error.message,
           ));
-
-          // Show failure snackbar
           ScaffoldMessenger.of(event.context).showSnackBar(
             SnackBar(
               content: Text('Login failed: ${error.message}'),
@@ -50,16 +45,12 @@ class LoginViewModel extends Bloc<LoginEvent, LoginState> {
             isLoading: false,
             isSuccess: true,
           ));
-
-          // Show success snackbar
           ScaffoldMessenger.of(event.context).showSnackBar(
             const SnackBar(
               content: Text('Login successful!'),
               backgroundColor: Colors.green,
             ),
           );
-
-          // Navigate to home screen
           Navigator.pushReplacementNamed(event.context, '/home');
         },
       );
@@ -69,7 +60,6 @@ class LoginViewModel extends Bloc<LoginEvent, LoginState> {
         isSuccess: false,
         error: e.toString(),
       ));
-
       ScaffoldMessenger.of(event.context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),

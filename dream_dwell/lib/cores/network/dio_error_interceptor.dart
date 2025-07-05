@@ -8,7 +8,6 @@ class DioErrorInterceptor extends Interceptor {
     if (err.response != null) {
       final statusCode = err.response?.statusCode ?? 0;
       if (statusCode >= 300) {
-        // Attempt to get message from response data, fallback to status message
         errorMessage = err.response?.data['message']?.toString() ??
             err.response?.statusMessage ??
             'Unknown error';
@@ -16,13 +15,13 @@ class DioErrorInterceptor extends Interceptor {
         errorMessage = 'Something went wrong';
       }
     } else {
-      errorMessage = 'Connection error. Check your internet connection.'; // More specific error
+      errorMessage = 'Connection error. Check your internet connection.';
     }
 
     final customError = DioException(
       requestOptions: err.requestOptions,
       response: err.response,
-      error: errorMessage, // Set the custom error message
+      error: errorMessage,
       type: err.type,
     );
 

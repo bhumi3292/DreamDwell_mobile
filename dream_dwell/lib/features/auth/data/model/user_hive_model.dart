@@ -19,38 +19,42 @@ class UserHiveModel extends Equatable {
   final String email;
 
   @HiveField(3)
-  final String phoneNumber;
+  final String? phoneNumber; // Made nullable to match UserEntity
 
   @HiveField(4)
-  final String stakeholder;
+  final String? stakeholder; // Made nullable to match UserEntity
 
   @HiveField(5)
-  final String password;
+  final String password; // Keep for local login logic if needed
 
   @HiveField(6)
-  final String confirmPassword;
+  final String confirmPassword; // Keep for local login logic if needed
+
+  @HiveField(7)
+  final String? profilePicture;
+
 
   UserHiveModel({
     String? userId,
     required this.fullName,
     required this.email,
-    required this.phoneNumber,
-    required this.stakeholder,
+    this.phoneNumber,
+    this.stakeholder,
     required this.password,
     required this.confirmPassword,
+    this.profilePicture,
   }) : userId = userId ?? const Uuid().v4();
 
-  // Initial Constructor
   const UserHiveModel.initial()
       : userId = '',
         fullName = '',
         email = '',
-        phoneNumber = '',
-        stakeholder = '',
+        phoneNumber = null,
+        stakeholder = null,
         password = '',
-        confirmPassword = '';
+        confirmPassword = '',
+        profilePicture = null;
 
-  // From Entity
   factory UserHiveModel.fromEntity(UserEntity entity) {
     return UserHiveModel(
       userId: entity.userId,
@@ -58,12 +62,13 @@ class UserHiveModel extends Equatable {
       email: entity.email,
       phoneNumber: entity.phoneNumber,
       stakeholder: entity.stakeholder,
-      password: entity.password,
-      confirmPassword: entity.confirmPassword,
+      // Pass password/confirmPassword from entity, assuming they are available for local storage
+      password: entity.password ?? '',
+      confirmPassword: entity.confirmPassword ?? '',
+      profilePicture: entity.profilePicture,
     );
   }
 
-  // To Entity
   UserEntity toEntity() {
     return UserEntity(
       userId: userId,
@@ -73,6 +78,7 @@ class UserHiveModel extends Equatable {
       stakeholder: stakeholder,
       password: password,
       confirmPassword: confirmPassword,
+      profilePicture: profilePicture,
     );
   }
 
@@ -85,5 +91,6 @@ class UserHiveModel extends Equatable {
     stakeholder,
     password,
     confirmPassword,
+    profilePicture,
   ];
 }

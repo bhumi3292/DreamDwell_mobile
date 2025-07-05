@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
 import 'package:dream_dwell/cores/common/snackbar/snackbar.dart';
+import 'package:image_picker/image_picker.dart'; // For image picking
+import 'dart:io'; // For File
 
 // Imports for your Profile BLoC
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart';
@@ -16,38 +18,54 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final ImagePicker _picker = ImagePicker(); // Initialize ImagePicker
+
   @override
   void initState() {
     super.initState();
-    // Dispatch an event to fetch user profile data when the page initializes.
-    // The context is passed to allow the ViewModel to show snackbars.
     context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
+  }
+
+  Future<void> _pickImage(BuildContext context) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        context.read<ProfileViewModel>().add(
+          UploadProfilePictureEvent(imageFile: File(pickedFile.path), context: context),
+        );
+      }
+    } catch (e) {
+      showMySnackbar(
+        context: context,
+        content: 'Failed to pick image: ${e.toString()}',
+        isSuccess: false,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // Use BlocConsumer to listen to state changes and rebuild the UI
+      appBar: AppBar(
+        title: const Text('Profile'),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+      ),
       body: BlocConsumer<ProfileViewModel, ProfileState>(
         listener: (context, state) {
-          // Listen for logout success to navigate to the login page
           if (state.isLogoutSuccess) {
-            // SnackBar already shown by ViewModel based on your ViewModel code
-            Navigator.of(context).pushReplacementNamed('/login'); // Navigate to login page
+            Navigator.of(context).pushReplacementNamed('/login');
           }
-          // Listen for errors from fetching profile or other operations
           if (state.errorMessage != null && !state.isLoading) {
-            // SnackBar already shown by ViewModel, but can add more logic here if needed
             print("Profile Page Error: ${state.errorMessage}");
           }
         },
         builder: (context, state) {
-          // Show loading indicator
           if (state.isLoading && state.user == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          // Show error message if loading failed and no user data
           if (state.errorMessage != null && state.user == null) {
             return Center(
               child: Padding(
@@ -65,7 +83,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () {
-                        // Retry fetching profile, pass context
                         context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
                       },
                       child: const Text("Retry"),
@@ -75,118 +92,104 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             );
           }
-          // Display profile content when data is loaded
-          final UserEntity? user = state.user; // Get user data from state
+          final UserEntity? user = state.user;
 
-          // Fallback for when user is null (e.g., initial state before fetch, or after error/logout)
           if (user == null) {
             return const Center(
               child: Text("No profile data available. Please log in."),
             );
           }
 
-          return Padding(
+          return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 40),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Avatar & Profile Info Row
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const CircleAvatar(
-                      radius: 35,
-                      // TODO: Implement dynamic profile image loading if available in UserEntity
-                      // For now, using a placeholder or default image
-                      backgroundImage: AssetImage("assets/images/google.png"), // Default image
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 8),
-                          Text(
-                            user.fullName, // Dynamic full name from UserEntity
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            user.email, // Dynamic email from UserEntity
-                            style: const TextStyle(
-                              color: Colors.grey,
-                            ),
-                          ),
-                          // Optionally display phone number or stakeholder
-                          if (user.phoneNumber != null && user.phoneNumber!.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              user.phoneNumber!,
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                          if (user.stakeholder != null && user.stakeholder!.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              user.stakeholder!,
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                        ],
+                GestureDetector(
+                  onTap: () => _pickImage(context), // Tap to pick image
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: 70,
+                        backgroundColor: Colors.grey.shade200,
+                        // Use NetworkImage if profilePicture is available and not empty
+                        backgroundImage: (user.profilePicture != null && user.profilePicture!.isNotEmpty)
+                            ? NetworkImage(user.profilePicture!) as ImageProvider<Object>?
+                            : null, // No image, no backgroundImage
+                        child: (user.profilePicture == null || user.profilePicture!.isEmpty)
+                            ? Icon(
+                          Icons.person,
+                          size: 80,
+                          color: Colors.grey.shade600,
+                        )
+                            : null, // If image exists, no child icon
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.purple),
-                      onPressed: () {
-                        print("Edit button clicked");
-                        // TODO: Dispatch an event to navigate to an edit profile page
-                      },
-                    ),
-                  ],
+                      if (state.isUploadingImage) // Show loading indicator during upload
+                        const CircularProgressIndicator(),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Theme.of(context).primaryColor,
+                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-
-                const SizedBox(height: 30),
-
-                // Profile Options
-                _buildListItem(Icons.settings, "Settings", onTap: () {
-                  print("Settings clicked");
-                  // TODO: Implement navigation to settings
-                }),
-                _buildListItem(Icons.payment, "Payments", onTap: () {
-                  print("Payments clicked");
-                  // TODO: Implement navigation to payments
-                }),
-                _buildListItem(Icons.receipt_long, "Billing Details", onTap: () {
-                  print("Billing Details clicked");
-                  // TODO: Implement navigation to billing details
-                }),
-                _buildListItem(Icons.person_outline, "My Account", onTap: () {
-                  print("My Account clicked");
-                  // TODO: Implement navigation to my account details
-                }),
-                _buildListItem(
-                  Icons.logout,
-                  "Logout",
-                  isLogout: true,
-                  onTap: () {
-                    // Show confirmation dialog on logout tap
+                const SizedBox(height: 20),
+                Card(
+                  elevation: 2,
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        _buildProfileInfoRow(
+                          icon: Icons.person_outline,
+                          label: 'Full Name',
+                          value: user.fullName,
+                        ),
+                        const Divider(),
+                        _buildProfileInfoRow(
+                          icon: Icons.email_outlined,
+                          label: 'Email',
+                          value: user.email,
+                        ),
+                        const Divider(),
+                        _buildProfileInfoRow(
+                          icon: Icons.phone,
+                          label: 'Phone Number',
+                          value: user.phoneNumber ?? 'N/A', // Handle nullable
+                        ),
+                        const Divider(),
+                        _buildProfileInfoRow(
+                          icon: Icons.assignment_ind_outlined,
+                          label: 'Stakeholder',
+                          value: user.stakeholder ?? 'N/A', // Handle nullable
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (dialogContext) => AlertDialog( // Use dialogContext to avoid conflicts
+                      builder: (dialogContext) => AlertDialog(
                         title: const Text("Confirm Logout"),
                         content: const Text("Are you sure you want to exit?"),
                         actions: [
                           TextButton(
-                            onPressed: () => Navigator.pop(dialogContext), // Close dialog
+                            onPressed: () => Navigator.pop(dialogContext),
                             child: const Text("Cancel"),
                           ),
                           TextButton(
                             onPressed: () {
-                              Navigator.pop(dialogContext); // Close dialog
-                              // Dispatch LogoutEvent to the BLoC, pass context
+                              Navigator.pop(dialogContext);
                               context.read<ProfileViewModel>().add(LogoutEvent(context: context));
                             },
                             child: const Text("Yes"),
@@ -195,6 +198,15 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     );
                   },
+                  icon: const Icon(Icons.logout, color: Colors.white),
+                  label: const Text('Logout', style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -204,26 +216,31 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  /// Helper method to build consistent list tiles for profile options.
-  Widget _buildListItem(
-      IconData icon,
-      String title, {
-        bool isLogout = false,
-        VoidCallback? onTap,
-      }) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: Colors.grey.shade200,
-        child: Icon(icon, color: isLogout ? Colors.red : Colors.black),
+  Widget _buildProfileInfoRow({required IconData icon, required String label, required String value}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 1,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 16),
+              textAlign: TextAlign.end,
+            ),
+          ),
+        ],
       ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.w500,
-          color: isLogout ? Colors.red : Colors.black,
-        ),
-      ),
-      onTap: onTap,
     );
   }
 }
