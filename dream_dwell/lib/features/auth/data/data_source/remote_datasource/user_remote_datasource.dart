@@ -93,13 +93,19 @@ class UserRemoteDatasource implements IUserDataSource {
   Future<String> uploadProfilePicture(File imageFile) async {
     try {
       String fileName = imageFile.path.split('/').last;
+
       FormData formData = FormData.fromMap({
-        "profilePicture": await MultipartFile.fromFile(imageFile.path, filename: fileName),
+        'profilePicture': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: fileName,
+        ),
       });
+
+      print(formData.fields);
 
       final response = await _apiService.dio.post(
         ApiEndpoints.uploadProfilePicture,
-        data: formData,
+        data:formData,
         options: Options(
           headers: {
             'Content-Type': 'multipart/form-data',

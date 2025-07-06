@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
@@ -179,18 +180,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         alignment: Alignment.center,
                         children: [
                           CircleAvatar(
-                            radius: 35, // Smaller radius as per image
-                            backgroundColor: Colors.grey.shade200,
-                            backgroundImage: (user.profilePicture != null && user.profilePicture!.isNotEmpty)
-                                ? NetworkImage(user.profilePicture!) as ImageProvider<Object>?
-                                : null,
-                            child: (user.profilePicture == null || user.profilePicture!.isEmpty)
-                                ? Icon(
-                              Icons.person,
-                              size: 40, // Adjusted size for smaller avatar
-                              color: Colors.grey.shade600,
-                            )
-                                : null,
+                            radius: 40,
+                            backgroundImage: CachedNetworkImageProvider(
+                              "http://10.0.2.2:3001${user.profilePicture}",
+                            ),
                           ),
                           if (state.isUploadingImage)
                             const CircularProgressIndicator(),
