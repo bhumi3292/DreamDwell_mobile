@@ -34,7 +34,7 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
         // Removed showMySnackbar here. UI will react to errorMessage.
       },
           (userEntity) {
-        emit(state.copyWith(isLoading: false, user: userEntity));
+        emit(state.copyWith(isLoading: false, user: userEntity,isLogoutSuccess: false,errorMessage: null,isUploadingImage: true,successMessage: "image uploaded success"));
       },
     );
   }
@@ -47,19 +47,44 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
 
     result.fold(
           (failure) {
-        emit(state.copyWith(isUploadingImage: false, errorMessage: failure.message));
-        // Removed showMySnackbar here. UI will react to errorMessage.
+        emit(state.copyWith(
+          isUploadingImage: false, 
+          errorMessage: failure.message,
+          isLoading: false
+        ));
       },
           (newProfilePictureUrl) {
+        // Update the user with the new profile picture URL
         final updatedUser = state.user?.copyWith(profilePicture: newProfilePictureUrl);
         emit(state.copyWith(
           isUploadingImage: false,
           user: updatedUser,
-          successMessage: 'Profile picture updated!', // Set success message
+          successMessage: 'Profile picture updated successfully!', 
+          isLogoutSuccess: false,
+          isLoading: false
         ));
-        // Removed showMySnackbar here. UI will react to successMessage.
+        
+        // Refresh user data to get the latest information
+        _refreshUserData(emit);
       },
     );
+  }
+
+  Future<void> _refreshUserData(Emitter<ProfileState> emit) async {
+    try {
+      final result = await userGetCurrentUsecase.call();
+      result.fold(
+        (failure) {
+          // Don't emit error here as the upload was successful
+          print('Failed to refresh user data: ${failure.message}');
+        },
+        (userEntity) {
+          emit(state.copyWith(user: userEntity));
+        },
+      );
+    } catch (e) {
+      print('Error refreshing user data: $e');
+    }
   }
 
   void _onUpdateLocalUser(UpdateLocalUserEvent event, Emitter<ProfileState> emit) {
