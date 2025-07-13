@@ -4,25 +4,52 @@ class ApiEndpoints {
   static const Duration connectionTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 
-  // IMPORTANT: Use your actual server IP or domain.
-  // For Android emulator, 'http://10.0.2.2:3001' is common.
-  // For iOS simulator/physical device, use your machine's local IP (e.g., 'http://192.168.1.X:3001').
-  static const String serverAddress = "http://10.0.2.2:3001";
+  static const String androidEmulatorAddress = "http://10.0.2.2:3001";
+  static const String iosSimulatorAddress = "http://localhost:3001";
+  static const String localNetworkAddress = "http://172.25.0.125:3001"; // Updated to correct IP address
+
+  // Choose one of these options:
+  // Option 1: Use network IP address (for physical devices or network testing)
+  static const String serverAddress = androidEmulatorAddress;
+
+  // Option 2: Use Android emulator address (for Android emulator testing)
+  // static const String serverAddress = androidEmulatorAddress;
 
   static const String baseUrl = "$serverAddress/api/";
-  static const String imageUrl = "$serverAddress/uploads/"; // For serving uploaded images
+  static const String imageUrl = "$serverAddress/";
 
   // ---------- Auth ----------
   static const String register = "${baseUrl}auth/register";
   static const String login = "${baseUrl}auth/login";
-  static const String getCurrentUser = "${baseUrl}auth/me"; // Endpoint to get current user profile
+  static const String getCurrentUser = "${baseUrl}auth/me";
 
   // ---------- User ----------
   static const String updateUser = "${baseUrl}user/update/";
   static const String deleteUser = "${baseUrl}user/delete/";
 
   // ---------- Profile ----------
-  // Ensure your backend has this endpoint for profile picture upload
-  // Based on your backend, this might be a separate route like '/upload/profile-picture'
-  static const String uploadProfilePicture = "${baseUrl}auth/uploadImage"; // Assuming this is the correct endpoint
+  static const String uploadProfilePicture = "${baseUrl}auth/uploadImage";
+
+  // ---------- Property ----------
+  static const String createProperty = "${baseUrl}properties";
+  static const String getAllProperties = "${baseUrl}properties"; // GET
+  static const String getPropertyById = "${baseUrl}properties/"; // GET by ID (append ID)
+  static const String updateProperty = "${baseUrl}properties/"; // PUT by ID (append ID)
+  static const String deleteProperty = "${baseUrl}properties/"; // DELETE by ID (append ID)
+
+  // ---------- Category ----------
+  static const String createCategory = "${baseUrl}categories"; // POST
+  static const String getAllCategories = "${baseUrl}categories"; // GET
+  static const String getCategoryById = "${baseUrl}categories/"; // GET by ID
+  static const String updateCategory = "${baseUrl}categories/"; // PUT by ID
+  static const String deleteCategory = "${baseUrl}categories/"; // DELETE by ID
+
+  // ---------- Blog ----------
+  static const String getAllBlogs = "${baseUrl}blogs"; // GET
+  static const String getBlogById = "${baseUrl}blogs/"; // GET by ID (append ID)
+  static const String createBlog = "${baseUrl}blogs"; // POST
+  static const String updateBlog = "${baseUrl}blogs/"; // PUT by ID (append ID)
+  static const String deleteBlog = "${baseUrl}blogs/"; // DELETE by ID (append ID)
+  static const String likeBlog = "${baseUrl}blogs/"; // POST like (append ID + /like)
+  static const String getFeaturedBlogs = "${baseUrl}blogs/featured"; // GET
 }
