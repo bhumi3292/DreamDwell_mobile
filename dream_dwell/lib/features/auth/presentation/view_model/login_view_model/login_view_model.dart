@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter/material.dart';
 import 'package:dream_dwell/features/auth/domain/use_case/user_login_usecase.dart';
 import 'login_event.dart';
 import 'login_state.dart';
@@ -9,6 +8,8 @@ class LoginViewModel extends Bloc<LoginEvent, LoginState> {
 
   LoginViewModel({required this.loginUserUseCase}) : super(LoginState.initial()) {
     on<LoginWithEmailAndPasswordEvent>(_onLoginWithEmailAndPassword);
+    on<NavigateToRegisterViewEvent>(_onNavigateToRegisterView);
+    on<NavigateToHomeViewEvent>(_onNavigateToHomeView);
   }
 
   void _onLoginWithEmailAndPassword(
@@ -22,36 +23,25 @@ class LoginViewModel extends Bloc<LoginEvent, LoginState> {
         LoginParams(
           email: event.username,
           password: event.password,
-          stakeholder: event.stakeholder, // Use the stakeholder from the event
+          stakeholder: event.stakeholder,
         ),
       );
 
       result.fold(
-            (error) {
+        (error) {
           emit(state.copyWith(
             isLoading: false,
             isSuccess: false,
             error: error.message,
           ));
-          ScaffoldMessenger.of(event.context).showSnackBar(
-            SnackBar(
-              content: Text('Login failed: ${error.message}'),
-              backgroundColor: Colors.red,
-            ),
-          );
         },
-            (success) {
+        (success) {
           emit(state.copyWith(
             isLoading: false,
             isSuccess: true,
+            shouldNavigateToHome: true,
           ));
-          ScaffoldMessenger.of(event.context).showSnackBar(
-            const SnackBar(
-              content: Text('Login successful!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.pushReplacementNamed(event.context, '/home');
+
         },
       );
     } catch (e) {
@@ -60,12 +50,20 @@ class LoginViewModel extends Bloc<LoginEvent, LoginState> {
         isSuccess: false,
         error: e.toString(),
       ));
-      ScaffoldMessenger.of(event.context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
+  }
+
+  void _onNavigateToRegisterView(
+      NavigateToRegisterViewEvent event,
+      Emitter<LoginState> emit,
+      ) {
+    emit(state.copyWith(shouldNavigateToRegister: true));
+  }
+
+  void _onNavigateToHomeView(
+      NavigateToHomeViewEvent event,
+      Emitter<LoginState> emit,
+      ) {
+    emit(state.copyWith(shouldNavigateToHome: true));
   }
 }

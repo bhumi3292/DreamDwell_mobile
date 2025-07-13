@@ -30,7 +30,6 @@ class _LoginState extends State<Login> {
       if (stakeholder != null) {
         context.read<LoginViewModel>().add(
           LoginWithEmailAndPasswordEvent(
-            context: context,
             username: email,
             password: password,
             stakeholder: stakeholder,
@@ -55,27 +54,30 @@ class _LoginState extends State<Login> {
       backgroundColor: Colors.white,
       body: BlocConsumer<LoginViewModel, LoginState>(
         listener: (context, state) {
-          if (state.isSuccess) {
-            showMySnackbar(context: context, content: 'Login successful!', isSuccess: true);
+          // Handle navigation based on state
+          if (state.shouldNavigateToHome) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const HomeView()),
             );
-          } else if (!state.isLoading && !state.isSuccess) {
-            // Check if error message is not null before displaying
-            if (state.error != null) {
-              showMySnackbar(
-                context: context,
-                content: '⚠️ ${state.error}',
-                isSuccess: false,
-              );
-            } else {
-              showMySnackbar(
-                context: context,
-                content: '⚠️ Invalid credentials or missing stakeholder.',
-                isSuccess: false,
-              );
-            }
+          }
+          
+          if (state.shouldNavigateToRegister) {
+            Navigator.pushReplacementNamed(context, '/signup');
+          }
+          
+          // Handle success state
+          if (state.isSuccess && !state.isLoading) {
+            showMySnackbar(context: context, content: 'Login successful!', isSuccess: true);
+          }
+          
+          // Handle error state
+          if (!state.isLoading && !state.isSuccess && state.error != null) {
+            showMySnackbar(
+              context: context,
+              content: '⚠️ ${state.error}',
+              isSuccess: false,
+            );
           }
         },
         builder: (context, state) {
@@ -192,7 +194,7 @@ class _LoginState extends State<Login> {
                         const Text("Don't have an account?"),
                         TextButton(
                           onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/signup');
+                            context.read<LoginViewModel>().add(NavigateToRegisterViewEvent());
                           },
                           child: Text(
                             "Signup",
