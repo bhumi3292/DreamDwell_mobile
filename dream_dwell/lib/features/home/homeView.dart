@@ -14,7 +14,7 @@ import 'package:dream_dwell/features/dashbaord/dashboard.dart';
 import 'package:dream_dwell/view/explore.dart';
 import 'package:dream_dwell/view/favourite.dart';
 import 'package:dream_dwell/view/booking.dart';
-import 'package:dream_dwell/features/profile/presentation/view/profile.dart'; // Ensure this path is correct
+import 'package:dream_dwell/features/profile/presentation/view/profile.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -26,13 +26,11 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   int _selectedIndex = 0;
 
-  // List of pages to be displayed in the BottomNavigationBar
   late final List<Widget> pages;
 
   @override
   void initState() {
     super.initState();
-    // Initialize pages here if they depend on context or other properties
     pages = [
       DashboardPage(onSeeAllTap: () => _onItemTapped(1)),
       const ExplorePage(),
@@ -41,15 +39,11 @@ class _HomeViewState extends State<HomeView> {
       const ProfilePage(),
     ];
 
-    // Dispatch an event to fetch the current user's profile data
-    // This ensures that `ProfileViewModel` has the user data when `HeaderNav` needs it.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // ⭐⭐⭐ FIX: Pass context to FetchUserProfileEvent ⭐⭐⭐
       context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
     });
   }
 
-  /// Handles tap events on the BottomNavigationBar items.
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -65,6 +59,9 @@ class _HomeViewState extends State<HomeView> {
         preferredSize: const Size.fromHeight(kToolbarHeight),
         child: BlocBuilder<ProfileViewModel, ProfileState>(
           builder: (context, state) {
+            // Debug: Print state information
+            debugPrint("ProfileState - isLoading: ${state.isLoading}, user: ${state.user?.email}, stakeholder: ${state.user?.stakeholder}");
+            
             // Pass the user entity from the ProfileState to the HeaderNav.
             // The HeaderNav will then use this user object to decide whether to show the icon.
             return HeaderNav(user: state.user);
@@ -85,6 +82,7 @@ class _HomeViewState extends State<HomeView> {
           BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
           BottomNavigationBarItem(icon: Icon(Icons.favorite_outlined), label: 'Favourite'),
           BottomNavigationBarItem(icon: Icon(Icons.book_online), label: 'Booking'),
+          BottomNavigationBarItem(icon: Icon(Icons.article), label: 'Blog'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
