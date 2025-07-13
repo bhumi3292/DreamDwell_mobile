@@ -11,7 +11,7 @@ class PropertyEntity extends Equatable {
   final String? categoryId;
   final double? price;
   final String? description;
-  final String? landlordId;
+  final String? landlordId; // Optional - can be null for unauthenticated users
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -72,7 +72,7 @@ class PropertyEntity extends Equatable {
 
   // Method to convert a PropertyEntity to a JSON map (e.g., for sending to API)
   Map<String, dynamic> toJson() {
-    return {
+    final json = {
       '_id': id,
       'images': images,
       'videos': videos,
@@ -83,10 +83,16 @@ class PropertyEntity extends Equatable {
       'categoryId': categoryId,
       'price': price,
       'description': description,
-      'landlord': landlordId, // Matches 'landlord' in schema
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
+    
+    // Only add landlord if it's not null
+    if (landlordId != null) {
+      json['landlord'] = landlordId;
+    }
+    
+    return json;
   }
 
   // Optional: copyWith method for immutability and easy updates

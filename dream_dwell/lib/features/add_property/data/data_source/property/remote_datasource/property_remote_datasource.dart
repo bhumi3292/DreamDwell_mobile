@@ -1,16 +1,13 @@
 // lib/features/add_property/data/data_source/remote_datasource/property_remote_datasource.dart
 
-
 import 'package:dio/dio.dart';
 import 'dart:io'; // For File
 import 'package:dream_dwell/features/add_property/data/data_source/property/property_data_source.dart';
 import 'package:dream_dwell/features/add_property/domain/entity/property/property_entity.dart';
-
+import 'package:dream_dwell/app/constant/api_endpoints.dart';
 
 class PropertyRemoteDatasource implements IPropertyDataSource {
   final Dio _dio;
-  // You might have a base URL here or configure it in your Dio instance
-  // For example: final String _baseUrl = 'http://your-api-base-url.com/api/v1';
 
   PropertyRemoteDatasource({required Dio dio}) : _dio = dio;
 
@@ -20,55 +17,118 @@ class PropertyRemoteDatasource implements IPropertyDataSource {
       List<String> imagePaths,
       List<String> videoPaths,
       ) async {
-    final formData = FormData.fromMap(property.toJson()); // Use toJson from PropertyEntity
+    // Create form data with property fields - match web API format
+    final formData = FormData.fromMap({
+      'title': property.title ?? '',
+      'description': property.description ?? '',
+      'location': property.location ?? '',
+      'price': property.price?.toString() ?? '',
+      'categoryId': property.categoryId ?? '',
+      'bedrooms': property.bedrooms?.toString() ?? '',
+      'bathrooms': property.bathrooms?.toString() ?? '',
+      // Only add landlordId if it's not null
+      if (property.landlordId != null) 'landlordId': property.landlordId!,
+    });
 
     // Append images
-    for (String path in imagePaths) {
+    for (int i = 0; i < imagePaths.length; i++) {
+      final path = imagePaths[i];
       if (path.isNotEmpty && File(path).existsSync()) {
+        final file = File(path);
+        final fileName = path.split('/').last;
         formData.files.add(MapEntry(
-          "images", // This key must match your backend's expected field name for images (e.g., an array of files)
-          await MultipartFile.fromFile(path, filename: path.split('/').last),
+          "images",
+          await MultipartFile.fromFile(
+            path,
+            filename: fileName,
+            contentType: DioMediaType('image', 'jpeg'), // Adjust based on file type
+          ),
         ));
       }
     }
 
     // Append videos
-    for (String path in videoPaths) {
+    for (int i = 0; i < videoPaths.length; i++) {
+      final path = videoPaths[i];
       if (path.isNotEmpty && File(path).existsSync()) {
+        final file = File(path);
+        final fileName = path.split('/').last;
         formData.files.add(MapEntry(
-          "videos", // This key must match your backend's expected field name for videos
-          await MultipartFile.fromFile(path, filename: path.split('/').last),
+          "videos",
+          await MultipartFile.fromFile(
+            path,
+            filename: fileName,
+            contentType: DioMediaType('video', 'mp4'), // Adjust based on file type
+          ),
         ));
       }
     }
+    
     return formData;
   }
-
 
   @override
   Future<void> addProperty(PropertyEntity property, List<String> imagePaths, List<String> videoPaths) async {
     try {
+      print('=== ADD PROPERTY API CALL ===');
+      // Validate required fields
+      if (property.title == null || property.title!.isEmpty) {
+        throw Exception('Property title is required');
+      }
+      if (property.location == null || property.location!.isEmpty) {
+        throw Exception('Property location is required');
+      }
+      if (property.price == null || property.price! <= 0) {
+        throw Exception('Property price is required and must be greater than 0');
+      }
+      if (property.categoryId == null || property.categoryId!.isEmpty) {
+        throw Exception('Property category is required');
+      }
+      // Note: landlordId is optional - backend will handle this
+
       final formData = await _createPropertyFormData(property, imagePaths, videoPaths);
+      
+      print('Sending property data to: ${ApiEndpoints.createProperty}');
+      print('Form data fields: ${formData.fields}');
+      print('Form data files: ${formData.files.length} files');
+
       final response = await _dio.post(
-        '/properties', // Your API endpoint for adding properties
+        ApiEndpoints.createProperty,
         data: formData,
         options: Options(
           headers: {
-            'Content-Type': 'multipart/form-data', // Essential for file uploads
-            // Add authorization token if needed:
-            // 'Authorization': 'Bearer YOUR_AUTH_TOKEN',
+            'Content-Type': 'multipart/form-data',
           },
         ),
       );
 
-      if (response.statusCode != 201) { // 201 Created is typical for successful POST
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      if (response.statusCode != 201 && response.statusCode != 200) {
         throw Exception('Failed to add property: ${response.statusCode} - ${response.data}');
       }
-      // Optionally, process response data if your API returns the created property
+      
       print('Property added successfully: ${response.data}');
+      print('=== END ADD PROPERTY API CALL ===');
     } on DioException catch (e) {
-      throw Exception('Failed to add property (Dio Error): ${e.response?.data ?? e.message}');
+      print('DioException in addProperty: ${e.message}');
+      print('DioException type: ${e.type}');
+      print('DioException response: ${e.response?.data}');
+      print('DioException status: ${e.response?.statusCode}');
+      
+      String errorMessage = 'Failed to add property';
+      
+      if (e.response?.data != null && e.response!.data is Map) {
+        final data = e.response!.data as Map;
+        errorMessage = data['message'] ?? errorMessage;
+      } else if (e.message != null) {
+        errorMessage = e.message!;
+      }
+      
+      throw Exception(errorMessage);
     } catch (e) {
+      print('General exception in addProperty: $e');
       throw Exception('Failed to add property: $e');
     }
   }
@@ -76,30 +136,26 @@ class PropertyRemoteDatasource implements IPropertyDataSource {
   @override
   Future<List<PropertyEntity>> getProperties() async {
     try {
-      final response = await _dio.get('/properties'); // Your API endpoint for getting all properties
-
-      if (response.statusCode == 200) {
-        // Handle the API response structure where properties are wrapped in a 'data' array
-        final responseData = response.data;
-        List<dynamic> jsonList;
-        
-        if (responseData is Map<String, dynamic> && responseData.containsKey('data')) {
-          // API returns { success: true, message: "...", data: [...] }
-          jsonList = responseData['data'] as List<dynamic>;
-        } else if (responseData is List) {
-          // API returns direct array
-          jsonList = responseData;
-        } else {
-          throw Exception('Unexpected response format: ${response.data}');
-        }
-        
-        return jsonList.map((json) => PropertyEntity.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to get properties: ${response.statusCode} - ${response.data}');
+      final response = await _dio.get(ApiEndpoints.getAllProperties);
+      
+      if (response.statusCode != 200) {
+        throw Exception('Failed to get properties: ${response.statusCode}');
       }
+
+      final List<dynamic> data = response.data['data'] ?? [];
+      return data.map((json) => PropertyEntity.fromJson(json)).toList();
     } on DioException catch (e) {
-      throw Exception('Failed to get properties (Dio Error): ${e.response?.data ?? e.message}');
+      print('DioException in getProperties: ${e.message}');
+      String errorMessage = 'Failed to get properties';
+      
+      if (e.response?.data != null && e.response!.data is Map) {
+        final data = e.response!.data as Map;
+        errorMessage = data['message'] ?? errorMessage;
+      }
+      
+      throw Exception(errorMessage);
     } catch (e) {
+      print('General exception in getProperties: $e');
       throw Exception('Failed to get properties: $e');
     }
   }
@@ -107,54 +163,60 @@ class PropertyRemoteDatasource implements IPropertyDataSource {
   @override
   Future<PropertyEntity> getPropertyById(String propertyId) async {
     try {
-      final response = await _dio.get('/properties/$propertyId'); // API endpoint for getting property by ID
-
-      if (response.statusCode == 200) {
-        return PropertyEntity.fromJson(response.data);
-      } else if (response.statusCode == 404) {
-        throw Exception('Property with ID $propertyId not found.');
-      } else {
-        throw Exception('Failed to get property by ID: ${response.statusCode} - ${response.data}');
+      final response = await _dio.get('${ApiEndpoints.getPropertyById}$propertyId');
+      
+      if (response.statusCode != 200) {
+        throw Exception('Failed to get property: ${response.statusCode}');
       }
+
+      final data = response.data['data'] ?? response.data;
+      return PropertyEntity.fromJson(data);
     } on DioException catch (e) {
-      throw Exception('Failed to get property by ID (Dio Error): ${e.response?.data ?? e.message}');
+      print('DioException in getPropertyById: ${e.message}');
+      String errorMessage = 'Failed to get property';
+      
+      if (e.response?.data != null && e.response!.data is Map) {
+        final data = e.response!.data as Map;
+        errorMessage = data['message'] ?? errorMessage;
+      }
+      
+      throw Exception(errorMessage);
     } catch (e) {
-      throw Exception('Failed to get property by ID: $e');
+      print('General exception in getPropertyById: $e');
+      throw Exception('Failed to get property: $e');
     }
   }
 
   @override
   Future<void> updateProperty(String propertyId, PropertyEntity property, List<String> newImagePaths, List<String> newVideoPaths) async {
     try {
-      // For updates, you might want to differentiate between existing files (sent as URLs)
-      // and new files (sent as MultipartFile). This example assumes you're sending
-      // the complete list of current files (URLs if existing, and new files as MultipartFile).
-      // Backend should handle file replacement/addition based on this.
-
-      // If your backend expects a specific format for update (e.g., PATCH with only changed fields,
-      // or a full PUT with all fields and then separate file upload endpoints),
-      // you'll need to adjust this. This assumes a PUT with a full FormData payload.
-
       final formData = await _createPropertyFormData(property, newImagePaths, newVideoPaths);
-
+      
       final response = await _dio.put(
-        '/properties/$propertyId', // API endpoint for updating a property
+        '${ApiEndpoints.updateProperty}$propertyId',
         data: formData,
         options: Options(
           headers: {
             'Content-Type': 'multipart/form-data',
-            // 'Authorization': 'Bearer YOUR_AUTH_TOKEN',
           },
         ),
       );
 
-      if (response.statusCode != 200) { // 200 OK is typical for successful PUT
-        throw Exception('Failed to update property: ${response.statusCode} - ${response.data}');
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update property: ${response.statusCode}');
       }
-      print('Property updated successfully: ${response.data}');
     } on DioException catch (e) {
-      throw Exception('Failed to update property (Dio Error): ${e.response?.data ?? e.message}');
+      print('DioException in updateProperty: ${e.message}');
+      String errorMessage = 'Failed to update property';
+      
+      if (e.response?.data != null && e.response!.data is Map) {
+        final data = e.response!.data as Map;
+        errorMessage = data['message'] ?? errorMessage;
+      }
+      
+      throw Exception(errorMessage);
     } catch (e) {
+      print('General exception in updateProperty: $e');
       throw Exception('Failed to update property: $e');
     }
   }
@@ -162,15 +224,23 @@ class PropertyRemoteDatasource implements IPropertyDataSource {
   @override
   Future<void> deleteProperty(String propertyId) async {
     try {
-      final response = await _dio.delete('/properties/$propertyId'); // API endpoint for deleting property by ID
-
-      if (response.statusCode != 200 && response.statusCode != 204) { // 200 OK or 204 No Content
-        throw Exception('Failed to delete property: ${response.statusCode} - ${response.data}');
+      final response = await _dio.delete('${ApiEndpoints.deleteProperty}$propertyId');
+      
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete property: ${response.statusCode}');
       }
-      print('Property with ID $propertyId deleted successfully.');
     } on DioException catch (e) {
-      throw Exception('Failed to delete property (Dio Error): ${e.response?.data ?? e.message}');
+      print('DioException in deleteProperty: ${e.message}');
+      String errorMessage = 'Failed to delete property';
+      
+      if (e.response?.data != null && e.response!.data is Map) {
+        final data = e.response!.data as Map;
+        errorMessage = data['message'] ?? errorMessage;
+      }
+      
+      throw Exception(errorMessage);
     } catch (e) {
+      print('General exception in deleteProperty: $e');
       throw Exception('Failed to delete property: $e');
     }
   }

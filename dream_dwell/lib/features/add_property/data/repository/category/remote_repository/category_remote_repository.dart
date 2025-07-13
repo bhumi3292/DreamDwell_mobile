@@ -64,11 +64,15 @@ class CategoryRemoteRepository implements ICategoryRepository {
   @override
   Future<Either<Failure, List<CategoryEntity>>> getCategories() async {
     try {
+      print('CategoryRemoteRepository: Calling remoteDataSource.getCategories()');
       final categories = await _remoteDataSource.getCategories();
+      print('CategoryRemoteRepository: Success - ${categories.length} categories');
       return Right(categories);
     } on DioException catch (e) {
+      print('CategoryRemoteRepository: DioException - ${e.message}');
       return Left(_handleDioError(e));
     } catch (e) {
+      print('CategoryRemoteRepository: Exception - $e');
       return Left(RemoteDatabaseFailure(message: 'Failed to get categories remotely: ${e.toString()}'));
     }
   }

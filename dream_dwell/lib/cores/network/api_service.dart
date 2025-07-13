@@ -83,9 +83,13 @@ class ApiService {
       ..interceptors.add(
         QueuedInterceptorsWrapper(
           onRequest: (options, handler) async {
+            print('API Request: ${options.method} ${options.path}');
             final token = await _hiveService.getToken();
             if (token != null && token.isNotEmpty) {
               options.headers['Authorization'] = 'Bearer $token';
+              print('API Request: Token attached');
+            } else {
+              print('API Request: No token available');
             }
 
             if (options.data is! FormData) {
@@ -96,9 +100,11 @@ class ApiService {
             return handler.next(options);
           },
           onResponse: (response, handler) {
+            print('API Response: ${response.statusCode} ${response.requestOptions.path}');
             return handler.next(response);
           },
           onError: (error, handler) async {
+            print('API Error: ${error.response?.statusCode} ${error.requestOptions.path} - ${error.message}');
             if (error.response?.statusCode == 401) {
               print('401 Unauthorized: Attempting to clear token and log out.');
               await _hiveService.deleteToken();

@@ -3,7 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:dream_dwell/features/add_property/data/data_source/category/category_data_source.dart';
 import 'package:dream_dwell/features/add_property/domain/entity/category/category_entity.dart'; // Domain entity
-
+import 'package:dream_dwell/app/constant/api_endpoints.dart';
 import 'package:dream_dwell/features/add_property/data/model/category_model/category_api_model.dart';
 
 class CategoryRemoteDatasource implements ICategoryDataSource {
@@ -14,10 +14,14 @@ class CategoryRemoteDatasource implements ICategoryDataSource {
   @override
   Future<List<CategoryEntity>> getCategories() async {
     try {
-      final response = await _dio.get('/categories');
+      print('=== CATEGORY API CALL ===');
+      print('Fetching categories from: ${ApiEndpoints.getAllCategories}');
+      final response = await _dio.get(ApiEndpoints.getAllCategories);
       
       print('Category API Response: ${response.data}');
       print('Response type: ${response.data.runtimeType}');
+      print('Response status: ${response.statusCode}');
+      print('=== END CATEGORY API CALL ===');
 
       if (response.statusCode == 200) {
         // Handle the response structure: { success: true, data: [...] }
@@ -44,7 +48,16 @@ class CategoryRemoteDatasource implements ICategoryDataSource {
       }
     } on DioException catch (e) {
       print('DioException in getCategories: ${e.response?.data ?? e.message}');
-      throw Exception('Failed to get categories (Dio Error): ${e.response?.data ?? e.message}');
+      print('DioException type: ${e.type}');
+      print('DioException status: ${e.response?.statusCode}');
+      String errorMessage = 'Failed to get categories';
+      
+      if (e.response?.data != null && e.response!.data is Map) {
+        final data = e.response!.data as Map;
+        errorMessage = data['message'] ?? errorMessage;
+      }
+      
+      throw Exception(errorMessage);
     } catch (e) {
       print('Exception in getCategories: $e');
       throw Exception('Failed to get categories: $e');
@@ -54,12 +67,16 @@ class CategoryRemoteDatasource implements ICategoryDataSource {
   @override
   Future<void> addCategory(CategoryEntity category) async {
     try {
-      final categoryApiModel = CategoryApiModel.fromEntity(category);
-      final requestData = categoryApiModel.toJson();
+      print('=== ADD CATEGORY API CALL ===');
+      // Match the web API format: { name: "categoryName" }
+      final requestData = {
+        'name': category.categoryName,
+      };
+      print('Adding category to: ${ApiEndpoints.createCategory}');
       print('Adding category with data: $requestData');
       
       final response = await _dio.post(
-        '/categories',
+        ApiEndpoints.createCategory,
         data: requestData,
       );
 
@@ -70,6 +87,7 @@ class CategoryRemoteDatasource implements ICategoryDataSource {
         throw Exception('Failed to add category: ${response.statusCode} - ${response.data}');
       }
       print('Category added successfully: ${response.data}');
+      print('=== END ADD CATEGORY API CALL ===');
     } on DioException catch (e) {
       print('DioException in addCategory: ${e.response?.data ?? e.message}');
       throw Exception('Failed to add category (Dio Error): ${e.response?.data ?? e.message}');
@@ -87,7 +105,7 @@ class CategoryRemoteDatasource implements ICategoryDataSource {
       }
       final updatedCategoryApiModel = CategoryApiModel.fromEntity(category);
       final response = await _dio.put(
-        '/categories/${category.id}', // API endpoint for updating by ID
+        '${ApiEndpoints.updateCategory}${category.id}', // API endpoint for updating by ID
         data: updatedCategoryApiModel.toJson(), // Use API model's toJson()
       );
 
@@ -105,7 +123,7 @@ class CategoryRemoteDatasource implements ICategoryDataSource {
   @override
   Future<void> deleteCategory(String categoryId) async {
     try {
-      final response = await _dio.delete('/categories/$categoryId'); // API endpoint for deleting by ID
+      final response = await _dio.delete('${ApiEndpoints.deleteCategory}$categoryId'); // API endpoint for deleting by ID
 
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception('Failed to delete category: ${response.statusCode} - ${response.data}');

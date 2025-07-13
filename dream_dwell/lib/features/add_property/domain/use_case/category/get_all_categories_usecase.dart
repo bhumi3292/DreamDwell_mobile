@@ -13,6 +13,12 @@ class GetAllCategoriesUsecase implements UsecaseWithoutParams<List<CategoryEntit
 
   @override
   Future<Either<Failure, List<CategoryEntity>>> call() async {
-    return await repository.getCategories();
+    print('GetAllCategoriesUsecase: Calling repository.getCategories()');
+    final result = await repository.getCategories();
+    result.fold(
+      (failure) => print('GetAllCategoriesUsecase: Failed - ${failure.message}'),
+      (categories) => print('GetAllCategoriesUsecase: Success - ${categories.length} categories'),
+    );
+    return result;
   }
 }

@@ -78,11 +78,10 @@ class _HomeViewState extends State<HomeView> {
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed, // Ensures all items are visible
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Dashboard'),
+          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
           BottomNavigationBarItem(icon: Icon(Icons.favorite_outlined), label: 'Favourite'),
           BottomNavigationBarItem(icon: Icon(Icons.book_online), label: 'Booking'),
-          BottomNavigationBarItem(icon: Icon(Icons.article), label: 'Blog'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),

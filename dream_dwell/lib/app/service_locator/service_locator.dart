@@ -133,6 +133,7 @@ void _initPropertyModules() {
     () => AddPropertyBloc(
       addPropertyUsecase: serviceLocator<AddPropertyUsecase>(),
       getAllCategoriesUsecase: serviceLocator<GetAllCategoriesUsecase>(),
+      hiveService: serviceLocator<HiveService>(),
     ),
   );
 }

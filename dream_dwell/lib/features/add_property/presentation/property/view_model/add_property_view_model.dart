@@ -12,12 +12,12 @@ import 'package:dream_dwell/cores/common/snackbar/snackbar.dart'; // Assuming yo
 import 'package:dream_dwell/features/add_property/domain/entity/property/property_entity.dart';
 import 'package:dream_dwell/features/add_property/domain/entity/category/category_entity.dart';
 import 'package:dream_dwell/features/add_property/domain/use_case/property/add_property_usecase.dart';
-
-
+import 'package:dream_dwell/cores/network/hive_service.dart';
 
 class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
   final AddPropertyUsecase _addPropertyUsecase;
   final GetAllCategoriesUsecase _getAllCategoriesUsecase;
+  final HiveService _hiveService;
 
   // Internal state for selected media and category ID
   // These will be updated by events and then copied into the emitted state.
@@ -30,8 +30,10 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
   AddPropertyBloc({
     required AddPropertyUsecase addPropertyUsecase,
     required GetAllCategoriesUsecase getAllCategoriesUsecase,
+    required HiveService hiveService,
   })  : _addPropertyUsecase = addPropertyUsecase,
         _getAllCategoriesUsecase = getAllCategoriesUsecase,
+        _hiveService = hiveService,
         super(const AddPropertyInitial()) {
     on<InitializeAddPropertyForm>(_onInitializeAddPropertyForm);
     on<SelectCategoryEvent>(_onSelectCategory);
@@ -48,14 +50,19 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
       InitializeAddPropertyForm event,
       Emitter<AddPropertyState> emit,
       ) async {
+    print('Initializing add property form...');
     emit(AddPropertyLoadingState(categories: _currentCategories)); // Pass existing categories
     final result = await _getAllCategoriesUsecase();
     result.fold(
-          (failure) => emit(AddPropertyErrorState(
-        errorMessage: failure.message,
-        categories: _currentCategories,
-      )),
+          (failure) {
+        print('Failed to load categories: ${failure.message}');
+        emit(AddPropertyErrorState(
+          errorMessage: failure.message,
+          categories: _currentCategories,
+        ));
+      },
           (categories) {
+        print('Successfully loaded ${categories.length} categories');
         _currentCategories = categories; // Update internal list
         emit(AddPropertyLoadedState(
           categories: _currentCategories,
@@ -154,76 +161,132 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
       successMessage: null,
     ));
 
-    // Basic validation based on passed event data
-    if (event.title.isEmpty ||
-        event.location.isEmpty ||
-        event.price.isEmpty ||
-        event.description.isEmpty ||
-        event.bedrooms.isEmpty ||
-        event.bathrooms.isEmpty ||
-        event.categoryId == null) {
+    // Enhanced validation
+    final validationErrors = <String>[];
+    
+    if (event.title.trim().isEmpty) {
+      validationErrors.add('Property title is required');
+    }
+    if (event.location.trim().isEmpty) {
+      validationErrors.add('Property location is required');
+    }
+    if (event.price.trim().isEmpty) {
+      validationErrors.add('Property price is required');
+    } else {
+      final price = double.tryParse(event.price);
+      if (price == null || price <= 0) {
+        validationErrors.add('Property price must be a valid number greater than 0');
+      }
+    }
+    if (event.description.trim().isEmpty) {
+      validationErrors.add('Property description is required');
+    }
+    if (event.bedrooms.trim().isEmpty) {
+      validationErrors.add('Number of bedrooms is required');
+    } else {
+      final bedrooms = int.tryParse(event.bedrooms);
+      if (bedrooms == null || bedrooms < 0) {
+        validationErrors.add('Bedrooms must be a valid number (0 or more)');
+      }
+    }
+    if (event.bathrooms.trim().isEmpty) {
+      validationErrors.add('Number of bathrooms is required');
+    } else {
+      final bathrooms = int.tryParse(event.bathrooms);
+      if (bathrooms == null || bathrooms < 0) {
+        validationErrors.add('Bathrooms must be a valid number (0 or more)');
+      }
+    }
+    if (event.categoryId == null || event.categoryId!.isEmpty) {
+      validationErrors.add('Property category is required');
+    }
+    if (_currentImages.isEmpty) {
+      validationErrors.add('At least one property image is required');
+    }
+
+    if (validationErrors.isNotEmpty) {
       emit(state.copyWith(
         isSubmitting: false,
-        errorMessage: 'All required fields must be filled.',
+        errorMessage: validationErrors.join('\n'),
       ));
       if (event.context != null) {
         showMySnackbar(
           context: event.context!,
-          content: 'All required fields must be filled.',
+          content: validationErrors.join('\n'),
           isSuccess: false,
         );
       }
       return;
     }
 
-    final property = PropertyEntity(
-      id: null,
-      title: event.title,
-      location: event.location,
-      price: double.tryParse(event.price) ?? 0.0,
-      description: event.description,
-      bedrooms: int.tryParse(event.bedrooms) ?? 0,
-      bathrooms: int.tryParse(event.bathrooms) ?? 0,
-      categoryId: event.categoryId!,
-      // FIX: Changed 'ownerId' to 'landlordId' to match PropertyEntity constructor
-      landlordId: 'some_owner_id', // This line now correctly maps to 'landlordId'
-      images: const [],
-      videos: const [],
-    );
+    try {
+      // For now, we'll use a default user ID or skip authentication
+      // This allows property creation without login requirement
+      String? userId;
+      try {
+        final currentUser = await _hiveService.getCurrentUser();
+        userId = currentUser?.userId;
+      } catch (e) {
+        print('No authenticated user found, proceeding without user ID');
+        // Continue without user ID - backend will handle this
+      }
 
-    final imagePaths = _currentImages.map((file) => file.path).toList();
-    final videoPaths = _currentVideos.map((file) => file.path).toList();
+      final property = PropertyEntity(
+        id: null,
+        title: event.title.trim(),
+        location: event.location.trim(),
+        price: double.parse(event.price),
+        description: event.description.trim(),
+        bedrooms: int.parse(event.bedrooms),
+        bathrooms: int.parse(event.bathrooms),
+        categoryId: event.categoryId!,
+        landlordId: userId, // Use user ID if available, otherwise null
+        images: const [],
+        videos: const [],
+      );
 
-    final result = await _addPropertyUsecase(
-      AddPropertyParams(
-        property: property,
-        imagePaths: imagePaths,
-        videoPaths: videoPaths,
-      ),
-    );
+      final imagePaths = _currentImages.map((file) => file.path).toList();
+      final videoPaths = _currentVideos.map((file) => file.path).toList();
 
-    result.fold(
-          (failure) {
-        emit(state.copyWith(
-          isSubmitting: false,
-          errorMessage: failure.message,
-        ));
-        if (event.context != null) {
-          showMySnackbar(
-            context: event.context!,
-            content: failure.message,
-            isSuccess: false,
-          );
-        }
-      },
-          (_) {
-        // Reset local state after successful submission
-        _selectedCategoryId = null;
-        _currentImages.clear();
-        _currentVideos.clear();
-        // Keep _currentCategories for next form use
-        emit(AddPropertySubmissionSuccess(
-          successMessage: "Property added successfully!",
+      print('Submitting property with data:');
+      print('Title: ${property.title}');
+      print('Location: ${property.location}');
+      print('Price: ${property.price}');
+      print('Category: ${property.categoryId}');
+      print('Landlord ID: ${property.landlordId ?? "No user ID (proceeding without auth)"}');
+      print('Images: ${imagePaths.length} files');
+      print('Videos: ${videoPaths.length} files');
+
+      final result = await _addPropertyUsecase(
+        AddPropertyParams(
+          property: property,
+          imagePaths: imagePaths,
+          videoPaths: videoPaths,
+        ),
+      );
+
+      result.fold(
+            (failure) {
+          emit(state.copyWith(
+            isSubmitting: false,
+            errorMessage: failure.message,
+          ));
+          if (event.context != null) {
+            showMySnackbar(
+              context: event.context!,
+              content: failure.message,
+              isSuccess: false,
+            );
+          }
+        },
+            (_) {
+          // Reset local state after successful submission
+          _selectedCategoryId = null;
+          _currentImages.clear();
+          _currentVideos.clear();
+          // Keep _currentCategories for next form use
+                  emit(AddPropertySubmissionSuccess(
+          successMessage: "Property added successfully to backend!",
           categories: List.from(_currentCategories), // Pass current categories
           selectedCategoryId: null, // Clear selected category
           selectedImages: [], // Clear selected images
@@ -233,12 +296,26 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
         if (event.context != null) {
           showMySnackbar(
             context: event.context!,
-            content: "Property added successfully!",
+            content: "Property added successfully to backend!",
             isSuccess: true,
           );
         }
-      },
-    );
+        },
+      );
+    } catch (e) {
+      print('Exception in _onSubmitProperty: $e');
+      emit(state.copyWith(
+        isSubmitting: false,
+        errorMessage: 'An unexpected error occurred: $e',
+      ));
+      if (event.context != null) {
+        showMySnackbar(
+          context: event.context!,
+          content: 'An unexpected error occurred: $e',
+          isSuccess: false,
+        );
+      }
+    }
   }
 
   void _onClearAddPropertyMessage(

@@ -29,14 +29,6 @@ class DashboardView extends StatelessWidget {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            // Navigate to add property page
-            Get.toNamed('/add-property');
-          },
-          backgroundColor: const Color(0xFF003366),
-          child: const Icon(Icons.add, color: Colors.white),
-        ),
         body: BlocBuilder<DashboardViewModel, DashboardState>(
           builder: (context, state) {
             if (state is DashboardLoading) {

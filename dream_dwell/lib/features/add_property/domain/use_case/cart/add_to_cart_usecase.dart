@@ -24,10 +24,7 @@ class AddToCartUsecase implements UsecaseWithParams<CartEntity, AddToCartParams>
   Future<Either<Failure, CartEntity>> call(AddToCartParams params) async {
     try {
       final result = await _cartRepository.addToCart(params.propertyId);
-      return result.fold(
-        (failure) => Left(failure),
-        (_) => Right(CartEntity(items: [])), // Return empty cart on success
-      );
+      return result;
     } catch (e) {
       return Left(UnknownFailure(message: e.toString()));
     }

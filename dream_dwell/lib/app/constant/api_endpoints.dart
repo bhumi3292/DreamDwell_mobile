@@ -38,11 +38,11 @@ class ApiEndpoints {
   static const String deleteProperty = "${baseUrl}properties/"; // DELETE by ID (append ID)
 
   // ---------- Category ----------
-  static const String createCategory = "${baseUrl}categories"; // POST
-  static const String getAllCategories = "${baseUrl}categories"; // GET
-  static const String getCategoryById = "${baseUrl}categories/"; // GET by ID
-  static const String updateCategory = "${baseUrl}categories/"; // PUT by ID
-  static const String deleteCategory = "${baseUrl}categories/"; // DELETE by ID
+  static const String createCategory = "${baseUrl}category"; // POST
+  static const String getAllCategories = "${baseUrl}category"; // GET
+  static const String getCategoryById = "${baseUrl}category/"; // GET by ID
+  static const String updateCategory = "${baseUrl}category/"; // PUT by ID
+  static const String deleteCategory = "${baseUrl}category/"; // DELETE by ID
 
   // ---------- Blog ----------
   static const String getAllBlogs = "${baseUrl}blogs"; // GET
@@ -52,4 +52,10 @@ class ApiEndpoints {
   static const String deleteBlog = "${baseUrl}blogs/"; // DELETE by ID (append ID)
   static const String likeBlog = "${baseUrl}blogs/"; // POST like (append ID + /like)
   static const String getFeaturedBlogs = "${baseUrl}blogs/featured"; // GET
+
+  // ---------- Cart/Favorites ----------
+  static const String getCart = "${baseUrl}cart"; // GET
+  static const String addToCart = "${baseUrl}cart/add"; // POST
+  static const String removeFromCart = "${baseUrl}cart/remove/"; // DELETE (append propertyId)
+  static const String clearCart = "${baseUrl}cart/clear"; // DELETE
 }

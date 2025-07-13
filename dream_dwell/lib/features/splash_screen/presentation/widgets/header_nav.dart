@@ -32,21 +32,20 @@ class HeaderNav extends StatelessWidget implements PreferredSizeWidget {
             icon: const Icon(Icons.add_box, color: Colors.white),
             onPressed: () {
               // Navigate to AddPropertyScreen
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const AddPropertyPresentation()),
-              );
             },
           ),
        // if (user != null && user!.stakeholder == 'Landlord')
           IconButton(
             icon: const Icon(
-              Icons.home,
+              Icons.add_home_work_outlined,
               color: Colors.white,
               size: 24.0,
             ),
             onPressed: () {
-              // INVOKE CALLBACK: If the callback is provided, execute it.
-              // This allows the parent widget to handle the navigation.
+
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const AddPropertyPresentation()),
+              );
               onLandlordHomePressed?.call();
               debugPrint("Landlord Home icon pressed (via callback)");
             },

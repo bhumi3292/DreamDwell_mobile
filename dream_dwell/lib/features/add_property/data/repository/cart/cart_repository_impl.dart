@@ -2,6 +2,7 @@ import 'package:dream_dwell/features/add_property/domain/repository/cart/cart_re
 import 'package:dream_dwell/features/add_property/data/data_source/cart/remote_datasource/cart_remote_datasource.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dream_dwell/cores/error/failure.dart';
+import 'package:dream_dwell/features/add_property/domain/entity/cart/cart_entity.dart';
 
 class CartRepositoryImpl implements ICartRepository {
   final CartRemoteDatasource cartDataSource;
@@ -9,26 +10,42 @@ class CartRepositoryImpl implements ICartRepository {
   CartRepositoryImpl({required this.cartDataSource});
 
   @override
-  Future<Either<Failure, void>> addToCart(String propertyId) async {
-    // TODO: Implement actual logic
-    return const Right(null);
+  Future<Either<Failure, CartEntity>> addToCart(String propertyId) async {
+    try {
+      final result = await cartDataSource.addToCart(propertyId);
+      return Right(result);
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
   }
 
   @override
-  Future<Either<Failure, List<String>>> getCart() async {
-    // TODO: Implement actual logic
-    return const Right([]);
+  Future<Either<Failure, CartEntity>> getCart() async {
+    try {
+      final result = await cartDataSource.getCart();
+      return Right(result);
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
   }
 
   @override
-  Future<Either<Failure, void>> removeFromCart(String propertyId) async {
-    // TODO: Implement actual logic
-    return const Right(null);
+  Future<Either<Failure, CartEntity>> removeFromCart(String propertyId) async {
+    try {
+      final result = await cartDataSource.removeFromCart(propertyId);
+      return Right(result);
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
   }
 
   @override
   Future<Either<Failure, void>> clearCart() async {
-    // TODO: Implement actual logic
-    return const Right(null);
+    try {
+      await cartDataSource.clearCart();
+      return const Right(null);
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
   }
 } 

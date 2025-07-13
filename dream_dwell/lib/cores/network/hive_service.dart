@@ -85,6 +85,31 @@ class HiveService {
     await box.close();
   }
 
+  // Get current authenticated user
+  Future<UserHiveModel?> getCurrentUser() async {
+    final token = await getToken();
+    if (token == null || token.isEmpty) {
+      return null;
+    }
+    
+    // For now, we'll get the first user as the current user
+    // In a real app, you'd decode the JWT token to get the user ID
+    final box = await Hive.openBox<UserHiveModel>(HiveTableConstant.userBox);
+    try {
+      if (box.isNotEmpty) {
+        final currentUser = box.values.first;
+        await box.close();
+        return currentUser;
+      }
+      await box.close();
+      return null;
+    } catch (e) {
+      print('Error getting current user: $e');
+      await box.close();
+      return null;
+    }
+  }
+
 
   //=================================== Property Methods======================================
   Future<void> addProperty(PropertyHiveModel property) async {

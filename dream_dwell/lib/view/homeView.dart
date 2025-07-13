@@ -23,11 +23,6 @@ class _HomeViewState extends State<HomeView> {
     });
   }
 
-  void _onHomeIconTapped() {
-    // Navigate to add property page when home icon is tapped
-    Get.toNamed('/add-property');
-  }
-
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
@@ -47,18 +42,10 @@ class _HomeViewState extends State<HomeView> {
         selectedItemColor: const Color(0xFF003366),
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
-        onTap: (index) {
-          if (index == 0) {
-            // If home icon is tapped, navigate to add property page
-            _onHomeIconTapped();
-          } else {
-            // For other icons, use normal navigation
-            _onItemTapped(index);
-          }
-        },
+        onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Add Property'),
+          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
           BottomNavigationBarItem(icon: Icon(Icons.favorite_outlined), label: 'Favourite'),
           BottomNavigationBarItem(icon: Icon(Icons.book_online), label: 'Booking'),

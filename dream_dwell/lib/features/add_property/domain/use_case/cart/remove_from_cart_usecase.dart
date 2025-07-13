@@ -24,10 +24,7 @@ class RemoveFromCartUsecase implements UsecaseWithParams<CartEntity, RemoveFromC
   Future<Either<Failure, CartEntity>> call(RemoveFromCartParams params) async {
     try {
       final result = await _cartRepository.removeFromCart(params.propertyId);
-      return result.fold(
-        (failure) => Left(failure),
-        (_) => Right(CartEntity(items: [])), // Return empty cart on success
-      );
+      return result;
     } catch (e) {
       return Left(UnknownFailure(message: e.toString()));
     }
