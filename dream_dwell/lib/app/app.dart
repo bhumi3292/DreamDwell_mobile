@@ -11,6 +11,7 @@ import 'package:dream_dwell/features/auth/presentation/view/signup.dart';
 import 'package:dream_dwell/view/forgetPassword.dart'; // Make sure this path is correct
 import 'package:dream_dwell/view/homeView.dart'; // Make sure this path is correct
 import 'package:dream_dwell/features/dashbaord/dashboard.dart'; // Make sure this path is correct
+import 'package:dream_dwell/features/add_property/presentation/view/add_property_presentation.dart';
 
 // ViewModels
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
@@ -39,7 +40,7 @@ class MyApp extends StatelessWidget {
         title: 'DreamDwell',
         debugShowCheckedModeBanner: false,
         theme: getApplication(), // This uses the theme from splash_screen/presentation/widgets/theme.dart
-        initialRoute: '/login', // Set your initial route
+        initialRoute: '/', // Changed from '/login' to '/' to start with splash screen
         getPages: [
           GetPage(name: '/', page: () => const SplashScreen()),
           GetPage(name: '/login', page: () => const Login()),
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
           GetPage(name: '/dashboard', page: () => const DashboardPage()),
           GetPage(name: '/home', page: () => const HomeView()),
           GetPage(name: '/profile', page: () => const ProfilePage()),
+          GetPage(name: '/add-property', page: () => const AddPropertyPresentation()),
         ],
       ),
     );

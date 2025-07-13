@@ -1,18 +1,30 @@
+// lib/cores/network/hive_service.dart
+
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dream_dwell/app/constant/hive_table_const.dart';
 import 'package:dream_dwell/features/auth/data/model/user_hive_model.dart';
+import 'package:dream_dwell/features/add_property/data/model/property_model/property_hive_model.dart';
+import 'package:dream_dwell/features/add_property/data/model/category_model/category_hive_model.dart';
 
 class HiveService {
   Future<void> init() async {
     final directory = await getApplicationDocumentsDirectory();
     final path = '${directory.path}/dream_dwell.db';
     Hive.init(path);
+
     if (!Hive.isAdapterRegistered(HiveTableConstant.userTableId)) {
       Hive.registerAdapter(UserHiveModelAdapter());
     }
+    if (!Hive.isAdapterRegistered(HiveTableConstant.propertyTableId)) {
+      Hive.registerAdapter(PropertyHiveModelAdapter());
+    }
+    if (!Hive.isAdapterRegistered(HiveTableConstant.categoryTableId)) {
+      Hive.registerAdapter(CategoryHiveModelAdapter());
+    }
   }
 
+  // --- User/Auth Methods (No change needed) ---
   Future<void> saveToken(String token) async {
     final box = await Hive.openBox<String>(HiveTableConstant.userBox);
     await box.put('authToken', token);
@@ -73,17 +85,94 @@ class HiveService {
     await box.close();
   }
 
-  Future<void> clearAll() async {
-    final box = await Hive.openBox<UserHiveModel>(HiveTableConstant.userBox);
-    await box.clear();
+
+  //=================================== Property Methods======================================
+  Future<void> addProperty(PropertyHiveModel property) async {
+    final box = await Hive.openBox<PropertyHiveModel>(HiveTableConstant.propertyBox);
+    await box.put(property.id, property);
     await box.close();
-    print('HiveService: User data box cleared.');
   }
 
+  Future<List<PropertyHiveModel>> getAllProperties() async {
+    final box = await Hive.openBox<PropertyHiveModel>(HiveTableConstant.propertyBox);
+    final properties = box.values.toList();
+    await box.close();
+    return properties;
+  }
+
+  //  Use PropertyHiveModel here
+  Future<void> updateProperty(PropertyHiveModel property) async {
+    final box = await Hive.openBox<PropertyHiveModel>(HiveTableConstant.propertyBox);
+    await box.put(property.id, property); // Hive's put acts as upsert
+    await box.close();
+  }
+
+  //  Use PropertyHiveModel here
+  Future<PropertyHiveModel?> getPropertyById(String propertyId) async {
+    final box = await Hive.openBox<PropertyHiveModel>(HiveTableConstant.propertyBox);
+    final property = box.get(propertyId);
+    await box.close();
+    return property;
+  }
+
+  //  Use PropertyHiveModel
+  Future<void> deletePropertyById(String propertyId) async {
+    final box = await Hive.openBox<PropertyHiveModel>(HiveTableConstant.propertyBox);
+    await box.delete(propertyId);
+    await box.close();
+  }
+
+  //================================ Category Methods (No change needed)===========================================================================
+  Future<void> addCategory(CategoryHiveModel category) async {
+    final box = await Hive.openBox<CategoryHiveModel>(HiveTableConstant.categoryBox);
+    await box.put(category.id, category); // Assuming 'id' is the unique key
+    await box.close();
+  }
+
+  Future<List<CategoryHiveModel>> getAllCategories() async {
+    final box = await Hive.openBox<CategoryHiveModel>(HiveTableConstant.categoryBox);
+    final categories = box.values.toList();
+    await box.close();
+    return categories;
+  }
+
+  Future<void> updateCategory(CategoryHiveModel category) async {
+    final box = await Hive.openBox<CategoryHiveModel>(HiveTableConstant.categoryBox);
+    await box.put(category.id, category);
+    await box.close();
+  }
+
+  Future<void> deleteCategoryById(String categoryId) async {
+    final box = await Hive.openBox<CategoryHiveModel>(HiveTableConstant.categoryBox);
+    await box.delete(categoryId);
+    await box.close();
+  }
+
+  // --- Clear Methods (MODIFIED) ⭐ ---
+  @override
+  Future<void> clearAll() async {
+    final userBox = await Hive.openBox<UserHiveModel>(HiveTableConstant.userBox);
+    await userBox.clear();
+    await userBox.close();
+
+    // Use PropertyHiveModel here
+    final propertyBox = await Hive.openBox<PropertyHiveModel>(HiveTableConstant.propertyBox);
+    await propertyBox.clear();
+    await propertyBox.close();
+
+    final categoryBox = await Hive.openBox<CategoryHiveModel>(HiveTableConstant.categoryBox);
+    await categoryBox.clear();
+    await categoryBox.close();
+
+    print('HiveService: All relevant data boxes cleared.');
+  }
+
+  // Modified clearUserData to call the comprehensive clearAll
+  @override
   Future<void> clearUserData() async {
     await deleteToken();
     print('HiveService: Auth token deleted.');
-    await clearAll();
+    await clearAll(); // This now clears all data, not just user box
   }
 
   Future<void> close() async {
