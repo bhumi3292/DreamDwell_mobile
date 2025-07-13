@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart'; // Import UserEntity
+import 'package:dream_dwell/features/add_property/presentation/view/add_property_presentation.dart';
 
 
 class HeaderNav extends StatelessWidget implements PreferredSizeWidget {
@@ -26,8 +27,17 @@ class HeaderNav extends StatelessWidget implements PreferredSizeWidget {
       ),
       centerTitle: true,
       actions: [
-
         if (user != null && user!.stakeholder == 'Landlord')
+          IconButton(
+            icon: const Icon(Icons.add_box, color: Colors.white),
+            onPressed: () {
+              // Navigate to AddPropertyScreen
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const AddPropertyPresentation()),
+              );
+            },
+          ),
+       // if (user != null && user!.stakeholder == 'Landlord')
           IconButton(
             icon: const Icon(
               Icons.home,
