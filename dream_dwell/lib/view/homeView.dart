@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:dream_dwell/features/splash_screen/presentation/widgets/header_nav.dart';
 import 'package:dream_dwell/features/dashbaord/dashboard.dart';
 import 'package:dream_dwell/view/explore.dart';
 import 'package:dream_dwell/view/favourite.dart';
 import 'package:dream_dwell/view/booking.dart';
 import 'package:dream_dwell/features/profile/presentation/view/profile.dart';
-
-import 'package:dream_dwell/features/profile/presentation/view/profile.dart';
-
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -23,6 +21,11 @@ class _HomeViewState extends State<HomeView> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  void _onHomeIconTapped() {
+    // Navigate to add property page when home icon is tapped
+    Get.toNamed('/add-property');
   }
 
   @override
@@ -44,10 +47,18 @@ class _HomeViewState extends State<HomeView> {
         selectedItemColor: const Color(0xFF003366),
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
-        onTap: _onItemTapped,
+        onTap: (index) {
+          if (index == 0) {
+            // If home icon is tapped, navigate to add property page
+            _onHomeIconTapped();
+          } else {
+            // For other icons, use normal navigation
+            _onItemTapped(index);
+          }
+        },
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Dashboard'),
+          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Add Property'),
           BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
           BottomNavigationBarItem(icon: Icon(Icons.favorite_outlined), label: 'Favourite'),
           BottomNavigationBarItem(icon: Icon(Icons.book_online), label: 'Booking'),

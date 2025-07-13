@@ -11,7 +11,7 @@ class ApiEndpoints {
   // Choose one of these options:
   // Option 1: Use network IP address (for physical devices or network testing)
   static const String serverAddress = androidEmulatorAddress;
-
+  
   // Option 2: Use Android emulator address (for Android emulator testing)
   // static const String serverAddress = androidEmulatorAddress;
 
