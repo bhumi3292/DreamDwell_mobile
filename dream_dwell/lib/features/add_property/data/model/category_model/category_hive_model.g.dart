@@ -8,7 +8,7 @@ part of 'category_hive_model.dart';
 
 class CategoryHiveModelAdapter extends TypeAdapter<CategoryHiveModel> {
   @override
-  final int typeId = 0;
+  final int typeId = 2;
 
   @override
   CategoryHiveModel read(BinaryReader reader) {
@@ -17,19 +17,25 @@ class CategoryHiveModelAdapter extends TypeAdapter<CategoryHiveModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return CategoryHiveModel(
-      id_: fields[0] as String,
-      name_: fields[1] as String,
+      id: fields[0] as String?,
+      categoryName: fields[1] as String,
+      createdAt: fields[2] as DateTime?,
+      updatedAt: fields[3] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, CategoryHiveModel obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(4)
       ..writeByte(0)
-      ..write(obj.id_)
+      ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.name_);
+      ..write(obj.categoryName)
+      ..writeByte(2)
+      ..write(obj.createdAt)
+      ..writeByte(3)
+      ..write(obj.updatedAt);
   }
 
   @override

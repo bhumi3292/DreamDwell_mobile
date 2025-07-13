@@ -17,10 +17,16 @@ PropertyApiModel _$PropertyApiModelFromJson(Map<String, dynamic> json) =>
       location: json['location'] as String,
       bedrooms: (json['bedrooms'] as num?)?.toInt(),
       bathrooms: (json['bathrooms'] as num?)?.toInt(),
-      categoryName: json['categoryName'] as String,
+      categoryId: json['categoryId'] as String,
       price: (json['price'] as num).toDouble(),
       description: json['description'] as String?,
       landlordId: json['landlord'] as String,
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
+      updatedAt: json['updatedAt'] == null
+          ? null
+          : DateTime.parse(json['updatedAt'] as String),
     );
 
 Map<String, dynamic> _$PropertyApiModelToJson(PropertyApiModel instance) =>
@@ -32,8 +38,10 @@ Map<String, dynamic> _$PropertyApiModelToJson(PropertyApiModel instance) =>
       'location': instance.location,
       'bedrooms': instance.bedrooms,
       'bathrooms': instance.bathrooms,
-      'categoryName': instance.categoryName,
+      'categoryId': instance.categoryId,
       'price': instance.price,
       'description': instance.description,
       'landlord': instance.landlordId,
+      'createdAt': instance.createdAt?.toIso8601String(),
+      'updatedAt': instance.updatedAt?.toIso8601String(),
     };
