@@ -1,0 +1,26 @@
+// lib/features/add_property/domain/use_case/update_property_usecase.dart
+
+import 'package:dartz/dartz.dart';
+import 'package:dream_dwell/cores/error/failure.dart';
+import 'package:dream_dwell/features/add_property/domain/entity/property/property_entity.dart';
+import 'package:dream_dwell/features/add_property/domain/repository/property_repository.dart';
+
+class UpdatePropertyUsecase {
+  final IPropertyRepository repository;
+
+  UpdatePropertyUsecase(this.repository);
+
+  Future<Either<Failure, void>> call(
+      String propertyId,
+      PropertyEntity property,
+      List<String> newImagePaths,
+      List<String> newVideoPaths,
+      ) async {
+    return await repository.updateProperty(
+      propertyId,
+      property,
+      newImagePaths,
+      newVideoPaths,
+    );
+  }
+}
