@@ -5,4 +5,5 @@ abstract interface class IUserDataSource {
 
   Future<String> loginUser(String email, String password, String stakeholder);
   Future<UserEntity> getCurrentUser();
+
 }
