@@ -17,7 +17,7 @@ import 'property_add_property_bloc_test.mocks.dart';
 
 void main() {
   late AddPropertyBloc addPropertyBloc;
-  late MockAddPropertyUseca mockAddPropertyUsecase;
+  late MockAddPropertyUsecase mockAddPropertyUsecase;
   late MockGetAllCategoriesUsecase mockGetAllCategoriesUsecase;
 
   setUp(() {
