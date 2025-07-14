@@ -6,6 +6,7 @@ import 'package:dream_dwell/features/dashbaord/presentation/view_model/dashboard
 import 'package:dream_dwell/features/add_property/data/model/property_model/property_api_model.dart';
 import 'package:dream_dwell/features/dashbaord/presentation/widgets/property_card_widget.dart';
 import 'package:dream_dwell/features/dashbaord/presentation/widgets/horizontal_property_card.dart';
+import 'dart:async';
 
 class DashboardPage extends StatelessWidget {
   final VoidCallback? onSeeAllTap;
@@ -21,8 +22,48 @@ class DashboardPage extends StatelessWidget {
   }
 }
 
-class DashboardView extends StatelessWidget {
+class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
+
+  @override
+  State<DashboardView> createState() => _DashboardViewState();
+}
+
+class _DashboardViewState extends State<DashboardView> {
+  int _currentBigImageIndex = 0;
+  Timer? _bigImageTimer;
+  late PageController _bigImagePageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _bigImagePageController = PageController();
+    _startBigImageTimer();
+  }
+
+  void _startBigImageTimer() {
+    _bigImageTimer?.cancel();
+    _bigImageTimer = Timer.periodic(const Duration(seconds: 45), (timer) {
+      if (!mounted) return;
+      setState(() {
+        _currentBigImageIndex = (_currentBigImageIndex + 1) % (_bigImageCount ?? 1);
+        _bigImagePageController.animateToPage(
+          _currentBigImageIndex,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOut,
+        );
+      });
+    });
+  }
+
+  int? _bigImageCount;
+
+  @override
+  void dispose() {
+    _bigImageTimer?.cancel();
+    _bigImagePageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +79,7 @@ class DashboardView extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Error: ${state.message}'),
+                    Text('Error:  {state.message}'),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
@@ -50,132 +91,137 @@ class DashboardView extends StatelessWidget {
                 ),
               );
             } else if (state is DashboardLoaded) {
-              return _buildDashboardContent(context, state.properties);
+              final landlordAvatars = state.landlordAvatars;
+              final bigImageUrls = state.bigImageUrls;
+              final topProperties = state.topProperties;
+              _bigImageCount = bigImageUrls.length;
+              return SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Horizontal Avatars
+                    if (landlordAvatars.isNotEmpty)
+                      SizedBox(
+                        height: 80,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          itemCount: landlordAvatars.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 12),
+                          itemBuilder: (context, index) {
+                            final landlord = landlordAvatars[index];
+                            final avatarUrl = landlord['profilePicture'] != null && landlord['profilePicture'].toString().isNotEmpty
+                                ? 'http://10.0.2.2:3001${landlord['profilePicture']}'
+                                : null;
+                            return Column(
+                              children: [
+                                CircleAvatar(
+                                  radius: 28,
+                                  backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                                  backgroundColor: Colors.grey[300],
+                                  child: avatarUrl == null ? const Icon(Icons.person, size: 28, color: Colors.white) : null,
+                                ),
+                                const SizedBox(height: 4),
+                                SizedBox(
+                                  width: 60,
+                                  child: Text(
+                                    landlord['fullName'] ?? '',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 11),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    // Big Animated House Image
+                    if (bigImageUrls.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: SizedBox(
+                          height: 220,
+                          child: PageView.builder(
+                            controller: _bigImagePageController,
+                            itemCount: bigImageUrls.length,
+                            onPageChanged: (index) {
+                              setState(() {
+                                _currentBigImageIndex = index;
+                              });
+                            },
+                            itemBuilder: (context, index) {
+                              final imageUrl = bigImageUrls[index];
+                              return AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 800),
+                                child: imageUrl.isNotEmpty
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Image.network(
+                                          imageUrl,
+                                          key: ValueKey(imageUrl),
+                                          fit: BoxFit.cover,
+                                          width: double.infinity,
+                                          height: 220,
+                                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 80, color: Colors.grey),
+                                        ),
+                                      )
+                                    : Container(
+                                        height: 220,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[200],
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        child: const Center(child: Text('No image', style: TextStyle(color: Colors.grey))),
+                                      ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                    // 5 Property Cards (vertical)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: const [
+                          Text(
+                            "Popular for you",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: topProperties.length,
+                      itemBuilder: (context, index) {
+                        final property = topProperties[index];
+                        return PropertyCardWidget(
+                          property: property,
+                          onTap: () {
+                            // Navigate to property details
+                            // You can use Get.to or Navigator here
+                          },
+                          showFavoriteButton: true,
+                          baseUrl: 'http://10.0.2.2:3001/',
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              );
             }
             return const Center(child: CircularProgressIndicator());
           },
         ),
-      ),
-    );
-  }
-
-  Widget _buildDashboardContent(BuildContext context, List<PropertyApiModel> properties) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ---------------- Header ----------------
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Recommended",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Handle see all tap
-                  },
-                  child: Text(
-                    "See All",
-                    style: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ------------------- Horizontal Scroll Properties ------------------
-          if (properties.isNotEmpty)
-            SizedBox(
-              height: 200,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: properties.length,
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                itemBuilder: (context, index) {
-                  final property = properties[index];
-                  
-                  return HorizontalPropertyCard(
-                    property: property,
-                    onTap: () {
-                      // Navigate to property details
-                      // Navigator.pushNamed(context, '/property-details', arguments: property);
-                    },
-                    baseUrl: 'http://10.0.2.2:3001/',
-                  );
-                },
-              ),
-            ),
-
-          // ------------------- Promotional Banner ------------------
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                "https://thumbs.dreamstime.com/z/commercial-real-estate-banner-blue-colors-hands-smartphone-buildings-skyscrapers-cityscape-property-searching-app-concept-186877789.jpg",
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: 180,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return const Center(child: CircularProgressIndicator());
-                },
-                errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // ------------------- Popular for You ------------------
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
-                  "Popular for you",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ------------------- Vertical List of Properties ------------------
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: properties.length,
-            itemBuilder: (context, index) {
-              final property = properties[index];
-              
-              return PropertyCardWidget(
-                property: property,
-                onTap: () {
-                  // Navigate to property details
-                  // Navigator.pushNamed(context, '/property-details', arguments: property);
-                },
-                showFavoriteButton: true,
-                baseUrl: 'http://10.0.2.2:3001/',
-              );
-            },
-          )
-        ],
       ),
     );
   }

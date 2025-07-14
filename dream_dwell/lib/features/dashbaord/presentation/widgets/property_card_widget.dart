@@ -9,6 +9,9 @@ import 'package:dream_dwell/features/add_property/domain/use_case/cart/get_cart_
 import 'package:dream_dwell/cores/network/hive_service.dart';
 import 'package:dream_dwell/features/auth/data/model/user_hive_model.dart';
 import 'package:dream_dwell/cores/utils/image_url_helper.dart';
+import 'package:get/get.dart';
+import 'package:dream_dwell/features/favourite/presentation/view_model/cart_view_model.dart';
+import 'package:dream_dwell/features/add_property/presentation/view/property_detail_page.dart';
 
 class PropertyCardWidget extends StatefulWidget {
   final PropertyApiModel property;
@@ -17,6 +20,7 @@ class PropertyCardWidget extends StatefulWidget {
   final bool showRemoveButton;
   final bool isFavorite;
   final String? baseUrl;
+  final VoidCallback? onRemove;
 
   const PropertyCardWidget({
     super.key,
@@ -26,6 +30,7 @@ class PropertyCardWidget extends StatefulWidget {
     this.showRemoveButton = false,
     this.isFavorite = false,
     this.baseUrl,
+    this.onRemove,
   });
 
   @override
@@ -33,17 +38,13 @@ class PropertyCardWidget extends StatefulWidget {
 }
 
 class _PropertyCardWidgetState extends State<PropertyCardWidget> {
-  bool _isLoading = false;
-  bool _isFavorite = false;
   int _currentImageIndex = 0;
   late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
-    _isFavorite = widget.isFavorite;
     _pageController = PageController();
-    _checkFavoriteStatus();
   }
 
   @override
@@ -51,124 +52,6 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
     _pageController.dispose();
     super.dispose();
   }
-
-  Future<void> _checkFavoriteStatus() async {
-    try {
-      // Check if the property is in the cart (favorites)
-      final getCartUsecase = GetIt.instance<GetCartUsecase>();
-      final result = await getCartUsecase();
-      
-      result.fold(
-        (failure) {
-          // If we can't check, assume not favorite
-          setState(() {
-            _isFavorite = false;
-          });
-        },
-        (cart) {
-          final isInCart = cart.items?.any((item) => item.property?.id == widget.property.id) ?? false;
-          setState(() {
-            _isFavorite = isInCart;
-          });
-        },
-      );
-    } catch (e) {
-      // If there's an error, assume not favorite
-      setState(() {
-        _isFavorite = false;
-      });
-    }
-  }
-
-  Future<void> _toggleFavorite() async {
-    if (_isLoading) return;
-
-    print('DEBUG: Heart icon tapped for property: ${widget.property.id} - ${widget.property.title}');
-    print('DEBUG: Current favorite state: $_isFavorite');
-
-    // Proceed with cart operation without authentication check
-    print('DEBUG: Proceeding with cart operation (no login required)');
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      if (_isFavorite) {
-        // Remove from favorites
-        print('DEBUG: Attempting to remove from favorites');
-        final removeUsecase = GetIt.instance<RemoveFromCartUsecase>();
-        final result = await removeUsecase(RemoveFromCartParams(propertyId: widget.property.id ?? ''));
-        
-        result.fold(
-          (failure) {
-            print('DEBUG: Remove from favorites failed: ${failure.message}');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to remove from favorites: ${failure.message}'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          },
-          (_) {
-            print('DEBUG: Successfully removed from favorites');
-            setState(() {
-              _isFavorite = false;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Removed from favorites'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          },
-        );
-      } else {
-        // Add to favorites
-        print('DEBUG: Attempting to add to favorites');
-        final addUsecase = GetIt.instance<AddToCartUsecase>();
-        final result = await addUsecase(AddToCartParams(propertyId: widget.property.id ?? ''));
-        
-        result.fold(
-          (failure) {
-            print('DEBUG: Add to favorites failed: ${failure.message}');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to add to favorites: ${failure.message}'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          },
-          (_) {
-            print('DEBUG: Successfully added to favorites');
-            setState(() {
-              _isFavorite = true;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Added to favorites'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          },
-        );
-      }
-    } catch (e) {
-      print('DEBUG: Exception in _toggleFavorite: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-
 
   String _getImageUrl(String imagePath) {
     print('DEBUG: Processing image path: $imagePath');
@@ -316,8 +199,18 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final CartViewModel cartViewModel = Get.find<CartViewModel>();
     return GestureDetector(
-      onTap: widget.onTap,
+      onTap: widget.onTap ?? () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => PropertyDetailPage(
+              propertyId: widget.property.id ?? '',
+              baseUrl: widget.baseUrl,
+            ),
+          ),
+        );
+      },
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -370,7 +263,15 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        // Update and Delete buttons removed - no login required for cart functionality
+                        if (widget.showRemoveButton && widget.onRemove != null)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              tooltip: 'Remove from cart',
+                              onPressed: widget.onRemove,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -382,34 +283,46 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
               Positioned(
                 top: 8,
                 right: 8,
-                child: GestureDetector(
-                  onTap: _toggleFavorite,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
-                          )
-                        : Icon(
-                            _isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: _isFavorite ? Colors.red : Colors.grey,
-                            size: 24,
+                child: Obx(() {
+                  final isFavorite = cartViewModel.isInCart(widget.property.id ?? '');
+                  final isLoading = cartViewModel.isLoading;
+                  return GestureDetector(
+                    onTap: isLoading
+                        ? null
+                        : () async {
+                            if (isFavorite) {
+                              await cartViewModel.removeFromCart(widget.property.id ?? '');
+                            } else {
+                              await cartViewModel.addToCart(widget.property.id ?? '');
+                            }
+                          },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
                           ),
-                  ),
-                ),
+                        ],
+                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+                            )
+                          : Icon(
+                              isFavorite ? Icons.favorite : Icons.favorite_border,
+                              color: isFavorite ? Colors.red : Colors.grey,
+                              size: 24,
+                            ),
+                    ),
+                  );
+                }),
               ),
           ],
         ),

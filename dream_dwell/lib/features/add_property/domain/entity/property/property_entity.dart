@@ -14,6 +14,8 @@ class PropertyEntity extends Equatable {
   final String? landlordId; // Optional - can be null for unauthenticated users
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final Map<String, dynamic>? category; // Populated category object
+  final Map<String, dynamic>? landlord; // Populated landlord object
 
   const PropertyEntity({
     this.id,
@@ -29,11 +31,11 @@ class PropertyEntity extends Equatable {
     this.landlordId,
     this.createdAt,
     this.updatedAt,
+    this.category,
+    this.landlord,
   });
 
-  // Factory constructor to create a PropertyEntity from a JSON map (e.g., from API response)
   factory PropertyEntity.fromJson(Map<String, dynamic> json) {
-    // Handle categoryId which can be either a string or an object
     String? categoryId;
     if (json['categoryId'] != null) {
       if (json['categoryId'] is String) {
@@ -43,7 +45,6 @@ class PropertyEntity extends Equatable {
       }
     }
 
-    // Handle landlord which can be either a string or an object
     String? landlordId;
     if (json['landlord'] != null) {
       if (json['landlord'] is String) {
@@ -62,15 +63,16 @@ class PropertyEntity extends Equatable {
       bedrooms: json['bedrooms'] as int?,
       bathrooms: json['bathrooms'] as int?,
       categoryId: categoryId,
-      price: (json['price'] as num?)?.toDouble(), // Handle num from JSON, convert to double
+      price: (json['price'] as num?)?.toDouble(),
       description: json['description'] as String?,
       landlordId: landlordId,
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      category: json['categoryId'] is Map<String, dynamic> ? json['categoryId'] as Map<String, dynamic> : null,
+      landlord: json['landlord'] is Map<String, dynamic> ? json['landlord'] as Map<String, dynamic> : null,
     );
   }
 
-  // Method to convert a PropertyEntity to a JSON map (e.g., for sending to API)
   Map<String, dynamic> toJson() {
     final json = {
       '_id': id,
@@ -85,17 +87,15 @@ class PropertyEntity extends Equatable {
       'description': description,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'category': category,
+      'landlord': landlord,
     };
-    
-    // Only add landlord if it's not null
     if (landlordId != null) {
-      json['landlord'] = landlordId;
+      json['landlordId'] = landlordId;
     }
-    
     return json;
   }
 
-  // Optional: copyWith method for immutability and easy updates
   PropertyEntity copyWith({
     String? id,
     List<String>? images,
@@ -110,6 +110,8 @@ class PropertyEntity extends Equatable {
     String? landlordId,
     DateTime? createdAt,
     DateTime? updatedAt,
+    Map<String, dynamic>? category,
+    Map<String, dynamic>? landlord,
   }) {
     return PropertyEntity(
       id: id ?? this.id,
@@ -125,6 +127,8 @@ class PropertyEntity extends Equatable {
       landlordId: landlordId ?? this.landlordId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      category: category ?? this.category,
+      landlord: landlord ?? this.landlord,
     );
   }
 
@@ -143,5 +147,7 @@ class PropertyEntity extends Equatable {
     landlordId,
     createdAt,
     updatedAt,
+    category,
+    landlord,
   ];
 }

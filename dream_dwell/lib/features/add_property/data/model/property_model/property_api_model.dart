@@ -20,6 +20,7 @@ class PropertyApiModel extends Equatable {
   final String? description;
   @JsonKey(name: 'landlord') // Matches your Mongoose schema's field name
   final String landlordId;
+  final Map<String, dynamic>? landlord; // Populated landlord object from backend
 
   // Add timestamps from Mongoose schema
   final DateTime? createdAt;
@@ -38,6 +39,7 @@ class PropertyApiModel extends Equatable {
     required this.price,
     this.description,
     required this.landlordId,
+    this.landlord,
     this.createdAt, // Added
     this.updatedAt, // Added
   });
@@ -62,6 +64,7 @@ class PropertyApiModel extends Equatable {
       price: price,
       description: description,
       landlordId: landlordId,
+      landlord: landlord,
       createdAt: createdAt, // Added
       updatedAt: updatedAt, // Added
     );
@@ -81,6 +84,7 @@ class PropertyApiModel extends Equatable {
       price: entity.price ?? 0.0, // Ensure non-nullable price is handled
       description: entity.description,
       landlordId: entity.landlordId ?? '', // Ensure non-nullable landlordId is handled
+      landlord: entity.landlord,
       createdAt: entity.createdAt, // Added
       updatedAt: entity.updatedAt, // Added
     );
@@ -89,7 +93,7 @@ class PropertyApiModel extends Equatable {
   @override
   List<Object?> get props => [
     id, images, videos, title, location, bedrooms, bathrooms,
-    categoryId, price, description, landlordId, createdAt, updatedAt, // Added timestamps
+    categoryId, price, description, landlordId, landlord, createdAt, updatedAt, // Added timestamps
   ];
 
   @override
@@ -108,6 +112,7 @@ class PropertyApiModel extends Equatable {
     double? price,
     String? description,
     String? landlordId,
+    Map<String, dynamic>? landlord,
     DateTime? createdAt, // Added
     DateTime? updatedAt, // Added
   }) {
@@ -123,6 +128,7 @@ class PropertyApiModel extends Equatable {
       price: price ?? this.price,
       description: description ?? this.description,
       landlordId: landlordId ?? this.landlordId,
+      landlord: landlord ?? this.landlord,
       createdAt: createdAt ?? this.createdAt, // Added
       updatedAt: updatedAt ?? this.updatedAt, // Added
     );

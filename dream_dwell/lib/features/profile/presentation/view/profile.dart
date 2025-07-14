@@ -8,8 +8,11 @@ import 'package:image_picker/image_picker.dart'; // For image picking
 import 'dart:io'; // For File
 import 'dart:typed_data'; // For Uint8List
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:image/image.dart' as img; // For image processing
+import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart'; // For getTemporaryDirectory
+import 'package:get_it/get_it.dart';
+import 'package:dream_dwell/features/favourite/presentation/view_model/cart_view_model.dart';
+import 'package:get/get.dart';
 
 // Imports for your Profile BLoC
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart';
@@ -32,6 +35,8 @@ class _ProfilePageState extends State<ProfilePage> {
     // Fetch user profile on page load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
+      // Ensure cart is loaded for correct Favourites count
+      GetIt.instance<CartViewModel>().loadCart();
     });
   }
 
@@ -484,12 +489,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: _buildStatCard(
+                        child: Obx(() => _buildStatCard(
                           icon: Icons.favorite,
                           title: 'Favourites',
-                          value: '12',
+                          value: GetIt.instance<CartViewModel>().itemCount.toString(),
                           color: Colors.red,
-                        ),
+                        )),
                       ),
                       const SizedBox(width: 16),
                       Expanded(

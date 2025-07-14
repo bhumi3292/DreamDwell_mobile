@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dream_dwell/view/explore.dart';
+import 'package:dream_dwell/features/explore/presentation/view/explore_page.dart';
 
 void main() {
   group('ExplorePage', () {

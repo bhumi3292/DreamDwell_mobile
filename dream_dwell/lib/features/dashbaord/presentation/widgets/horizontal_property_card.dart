@@ -77,6 +77,7 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
 
     print('DEBUG: Horizontal heart icon tapped for property: ${widget.property.id} - ${widget.property.title}');
     print('DEBUG: Current favorite state: $_isFavorite');
+    print('DEBUG: Property images: ${widget.property.images}');
 
     // Proceed with cart operation without authentication check
     print('DEBUG: Proceeding with cart operation (no login required)');
@@ -102,8 +103,9 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
               ),
             );
           },
-          (_) {
+          (cart) {
             print('DEBUG: Successfully removed from favorites (horizontal)');
+            print('DEBUG: Updated cart has ${cart.items?.length ?? 0} items');
             setState(() {
               _isFavorite = false;
             });
@@ -131,8 +133,9 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
               ),
             );
           },
-          (_) {
+          (cart) {
             print('DEBUG: Successfully added to favorites (horizontal)');
+            print('DEBUG: Updated cart has ${cart.items?.length ?? 0} items');
             setState(() {
               _isFavorite = true;
             });

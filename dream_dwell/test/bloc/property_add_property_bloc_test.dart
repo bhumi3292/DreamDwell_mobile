@@ -11,21 +11,25 @@ import 'package:dream_dwell/features/add_property/domain/entity/category/categor
 import 'package:dream_dwell/features/add_property/presentation/property/view_model/add_property_view_model.dart';
 import 'package:dream_dwell/features/add_property/presentation/property/view_model/add_property_event.dart';
 import 'package:dream_dwell/features/add_property/presentation/property/view_model/add_property_state.dart';
+import 'package:dream_dwell/cores/network/hive_service.dart';
 
-@GenerateMocks([AddPropertyUsecase, GetAllCategoriesUsecase])
+@GenerateMocks([AddPropertyUsecase, GetAllCategoriesUsecase, HiveService])
 import 'property_add_property_bloc_test.mocks.dart';
 
 void main() {
   late AddPropertyBloc addPropertyBloc;
   late MockAddPropertyUsecase mockAddPropertyUsecase;
   late MockGetAllCategoriesUsecase mockGetAllCategoriesUsecase;
+  late MockHiveService mockHiveService;
 
   setUp(() {
     mockAddPropertyUsecase = MockAddPropertyUsecase();
     mockGetAllCategoriesUsecase = MockGetAllCategoriesUsecase();
+    mockHiveService = MockHiveService();
     addPropertyBloc = AddPropertyBloc(
       addPropertyUsecase: mockAddPropertyUsecase,
       getAllCategoriesUsecase: mockGetAllCategoriesUsecase,
+      hiveService: mockHiveService,
     );
   });
 
