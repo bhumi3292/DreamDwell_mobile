@@ -37,13 +37,14 @@ import 'package:dream_dwell/features/add_property/data/repository/category/remot
 import 'package:dream_dwell/features/add_property/domain/repository/category_repository.dart';
 
 // Cart
-import 'package:dream_dwell/features/add_property/data/data_source/cart/remote_datasource/cart_remote_datasource.dart';
-import 'package:dream_dwell/features/add_property/data/repository/cart/cart_repository_impl.dart';
-import 'package:dream_dwell/features/add_property/domain/repository/cart/cart_repository.dart';
-import 'package:dream_dwell/features/add_property/domain/use_case/cart/get_cart_usecase.dart';
-import 'package:dream_dwell/features/add_property/domain/use_case/cart/add_to_cart_usecase.dart';
-import 'package:dream_dwell/features/add_property/domain/use_case/cart/remove_from_cart_usecase.dart';
-import 'package:dream_dwell/features/add_property/domain/use_case/cart/clear_cart_usecase.dart';
+import 'package:dream_dwell/features/favourite/data/datasource/cart_api_service.dart';
+import 'package:dream_dwell/features/favourite/data/repository/cart_repository_impl.dart';
+import 'package:dream_dwell/features/favourite/domain/repository/cart_repository.dart';
+import 'package:dream_dwell/features/favourite/domain/usecase/get_cart_usecase.dart';
+import 'package:dream_dwell/features/favourite/domain/usecase/add_to_cart_usecase.dart';
+import 'package:dream_dwell/features/favourite/domain/usecase/remove_from_cart_usecase.dart';
+import 'package:dream_dwell/features/favourite/domain/usecase/clear_cart_usecase.dart';
+import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
 
 // Dashboard
 import 'package:dream_dwell/features/dashbaord/data/data_source/remote_datasource/dashboard_remote_datasource.dart';
@@ -51,6 +52,13 @@ import 'package:dream_dwell/features/dashbaord/data/repository/dashboard_reposit
 import 'package:dream_dwell/features/dashbaord/domain/repository/dashboard_repository.dart';
 import 'package:dream_dwell/features/dashbaord/domain/use_case/get_dashboard_properties_usecase.dart';
 import 'package:dream_dwell/features/dashbaord/presentation/view_model/dashboard_view_model.dart';
+
+// Explore
+import 'package:dream_dwell/features/explore/data/data_source/explore_remote_data_source.dart';
+import 'package:dream_dwell/features/explore/data/repository/explore_repository_impl.dart';
+import 'package:dream_dwell/features/explore/domain/repository/explore_repository.dart';
+import 'package:dream_dwell/features/explore/domain/use_case/get_all_properties_usecase.dart';
+import 'package:dream_dwell/features/explore/presentation/bloc/explore_bloc.dart';
 
 
 final serviceLocator = GetIt.instance;
@@ -62,6 +70,7 @@ Future<void> initDependencies() async {
   _initPropertyModules();
   _initCartModules();
   _initDashboardModules();
+  _initExploreModules();
 }
 
 Future<void> _initHiveService() async {
@@ -140,39 +149,49 @@ void _initPropertyModules() {
 
 void _initCartModules() {
   // --- Cart Data Sources ---
-  serviceLocator.registerFactory<CartRemoteDatasource>(
-    () => CartRemoteDatasource(dio: serviceLocator<Dio>()),
+  serviceLocator.registerFactory<CartApiService>(
+    () => CartApiServiceImpl(serviceLocator<ApiService>()),
   );
 
   // --- Cart Repositories ---
-  serviceLocator.registerFactory<ICartRepository>(
+  serviceLocator.registerFactory<CartRepository>(
     () => CartRepositoryImpl(
-      cartDataSource: serviceLocator<CartRemoteDatasource>(),
+      serviceLocator<CartApiService>(),
     ),
   );
 
   // --- Cart Usecases ---
-  serviceLocator.registerFactory<GetCartUsecase>(
-    () => GetCartUsecase(
-      cartRepository: serviceLocator<ICartRepository>(),
+  serviceLocator.registerFactory<GetCartUseCase>(
+    () => GetCartUseCase(
+      serviceLocator<CartRepository>(),
     ),
   );
   
-  serviceLocator.registerFactory<AddToCartUsecase>(
-    () => AddToCartUsecase(
-      cartRepository: serviceLocator<ICartRepository>(),
+  serviceLocator.registerFactory<AddToCartUseCase>(
+    () => AddToCartUseCase(
+      serviceLocator<CartRepository>(),
     ),
   );
   
-  serviceLocator.registerFactory<RemoveFromCartUsecase>(
-    () => RemoveFromCartUsecase(
-      cartRepository: serviceLocator<ICartRepository>(),
+  serviceLocator.registerFactory<RemoveFromCartUseCase>(
+    () => RemoveFromCartUseCase(
+      serviceLocator<CartRepository>(),
     ),
   );
   
-  serviceLocator.registerFactory<ClearCartUsecase>(
-    () => ClearCartUsecase(
-      cartRepository: serviceLocator<ICartRepository>(),
+  serviceLocator.registerFactory<ClearCartUseCase>(
+    () => ClearCartUseCase(
+      serviceLocator<CartRepository>(),
+    ),
+  );
+
+  // --- Cart Bloc ---
+  serviceLocator.registerFactory<CartBloc>(
+    () => CartBloc(
+      getCartUseCase: serviceLocator<GetCartUseCase>(),
+      addToCartUseCase: serviceLocator<AddToCartUseCase>(),
+      removeFromCartUseCase: serviceLocator<RemoveFromCartUseCase>(),
+      clearCartUseCase: serviceLocator<ClearCartUseCase>(),
     ),
   );
 }
@@ -270,6 +289,36 @@ void _initDashboardModules() {
   serviceLocator.registerFactory<DashboardViewModel>(
     () => DashboardViewModel(
       getDashboardPropertiesUsecase: serviceLocator<GetDashboardPropertiesUsecase>(),
+    ),
+  );
+}
+
+void _initExploreModules() {
+  // --- Explore Data Sources ---
+  serviceLocator.registerFactory<ExploreRemoteDataSource>(
+    () => ExploreRemoteDataSourceImpl(
+      serviceLocator<ApiService>(),
+    ),
+  );
+
+  // --- Explore Repositories ---
+  serviceLocator.registerFactory<ExploreRepository>(
+    () => ExploreRepositoryImpl(
+      serviceLocator<ExploreRemoteDataSource>(),
+    ),
+  );
+
+  // --- Explore Usecases ---
+  serviceLocator.registerFactory<GetExplorePropertiesUsecase>(
+    () => GetExplorePropertiesUsecase(
+      serviceLocator<ExploreRepository>(),
+    ),
+  );
+
+  // --- Explore Bloc ---
+  serviceLocator.registerFactory<ExploreBloc>(
+    () => ExploreBloc(
+      getAllPropertiesUsecase: serviceLocator<GetExplorePropertiesUsecase>(),
     ),
   );
 }

@@ -16,7 +16,7 @@ class ApiEndpoints {
   // static const String serverAddress = androidEmulatorAddress;
 
   static const String baseUrl = "$serverAddress/api/";
-  static const String imageUrl = "$serverAddress/";
+  static const String imageUrl = "$serverAddress";
 
   // ---------- Auth ----------
   static const String register = "${baseUrl}auth/register";
