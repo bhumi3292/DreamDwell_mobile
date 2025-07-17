@@ -5,14 +5,18 @@ import 'package:dream_dwell/features/auth/domain/repository/user_repository.dart
 import 'package:dream_dwell/features/auth/data/data_source/remote_datasource/user_remote_datasource.dart';
 import 'package:dream_dwell/cores/network/hive_service.dart';
 import 'dart:io';
+import 'package:dream_dwell/cores/network/api_service.dart';
+import 'package:dream_dwell/features/auth/data/model/user_api_model.dart';
 
 class UserRemoteRepository implements IUserRepository {
   final UserRemoteDatasource _dataSource;
   final HiveService _hiveService;
+  final ApiService apiService;
 
   UserRemoteRepository({
     required UserRemoteDatasource dataSource,
     required HiveService hiveService,
+    required this.apiService,
   })  : _dataSource = dataSource,
         _hiveService = hiveService;
 
@@ -66,6 +70,24 @@ class UserRemoteRepository implements IUserRepository {
       }
       // Fallback for any unexpected non-Failure exceptions
       return Left(RemoteDatabaseFailure(message: "Upload profile picture failed: ${e.toString()}"));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> updateUser(String fullName, String email) async {
+    try {
+      final response = await apiService.dio.patch(
+        '/users/me', // Adjust endpoint as needed
+        data: {'fullName': fullName, 'email': email},
+      );
+      if (response.statusCode == 200) {
+        final userApiModel = UserApiModel.fromJson(response.data);
+        return Right(userApiModel.toEntity());
+      } else {
+        return Left(ServerFailure(message: 'Failed to update user'));
+      }
+    } catch (e) {
+      return Left(NetworkFailure(message: e.toString()));
     }
   }
 

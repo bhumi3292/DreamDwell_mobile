@@ -18,7 +18,10 @@ class _ExplorePageState extends State<ExplorePage> {
   late CartBloc _cartBloc;
   String _searchText = '';
   String? _selectedCategory;
+  double? _minPrice;
   double? _maxPrice;
+  int? _minBedrooms;
+  int? _minBathrooms;
 
   @override
   void initState() {
@@ -62,6 +65,53 @@ class _ExplorePageState extends State<ExplorePage> {
                       await _showFilterDialog();
                     },
                   ),
+                  // Filter Indicator
+                  if (_hasActiveFilters())
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.filter_list,
+                                  size: 16,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Filters Active',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context).primaryColor,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Spacer(),
+                          TextButton(
+                            onPressed: _clearAllFilters,
+                            child: Text(
+                              'Clear All',
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -174,7 +224,10 @@ class _ExplorePageState extends State<ExplorePage> {
       FilterPropertiesEvent(
         searchText: _searchText,
         categoryId: _selectedCategory,
+        minPrice: _minPrice,
         maxPrice: _maxPrice,
+        minBedrooms: _minBedrooms,
+        minBathrooms: _minBathrooms,
       ),
     );
   }
@@ -185,15 +238,39 @@ class _ExplorePageState extends State<ExplorePage> {
       builder: (context) => ExploreFilterDialog(
         initialMaxPrice: _maxPrice,
         initialCategory: _selectedCategory,
+        initialMinBedrooms: _minBedrooms,
+        initialMinBathrooms: _minBathrooms,
       ),
     );
 
     if (result != null) {
       setState(() {
         _maxPrice = result['maxPrice'];
+        _minPrice = result['minPrice'];
         _selectedCategory = result['category'];
+        _minBedrooms = result['minBedrooms'];
+        _minBathrooms = result['minBathrooms'];
       });
       _filterProperties();
     }
+  }
+
+  bool _hasActiveFilters() {
+    return _selectedCategory != null ||
+           _minPrice != null ||
+           _maxPrice != null ||
+           _minBedrooms != null ||
+           _minBathrooms != null;
+  }
+
+  void _clearAllFilters() {
+    setState(() {
+      _selectedCategory = null;
+      _minPrice = null;
+      _maxPrice = null;
+      _minBedrooms = null;
+      _minBathrooms = null;
+    });
+    _filterProperties();
   }
 } 

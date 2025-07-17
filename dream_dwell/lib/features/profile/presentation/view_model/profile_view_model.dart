@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 // import 'package:dream_dwell/cores/common/snackbar/snackbar.dart'; // No longer needed here if snackbar is handled in UI
 import 'package:dream_dwell/cores/network/hive_service.dart';
 import 'package:dream_dwell/features/auth/domain/use_case/user_get_current_usecase.dart';
+import 'package:dream_dwell/features/auth/domain/use_case/update_user_profile_usecase.dart';
 import 'package:dream_dwell/features/profile/domain/use_case/upload_profile_picture_usecase.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_state.dart';
@@ -9,17 +10,20 @@ import 'package:dream_dwell/features/profile/presentation/view_model/profile_sta
 class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
   final UserGetCurrentUsecase userGetCurrentUsecase;
   final UploadProfilePictureUsecase uploadProfilePictureUsecase;
+  final UpdateUserProfileUsecase updateUserProfileUsecase;
   final HiveService hiveService;
 
   ProfileViewModel({
     required this.userGetCurrentUsecase,
     required this.uploadProfilePictureUsecase,
+    required this.updateUserProfileUsecase,
     required this.hiveService,
   }) : super(const ProfileState.initial()) {
     on<FetchUserProfileEvent>(_onFetchUserProfile);
     on<UploadProfilePictureEvent>(_onUploadProfilePicture);
     on<UpdateLocalUserEvent>(_onUpdateLocalUser);
     on<LogoutEvent>(_onLogout);
+    on<UpdateUserProfileEvent>(_onUpdateUserProfile);
   }
 
   Future<void> _onFetchUserProfile(
@@ -114,5 +118,25 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
       ));
       // Removed showMySnackbar here. UI will react to errorMessage.
     }
+  }
+
+  Future<void> _onUpdateUserProfile(
+      UpdateUserProfileEvent event, Emitter<ProfileState> emit) async {
+    emit(state.copyWith(isLoading: true, errorMessage: null, successMessage: null));
+
+    final result = await updateUserProfileUsecase.call(event.fullName, event.email);
+
+    result.fold(
+      (failure) {
+        emit(state.copyWith(isLoading: false, errorMessage: failure.message));
+      },
+      (updatedUser) {
+        emit(state.copyWith(
+          isLoading: false,
+          user: updatedUser,
+          successMessage: 'Profile updated successfully!',
+        ));
+      },
+    );
   }
 }

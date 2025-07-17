@@ -546,7 +546,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               title: 'Edit Profile',
                               subtitle: 'Update your personal information',
                               onTap: () {
-                                showMySnackbar(context: context, content: "Edit profile tapped!", isSuccess: true);
+                                _showEditProfileDialog(context, user);
                               },
                             ),
                             _buildDivider(),
@@ -724,6 +724,76 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  void _showEditProfileDialog(BuildContext context, UserEntity user) {
+    final TextEditingController _nameController = TextEditingController(text: user.fullName);
+    final TextEditingController _emailController = TextEditingController(text: user.email);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("Edit Profile"),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: "Full Name",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: "Email",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              final updatedName = _nameController.text;
+              final updatedEmail = _emailController.text;
+
+              if (updatedName.isEmpty || updatedEmail.isEmpty) {
+                showMySnackbar(
+                  context: context,
+                  content: "Name and Email cannot be empty.",
+                  isSuccess: false,
+                );
+                return;
+              }
+
+              context.read<ProfileViewModel>().add(
+                UpdateUserProfileEvent(
+                  context: context,
+                  fullName: updatedName,
+                  email: updatedEmail,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text("Save Changes", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -750,5 +820,10 @@ class _ProfilePageState extends State<ProfilePage> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }

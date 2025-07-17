@@ -49,3 +49,18 @@ class LogoutEvent extends ProfileEvent {
   @override
   List<Object?> get props => [context];
 }
+
+class UpdateUserProfileEvent extends ProfileEvent {
+  final BuildContext context;
+  final String fullName;
+  final String email;
+
+  const UpdateUserProfileEvent({
+    required this.context,
+    required this.fullName,
+    required this.email,
+  });
+
+  @override
+  List<Object?> get props => [context, fullName, email];
+}

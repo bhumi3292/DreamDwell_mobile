@@ -16,16 +16,22 @@ class GetPropertiesEvent extends ExploreEvent {}
 class FilterPropertiesEvent extends ExploreEvent {
   final String searchText;
   final String? categoryId;
+  final double? minPrice;
   final double? maxPrice;
+  final int? minBedrooms;
+  final int? minBathrooms;
 
   const FilterPropertiesEvent({
     required this.searchText,
     this.categoryId,
+    this.minPrice,
     this.maxPrice,
+    this.minBedrooms,
+    this.minBathrooms,
   });
 
   @override
-  List<Object?> get props => [searchText, categoryId, maxPrice];
+  List<Object?> get props => [searchText, categoryId, minPrice, maxPrice, minBedrooms, minBathrooms];
 }
 
 // States
@@ -96,12 +102,38 @@ class ExploreBloc extends Bloc<ExploreEvent, ExploreState> {
     Emitter<ExploreState> emit,
   ) {
     final filteredProperties = _allProperties.where((property) {
+      // Search text filter - search in title, location, and description
+      final searchLower = event.searchText.toLowerCase();
       final matchesSearch = event.searchText.isEmpty ||
-          (property.title?.toLowerCase().contains(event.searchText.toLowerCase()) ?? false) ||
-          (property.location?.toLowerCase().contains(event.searchText.toLowerCase()) ?? false);
-      final matchesCategory = event.categoryId == null || property.categoryId == event.categoryId;
-      final matchesPrice = event.maxPrice == null || (property.price ?? 0) <= event.maxPrice!;
-      return matchesSearch && matchesCategory && matchesPrice;
+          (property.title?.toLowerCase().contains(searchLower) ?? false) ||
+          (property.location?.toLowerCase().contains(searchLower) ?? false) ||
+          (property.description?.toLowerCase().contains(searchLower) ?? false);
+      
+      // Category filter
+      final matchesCategory = event.categoryId == null || 
+          property.categoryId == event.categoryId;
+      
+      // Price range filter
+      final propertyPrice = property.price ?? 0;
+      final matchesMinPrice = event.minPrice == null || propertyPrice >= event.minPrice!;
+      final matchesMaxPrice = event.maxPrice == null || propertyPrice <= event.maxPrice!;
+      
+      // Bedrooms filter
+      final propertyBedrooms = property.bedrooms ?? 0;
+      final matchesMinBedrooms = event.minBedrooms == null || 
+          propertyBedrooms >= event.minBedrooms!;
+      
+      // Bathrooms filter
+      final propertyBathrooms = property.bathrooms ?? 0;
+      final matchesMinBathrooms = event.minBathrooms == null || 
+          propertyBathrooms >= event.minBathrooms!;
+      
+      return matchesSearch && 
+             matchesCategory && 
+             matchesMinPrice && 
+             matchesMaxPrice && 
+             matchesMinBedrooms && 
+             matchesMinBathrooms;
     }).toList();
 
     emit(ExploreLoaded(

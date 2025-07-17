@@ -11,6 +11,8 @@ import 'package:dream_dwell/features/dashbaord/presentation/view_model/dashboard
 import 'package:dream_dwell/features/add_property/data/model/property_model/property_api_model.dart';
 import 'package:dream_dwell/features/dashbaord/presentation/widgets/property_card_widget.dart';
 import 'package:dream_dwell/features/dashbaord/presentation/widgets/horizontal_property_card.dart';
+import 'package:dream_dwell/features/explore/presentation/view/explore_page.dart';
+import 'package:dream_dwell/features/explore/presentation/bloc/explore_bloc.dart';
 
 class DashboardPage extends StatelessWidget {
   final VoidCallback? onSeeAllTap;
@@ -123,7 +125,16 @@ class DashboardView extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () {
-                    // TODO: Implement see all
+                    // Navigate to Explore page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BlocProvider(
+                          create: (context) => serviceLocator<ExploreBloc>(),
+                          child: const ExplorePage(),
+                        ),
+                      ),
+                    );
                   },
                   child: Text(
                     "See All",

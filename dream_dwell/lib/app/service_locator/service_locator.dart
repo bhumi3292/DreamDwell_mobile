@@ -14,6 +14,7 @@ import 'package:dream_dwell/features/auth/domain/repository/user_repository.dart
 import 'package:dream_dwell/features/auth/domain/use_case/user_login_usecase.dart';
 import 'package:dream_dwell/features/auth/domain/use_case/user_register_usecase.dart';
 import 'package:dream_dwell/features/auth/domain/use_case/user_get_current_usecase.dart';
+import 'package:dream_dwell/features/auth/domain/use_case/update_user_profile_usecase.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
 
@@ -215,6 +216,7 @@ void _initAuthAndProfileModules() {
         () => UserRemoteRepository(
       dataSource: serviceLocator<UserRemoteDatasource>(),
       hiveService: serviceLocator<HiveService>(),
+      apiService: serviceLocator<ApiService>(),
     ),
   );
 
@@ -244,6 +246,9 @@ void _initAuthAndProfileModules() {
       userRepository: serviceLocator<IUserRepository>(),
     ),
   );
+  serviceLocator.registerLazySingleton<UpdateUserProfileUsecase>(
+    () => UpdateUserProfileUsecase(serviceLocator<IUserRepository>()),
+  );
 
   // --- ViewModels ---
   serviceLocator.registerFactory<LoginViewModel>(
@@ -260,6 +265,7 @@ void _initAuthAndProfileModules() {
         () => ProfileViewModel(
       userGetCurrentUsecase: serviceLocator<UserGetCurrentUsecase>(),
       uploadProfilePictureUsecase: serviceLocator<UploadProfilePictureUsecase>(),
+      updateUserProfileUsecase: serviceLocator<UpdateUserProfileUsecase>(),
       hiveService: serviceLocator<HiveService>(),
     ),
   );

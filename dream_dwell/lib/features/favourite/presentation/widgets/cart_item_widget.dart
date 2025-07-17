@@ -155,7 +155,7 @@ class CartItemWidget extends StatelessWidget {
               IconButton(
                 onPressed: onRemove,
                 icon: const Icon(
-                  Icons.favorite,
+                  Icons.delete_outline,
                   color: Colors.red,
                   size: 24,
                 ),
