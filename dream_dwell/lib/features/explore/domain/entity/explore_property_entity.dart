@@ -7,9 +7,13 @@ class ExplorePropertyEntity {
   final int? bedrooms;
   final int? bathrooms;
   final String? categoryId;
+  final String? categoryName;
   final double? price;
   final String? description;
   final String? landlordId;
+  final String? landlordName;
+  final String? landlordEmail;
+  final String? landlordPhone;
 
   ExplorePropertyEntity({
     this.id,
@@ -20,8 +24,12 @@ class ExplorePropertyEntity {
     this.bedrooms,
     this.bathrooms,
     this.categoryId,
+    this.categoryName,
     this.price,
     this.description,
     this.landlordId,
+    this.landlordName,
+    this.landlordEmail,
+    this.landlordPhone,
   });
 } 

@@ -66,6 +66,7 @@ dependencies:
   iconly: ^1.0.1
   video_thumbnail: ^0.5.3
   image: ^4.1.7
+  sensors_plus: ^4.0.2
 
 
 

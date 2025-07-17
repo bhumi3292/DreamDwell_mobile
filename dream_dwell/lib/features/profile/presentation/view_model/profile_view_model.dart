@@ -28,6 +28,7 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
 
   Future<void> _onFetchUserProfile(
       FetchUserProfileEvent event, Emitter<ProfileState> emit) async {
+    print("FetchUserProfile - Starting fetch..."); // Debug print
     emit(state.copyWith(isLoading: true, errorMessage: null, successMessage: null));
 
     final result = await userGetCurrentUsecase.call();
@@ -38,7 +39,9 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
         // Removed showMySnackbar here. UI will react to errorMessage.
       },
           (userEntity) {
+        print("FetchUserProfile - Retrieved user: ${userEntity.fullName}, email: ${userEntity.email}"); // Debug print
         emit(state.copyWith(isLoading: false, user: userEntity,isLogoutSuccess: false,errorMessage: null,isUploadingImage: true,successMessage: "image uploaded success"));
+        print("FetchUserProfile - State emitted with user: ${userEntity.fullName}"); // Debug print
       },
     );
   }
@@ -125,7 +128,13 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
     print("_onUpdateUserProfile called with name: ${event.fullName}, email: ${event.email}"); // Debug print
     emit(state.copyWith(isLoading: true, errorMessage: null, successMessage: null));
 
-    final result = await updateUserProfileUsecase.call(event.fullName, event.email);
+    final result = await updateUserProfileUsecase.call(
+      event.fullName, 
+      event.email, 
+      event.phoneNumber,
+      event.currentPassword,
+      event.newPassword,
+    );
 
     result.fold(
       (failure) {
@@ -134,11 +143,13 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
       },
       (updatedUser) {
         print("Update user successful: ${updatedUser.fullName}"); // Debug print
+        print("Emitting new state with user: ${updatedUser.fullName}, email: ${updatedUser.email}"); // Debug print
         emit(state.copyWith(
           isLoading: false,
           user: updatedUser,
           successMessage: 'Profile updated successfully!',
         ));
+        print("State emitted successfully"); // Debug print
       },
     );
   }

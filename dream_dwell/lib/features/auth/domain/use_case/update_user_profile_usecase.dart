@@ -8,7 +8,19 @@ class UpdateUserProfileUsecase {
 
   UpdateUserProfileUsecase(this.repository);
 
-  Future<Either<Failure, UserEntity>> call(String fullName, String email) async {
-    return await repository.updateUser(fullName, email);
+  Future<Either<Failure, UserEntity>> call(
+    String fullName, 
+    String email, 
+    String? phoneNumber,
+    String? currentPassword,
+    String? newPassword,
+  ) async {
+    return await repository.updateUser(
+      fullName, 
+      email, 
+      phoneNumber,
+      currentPassword,
+      newPassword,
+    );
   }
 } 

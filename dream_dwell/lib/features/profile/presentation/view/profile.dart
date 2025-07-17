@@ -1,15 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dream_dwell/app/constant/api_endpoints.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
 import 'package:dream_dwell/cores/common/snackbar/snackbar.dart';
 import 'package:image_picker/image_picker.dart'; // For image picking
 import 'dart:io'; // For File
-import 'dart:typed_data'; // For Uint8List
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:image/image.dart' as img; // For image processing
 import 'package:path_provider/path_provider.dart'; // For getTemporaryDirectory
+import 'package:sensors_plus/sensors_plus.dart'; // For accelerometer
+import 'dart:async'; // For Timer
+import 'package:flutter/foundation.dart';
 
 // Imports for your Profile BLoC
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart';
@@ -19,6 +20,7 @@ import 'package:dream_dwell/features/profile/presentation/view_model/profile_vie
 // Import CartBloc for favourites count
 import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
 import 'package:dream_dwell/app/service_locator/service_locator.dart';
+import 'edit_profile_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -31,6 +33,14 @@ class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker(); // Initialize ImagePicker
   late CartBloc _cartBloc;
 
+  // Accelerometer variables for global logout
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
+  bool _hasTurnedLeft = false;
+  bool _hasTurnedRight = false;
+  Timer? _resetTimer;
+  static const double _threshold = 7.0; // Sensitivity
+  static const int _resetSeconds = 3;
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +51,45 @@ class _ProfilePageState extends State<ProfilePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
     });
+
+    // Start listening to accelerometer for global logout
+    _accelerometerSubscription = accelerometerEvents.listen((event) {
+      _detectTilt(event.x);
+    });
+  }
+
+  void _detectTilt(double x) {
+    if (!_hasTurnedLeft && x < -_threshold) {
+      _hasTurnedLeft = true;
+      _showGestureFeedback('Left tilt detected!');
+      _resetTimer?.cancel();
+      _resetTimer = Timer(const Duration(seconds: _resetSeconds), _resetGesture);
+      return;
+    }
+    if (_hasTurnedLeft && !_hasTurnedRight && x > _threshold) {
+      _hasTurnedRight = true;
+      _showGestureFeedback('Right tilt detected! Logging out...');
+      _performLogout();
+    }
+  }
+
+  void _showGestureFeedback(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), duration: const Duration(seconds: 1)),
+      );
+    }
+  }
+
+  void _resetGesture() {
+    _hasTurnedLeft = false;
+    _hasTurnedRight = false;
+  }
+
+  void _performLogout() {
+    _resetGesture();
+    _resetTimer?.cancel();
+    context.read<ProfileViewModel>().add(LogoutEvent(context: context));
   }
 
   // --- Image Picker Functionality ---
@@ -318,6 +367,7 @@ class _ProfilePageState extends State<ProfilePage> {
             }
           },
           builder: (context, state) {
+            print("Profile page - Building with state. User: ${state.user?.fullName}, isLoading: ${state.isLoading}"); // Debug print
             if (state.isLoading && state.user == null) {
               return const Center(child: CircularProgressIndicator());
             }
@@ -348,7 +398,7 @@ class _ProfilePageState extends State<ProfilePage> {
               );
             }
             final UserEntity? user = state.user;
-            print(user?.profilePicture);
+            print("Profile page - Current user: ${user?.fullName}, email: ${user?.email}"); // Debug print
 
             if (user == null) {
               return const Center(
@@ -564,8 +614,21 @@ class _ProfilePageState extends State<ProfilePage> {
                                 title: 'Edit Profile',
                                 subtitle: 'Update your personal information',
                                 onTap: () {
-                                  print("Edit Profile tapped!"); // Debug print
-                                  _showEditProfileDialog(context, user);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => EditProfilePage(user: user),
+                                    ),
+                                  ).then((updated) {
+                                    print("Profile page - Navigation returned with updated: $updated"); // Debug print
+                                    // Refresh user data if profile was updated
+                                    if (updated == true) {
+                                      print("Profile page - Triggering FetchUserProfileEvent"); // Debug print
+                                      context.read<ProfileViewModel>().add(
+                                        FetchUserProfileEvent(context: context),
+                                      );
+                                    }
+                                  });
                                 },
                               ),
                               _buildDivider(),
@@ -609,28 +672,14 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         const SizedBox(height: 20),
                         
-                        // Logout Section
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: _buildMenuItem(
-                            icon: Icons.logout,
-                            title: 'Logout',
-                            subtitle: 'Sign out of your account',
-                            isLogout: true,
-                            onTap: () {
-                              _showLogoutDialog(context);
-                            },
-                          ),
+                        // Logout Section with Accelerometer
+                        AccelerometerLogoutWidget(
+                          title: 'Logout',
+                          subtitle: 'Hold and turn device left, then right to logout',
+                          icon: Icons.logout,
+                          onLogout: () {
+                            _showLogoutDialog(context);
+                          },
                         ),
                         const SizedBox(height: 40),
                       ],
@@ -744,80 +793,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showEditProfileDialog(BuildContext context, UserEntity user) {
-    print("_showEditProfileDialog called with user: ${user.fullName}"); // Debug print
-    final TextEditingController _nameController = TextEditingController(text: user.fullName);
-    final TextEditingController _emailController = TextEditingController(text: user.email);
 
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("Edit Profile"),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: "Full Name",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: "Email",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              print("Save Changes button pressed"); // Debug print
-              Navigator.pop(dialogContext);
-              final updatedName = _nameController.text;
-              final updatedEmail = _emailController.text;
-
-              print("Updated name: $updatedName, email: $updatedEmail"); // Debug print
-
-              if (updatedName.isEmpty || updatedEmail.isEmpty) {
-                showMySnackbar(
-                  context: context,
-                  content: "Name and Email cannot be empty.",
-                  isSuccess: false,
-                );
-                return;
-              }
-
-              print("Sending UpdateUserProfileEvent"); // Debug print
-              context.read<ProfileViewModel>().add(
-                UpdateUserProfileEvent(
-                  context: context,
-                  fullName: updatedName,
-                  email: updatedEmail,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).primaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text("Save Changes", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
@@ -850,6 +826,271 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void dispose() {
     _cartBloc.close();
+    _accelerometerSubscription?.cancel();
+    _resetTimer?.cancel();
     super.dispose();
+  }
+}
+
+// Custom Logout Widget with Accelerometer Detection
+class AccelerometerLogoutWidget extends StatefulWidget {
+  final VoidCallback onLogout;
+  final String title;
+  final String subtitle;
+  final IconData icon;
+
+  const AccelerometerLogoutWidget({
+    super.key,
+    required this.onLogout,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+  });
+
+  @override
+  State<AccelerometerLogoutWidget> createState() => _AccelerometerLogoutWidgetState();
+}
+
+class _AccelerometerLogoutWidgetState extends State<AccelerometerLogoutWidget> {
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
+  bool _isListening = false;
+  bool _isAccelerometerAvailable = false;
+  List<double> _recentXValues = [];
+  bool _hasTurnedLeft = false;
+  bool _hasTurnedRight = false;
+  Timer? _resetTimer;
+  static const double _threshold = 8.0; // Threshold for detecting significant movement
+  static const int _maxValues = 10; // Number of recent values to keep
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAccelerometerAvailability();
+  }
+
+  void _checkAccelerometerAvailability() {
+    // Check if we're on a supported platform
+    if (kIsWeb) {
+      _isAccelerometerAvailable = false;
+      return;
+    }
+    
+    try {
+      // Try to listen to accelerometer events to check availability
+      _accelerometerSubscription = accelerometerEvents.listen(
+        (AccelerometerEvent event) {
+          // If we get here, accelerometer is available
+          if (!_isAccelerometerAvailable) {
+            setState(() {
+              _isAccelerometerAvailable = true;
+            });
+          }
+          
+          if (!_isListening) return;
+          
+          _recentXValues.add(event.x);
+          if (_recentXValues.length > _maxValues) {
+            _recentXValues.removeAt(0);
+          }
+
+          _detectGesture();
+        },
+        onError: (error) {
+          print('Accelerometer error: $error');
+          setState(() {
+            _isAccelerometerAvailable = false;
+          });
+        },
+      );
+    } catch (e) {
+      print('Accelerometer not available: $e');
+      setState(() {
+        _isAccelerometerAvailable = false;
+      });
+    }
+  }
+
+  void _detectGesture() {
+    if (_recentXValues.length < 5) return;
+
+    // Calculate average movement using last 5 values
+    List<double> lastFiveValues = _recentXValues.sublist(_recentXValues.length - 5);
+    double avgMovement = lastFiveValues.reduce((a, b) => a + b) / 5;
+    
+    // Detect left turn (negative X values)
+    if (avgMovement < -_threshold && !_hasTurnedLeft) {
+      _hasTurnedLeft = true;
+      _showGestureFeedback('Left turn detected!');
+      _resetTimer?.cancel();
+      _resetTimer = Timer(const Duration(seconds: 3), () {
+        _resetGesture();
+      });
+    }
+    
+    // Detect right turn (positive X values)
+    if (avgMovement > _threshold && _hasTurnedLeft && !_hasTurnedRight) {
+      _hasTurnedRight = true;
+      _showGestureFeedback('Right turn detected! Logging out...');
+      _performLogout();
+    }
+  }
+
+  void _showGestureFeedback(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 2),
+          backgroundColor: Colors.blue,
+        ),
+      );
+    }
+  }
+
+  void _resetGesture() {
+    setState(() {
+      _hasTurnedLeft = false;
+      _hasTurnedRight = false;
+    });
+    _recentXValues.clear();
+  }
+
+  void _performLogout() {
+    _isListening = false;
+    _resetTimer?.cancel();
+    widget.onLogout();
+  }
+
+  @override
+  void dispose() {
+    _accelerometerSubscription?.cancel();
+    _resetTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // If accelerometer is not available, show regular logout button
+    if (!_isAccelerometerAvailable) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.logout,
+              color: Colors.red,
+              size: 20,
+            ),
+          ),
+          title: const Text(
+            'Logout',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.red,
+            ),
+          ),
+          subtitle: const Text(
+            'Sign out of your account',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 12,
+            ),
+          ),
+          trailing: const Icon(
+            Icons.arrow_forward_ios,
+            color: Colors.red,
+            size: 16,
+          ),
+          onTap: widget.onLogout,
+        ),
+      );
+    }
+
+    // Accelerometer is available, show gesture-enabled logout
+    return GestureDetector(
+      onTapDown: (_) {
+        setState(() {
+          _isListening = true;
+        });
+        _showGestureFeedback('Hold and turn device left, then right to logout');
+      },
+      onTapUp: (_) {
+        setState(() {
+          _isListening = false;
+        });
+        _resetGesture();
+      },
+      onTapCancel: () {
+        setState(() {
+          _isListening = false;
+        });
+        _resetGesture();
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: _isListening ? Colors.orange.withOpacity(0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _isListening 
+                  ? Colors.orange.withOpacity(0.2) 
+                  : Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              widget.icon,
+              color: _isListening ? Colors.orange : Colors.red,
+              size: 20,
+            ),
+          ),
+          title: Text(
+            widget.title,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: _isListening ? Colors.orange : Colors.red,
+            ),
+          ),
+          subtitle: Text(
+            _isListening 
+                ? 'Turn left, then right to logout'
+                : widget.subtitle,
+            style: TextStyle(
+              color: _isListening ? Colors.orange : Colors.grey[600],
+              fontSize: 12,
+            ),
+          ),
+          trailing: Icon(
+            _isListening ? Icons.sensors : Icons.arrow_forward_ios,
+            color: _isListening ? Colors.orange : Colors.red,
+            size: 16,
+          ),
+        ),
+      ),
+    );
   }
 }

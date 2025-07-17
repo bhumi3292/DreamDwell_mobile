@@ -24,7 +24,7 @@ class ApiEndpoints {
   static const String getCurrentUser = "${baseUrl}auth/me";
 
   // ---------- User ----------
-  static const String updateUser = "${baseUrl}user/update/";
+  static const String updateUser = "${baseUrl}auth/update-profile";
   static const String deleteUser = "${baseUrl}user/delete/";
 
   // ---------- Profile ----------

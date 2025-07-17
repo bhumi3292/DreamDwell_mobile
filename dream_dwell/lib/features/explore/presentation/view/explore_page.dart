@@ -6,6 +6,7 @@ import 'package:dream_dwell/features/explore/presentation/widgets/explore_search
 import 'package:dream_dwell/features/explore/presentation/widgets/explore_filter_dialog.dart';
 import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
 import 'package:dream_dwell/app/service_locator/service_locator.dart';
+import 'package:dream_dwell/features/explore/presentation/view/property_detail_page.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -197,8 +198,12 @@ class _ExplorePageState extends State<ExplorePage> {
                             child: ExplorePropertyCard(
                               property: property,
                               onTap: () {
-                                // Navigate to property detail page
-                                // You can implement this navigation here
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => PropertyDetailPage(property: property),
+                                  ),
+                                );
                               },
                             ),
                           ),

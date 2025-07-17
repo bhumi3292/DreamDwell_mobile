@@ -58,7 +58,13 @@ class UserLocalRepository implements IUserRepository {
   }
 
   @override
-  Future<Either<Failure, UserEntity>> updateUser(String fullName, String email) async {
+  Future<Either<Failure, UserEntity>> updateUser(
+    String fullName, 
+    String email, 
+    String? phoneNumber,
+    String? currentPassword,
+    String? newPassword,
+  ) async {
     return Future.error(UnimplementedError('Local updateUser not implemented'));
   }
 }
