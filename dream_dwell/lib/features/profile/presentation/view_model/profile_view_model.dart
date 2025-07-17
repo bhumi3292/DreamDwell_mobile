@@ -122,15 +122,18 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
 
   Future<void> _onUpdateUserProfile(
       UpdateUserProfileEvent event, Emitter<ProfileState> emit) async {
+    print("_onUpdateUserProfile called with name: ${event.fullName}, email: ${event.email}"); // Debug print
     emit(state.copyWith(isLoading: true, errorMessage: null, successMessage: null));
 
     final result = await updateUserProfileUsecase.call(event.fullName, event.email);
 
     result.fold(
       (failure) {
+        print("Update user failed: ${failure.message}"); // Debug print
         emit(state.copyWith(isLoading: false, errorMessage: failure.message));
       },
       (updatedUser) {
+        print("Update user successful: ${updatedUser.fullName}"); // Debug print
         emit(state.copyWith(
           isLoading: false,
           user: updatedUser,

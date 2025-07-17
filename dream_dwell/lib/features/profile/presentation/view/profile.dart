@@ -16,6 +16,10 @@ import 'package:dream_dwell/features/profile/presentation/view_model/profile_eve
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_state.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
 
+// Import CartBloc for favourites count
+import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
+import 'package:dream_dwell/app/service_locator/service_locator.dart';
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -25,10 +29,14 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker(); // Initialize ImagePicker
+  late CartBloc _cartBloc;
 
   @override
   void initState() {
     super.initState();
+    _cartBloc = serviceLocator<CartBloc>();
+    _cartBloc.add(GetCartEvent());
+    
     // Fetch user profile on page load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
@@ -267,360 +275,372 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Profile'),
-        centerTitle: true,
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              showMySnackbar(context: context, content: "Edit profile tapped!", isSuccess: true);
-            },
-          ),
-        ],
-      ),
-      body: BlocConsumer<ProfileViewModel, ProfileState>(
-        listener: (context, state) {
-          if (state.isLogoutSuccess) {
-            if (mounted) {
-              Navigator.of(context).pushReplacementNamed('/login');
+    return BlocProvider.value(
+      value: _cartBloc,
+      child: Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          title: const Text('Profile'),
+          centerTitle: true,
+          backgroundColor: Theme.of(context).primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                showMySnackbar(context: context, content: "Edit profile tapped!", isSuccess: true);
+              },
+            ),
+          ],
+        ),
+        body: BlocConsumer<ProfileViewModel, ProfileState>(
+          listener: (context, state) {
+            if (state.isLogoutSuccess) {
+              if (mounted) {
+                Navigator.of(context).pushReplacementNamed('/login');
+              }
             }
-          }
-          if (state.errorMessage != null && !state.isLoading) {
-            if (mounted) {
-              showMySnackbar(context: context, content: state.errorMessage!, isSuccess: false);
+            if (state.errorMessage != null && !state.isLoading) {
+              if (mounted) {
+                showMySnackbar(context: context, content: state.errorMessage!, isSuccess: false);
+              }
             }
-          }
-          if (!state.isUploadingImage && state.successMessage != null && state.successMessage!.contains('Profile picture updated')) {
-            if (mounted) {
-              showMySnackbar(
-                context: context,
-                content: 'Profile picture updated successfully!',
-                isSuccess: true,
-              );
-              // The view model will automatically refresh the user data
+            if (!state.isUploadingImage && state.successMessage != null && state.successMessage!.contains('Profile picture updated')) {
+              if (mounted) {
+                showMySnackbar(
+                  context: context,
+                  content: 'Profile picture updated successfully!',
+                  isSuccess: true,
+                );
+                // The view model will automatically refresh the user data
+              }
             }
-          }
-        },
-        builder: (context, state) {
-          if (state.isLoading && state.user == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state.errorMessage != null && state.user == null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 50),
-                    const SizedBox(height: 10),
-                    Text(
-                      state.errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.red, fontSize: 16),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
-                      },
-                      child: const Text("Retry"),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-          final UserEntity? user = state.user;
-          print(user?.profilePicture);
-
-          if (user == null) {
-            return const Center(
-              child: Text("No profile data available. Please log in."),
-            );
-          }
-
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                // Profile Header Section
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(30),
-                      bottomRight: Radius.circular(30),
-                    ),
+          },
+          builder: (context, state) {
+            if (state.isLoading && state.user == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state.errorMessage != null && state.user == null) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red, size: 50),
+                      const SizedBox(height: 10),
+                      Text(
+                        state.errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.red, fontSize: 16),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
+                        },
+                        child: const Text("Retry"),
+                      ),
+                    ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        // Profile Picture
-                        GestureDetector(
-                          onTap: () => _showImagePickerDialog(context),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 4),
-                                ),
-                                child: user.profilePicture != null && user.profilePicture!.isNotEmpty
-                                    ? ClipOval(
-                                        child: CachedNetworkImage(
-                                          imageUrl: "http://10.0.2.2:3001${user.profilePicture}",
-                                          width: 100,
-                                          height: 100,
-                                          fit: BoxFit.cover,
-                                          placeholder: (context, url) => Container(
-                                            width: 100,
-                                            height: 100,
-                                            color: Colors.grey[300],
-                                            child: const Icon(Icons.person, size: 50, color: Colors.white),
-                                          ),
-                                          errorWidget: (context, url, error) => Container(
-                                            width: 100,
-                                            height: 100,
-                                            color: Colors.grey[300],
-                                            child: const Icon(Icons.person, size: 50, color: Colors.white),
-                                          ),
-                                        ),
-                                      )
-                                    : CircleAvatar(
-                                        radius: 50,
-                                        backgroundColor: Colors.grey[300],
-                                        child: const Icon(Icons.person, size: 50, color: Colors.white),
-                                      ),
-                              ),
-                              if (state.isUploadingImage)
+                ),
+              );
+            }
+            final UserEntity? user = state.user;
+            print(user?.profilePicture);
+
+            if (user == null) {
+              return const Center(
+                child: Text("No profile data available. Please log in."),
+              );
+            }
+
+            return SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Profile Header Section
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(30),
+                        bottomRight: Radius.circular(30),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 20),
+                          // Profile Picture
+                          GestureDetector(
+                            onTap: () => _showImagePickerDialog(context),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
                                 Container(
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.black.withOpacity(0.5),
+                                    border: Border.all(color: Colors.white, width: 4),
                                   ),
-                                  child: const CircularProgressIndicator(color: Colors.white),
+                                  child: user.profilePicture != null && user.profilePicture!.isNotEmpty
+                                      ? ClipOval(
+                                          child: CachedNetworkImage(
+                                            imageUrl: "http://10.0.2.2:3001${user.profilePicture}",
+                                            width: 100,
+                                            height: 100,
+                                            fit: BoxFit.cover,
+                                            placeholder: (context, url) => Container(
+                                              width: 100,
+                                              height: 100,
+                                              color: Colors.grey[300],
+                                              child: const Icon(Icons.person, size: 50, color: Colors.white),
+                                            ),
+                                            errorWidget: (context, url, error) => Container(
+                                              width: 100,
+                                              height: 100,
+                                              color: Colors.grey[300],
+                                              child: const Icon(Icons.person, size: 50, color: Colors.white),
+                                            ),
+                                          ),
+                                        )
+                                      : CircleAvatar(
+                                          radius: 50,
+                                          backgroundColor: Colors.grey[300],
+                                          child: const Icon(Icons.person, size: 50, color: Colors.white),
+                                        ),
                                 ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
+                                if (state.isUploadingImage)
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.black.withOpacity(0.5),
+                                    ),
+                                    child: const CircularProgressIndicator(color: Colors.white),
                                   ),
-                                  child: Icon(
-                                    Icons.camera_alt,
-                                    color: Theme.of(context).primaryColor,
-                                    size: 16,
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      Icons.camera_alt,
+                                      color: Theme.of(context).primaryColor,
+                                      size: 16,
+                                    ),
                                   ),
                                 ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // User Info
+                          Text(
+                            user.fullName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user.email,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 16,
+                            ),
+                          ),
+                          if (user.stakeholder != null && user.stakeholder!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                user.stakeholder!,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Profile Stats Section
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: BlocBuilder<CartBloc, CartState>(
+                            builder: (context, cartState) {
+                              int favouritesCount = 0;
+                              if (cartState is CartLoaded) {
+                                favouritesCount = cartState.cart.items?.length ?? 0;
+                              }
+                              return _buildStatCard(
+                                icon: Icons.favorite,
+                                title: 'Favourites',
+                                value: favouritesCount.toString(),
+                                color: Colors.red,
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatCard(
+                            icon: Icons.visibility,
+                            title: 'Profile Views',
+                            value: '156',
+                            color: Colors.blue,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatCard(
+                            icon: Icons.star,
+                            title: 'Rating',
+                            value: '4.8',
+                            color: Colors.amber,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Menu Options Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Account Settings',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              _buildMenuItem(
+                                icon: Icons.person_outline,
+                                title: 'Edit Profile',
+                                subtitle: 'Update your personal information',
+                                onTap: () {
+                                  print("Edit Profile tapped!"); // Debug print
+                                  _showEditProfileDialog(context, user);
+                                },
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
+                                icon: Icons.settings,
+                                title: 'Settings',
+                                subtitle: 'App preferences and notifications',
+                                onTap: () {
+                                  showMySnackbar(context: context, content: "Settings tapped!", isSuccess: true);
+                                },
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
+                                icon: Icons.payment,
+                                title: 'Payments',
+                                subtitle: 'Manage payment methods',
+                                onTap: () {
+                                  showMySnackbar(context: context, content: "Payments tapped!", isSuccess: true);
+                                },
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
+                                icon: Icons.receipt_long,
+                                title: 'Billing Details',
+                                subtitle: 'View billing history',
+                                onTap: () {
+                                  showMySnackbar(context: context, content: "Billing Details tapped!", isSuccess: true);
+                                },
+                              ),
+                              _buildDivider(),
+                              _buildMenuItem(
+                                icon: Icons.help_outline,
+                                title: 'Help & Support',
+                                subtitle: 'Get help and contact support',
+                                onTap: () {
+                                  showMySnackbar(context: context, content: "Help & Support tapped!", isSuccess: true);
+                                },
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        // User Info
-                        Text(
-                          user.fullName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          user.email,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16,
-                          ),
-                        ),
-                        if (user.stakeholder != null && user.stakeholder!.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              user.stakeholder!,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
                         const SizedBox(height: 20),
+                        
+                        // Logout Section
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: _buildMenuItem(
+                            icon: Icons.logout,
+                            title: 'Logout',
+                            subtitle: 'Sign out of your account',
+                            isLogout: true,
+                            onTap: () {
+                              _showLogoutDialog(context);
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 40),
                       ],
                     ),
                   ),
-                ),
-
-                // Profile Stats Section
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          icon: Icons.favorite,
-                          title: 'Favourites',
-                          value: '12',
-                          color: Colors.red,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildStatCard(
-                          icon: Icons.visibility,
-                          title: 'Profile Views',
-                          value: '156',
-                          color: Colors.blue,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildStatCard(
-                          icon: Icons.star,
-                          title: 'Rating',
-                          value: '4.8',
-                          color: Colors.amber,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Menu Options Section
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Account Settings',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            _buildMenuItem(
-                              icon: Icons.person_outline,
-                              title: 'Edit Profile',
-                              subtitle: 'Update your personal information',
-                              onTap: () {
-                                _showEditProfileDialog(context, user);
-                              },
-                            ),
-                            _buildDivider(),
-                            _buildMenuItem(
-                              icon: Icons.settings,
-                              title: 'Settings',
-                              subtitle: 'App preferences and notifications',
-                              onTap: () {
-                                showMySnackbar(context: context, content: "Settings tapped!", isSuccess: true);
-                              },
-                            ),
-                            _buildDivider(),
-                            _buildMenuItem(
-                              icon: Icons.payment,
-                              title: 'Payments',
-                              subtitle: 'Manage payment methods',
-                              onTap: () {
-                                showMySnackbar(context: context, content: "Payments tapped!", isSuccess: true);
-                              },
-                            ),
-                            _buildDivider(),
-                            _buildMenuItem(
-                              icon: Icons.receipt_long,
-                              title: 'Billing Details',
-                              subtitle: 'View billing history',
-                              onTap: () {
-                                showMySnackbar(context: context, content: "Billing Details tapped!", isSuccess: true);
-                              },
-                            ),
-                            _buildDivider(),
-                            _buildMenuItem(
-                              icon: Icons.help_outline,
-                              title: 'Help & Support',
-                              subtitle: 'Get help and contact support',
-                              onTap: () {
-                                showMySnackbar(context: context, content: "Help & Support tapped!", isSuccess: true);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      
-                      // Logout Section
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: _buildMenuItem(
-                          icon: Icons.logout,
-                          title: 'Logout',
-                          subtitle: 'Sign out of your account',
-                          isLogout: true,
-                          onTap: () {
-                            _showLogoutDialog(context);
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -725,6 +745,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showEditProfileDialog(BuildContext context, UserEntity user) {
+    print("_showEditProfileDialog called with user: ${user.fullName}"); // Debug print
     final TextEditingController _nameController = TextEditingController(text: user.fullName);
     final TextEditingController _emailController = TextEditingController(text: user.email);
 
@@ -762,9 +783,12 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           ElevatedButton(
             onPressed: () async {
+              print("Save Changes button pressed"); // Debug print
               Navigator.pop(dialogContext);
               final updatedName = _nameController.text;
               final updatedEmail = _emailController.text;
+
+              print("Updated name: $updatedName, email: $updatedEmail"); // Debug print
 
               if (updatedName.isEmpty || updatedEmail.isEmpty) {
                 showMySnackbar(
@@ -775,6 +799,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 return;
               }
 
+              print("Sending UpdateUserProfileEvent"); // Debug print
               context.read<ProfileViewModel>().add(
                 UpdateUserProfileEvent(
                   context: context,
@@ -824,6 +849,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   void dispose() {
+    _cartBloc.close();
     super.dispose();
   }
 }
