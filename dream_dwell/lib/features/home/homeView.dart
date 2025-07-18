@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart'; // Import flutter_bloc
 
 // Import your HeaderNav widget
 import 'package:dream_dwell/features/splash_screen/presentation/widgets/header_nav.dart'; // Ensure this path is correct
+import 'package:dream_dwell/features/splash_screen/presentation/widgets/nav_bar.dart';
 
 // Import your BLoC and State for user profile
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
@@ -11,7 +12,7 @@ import 'package:dream_dwell/features/profile/presentation/view_model/profile_sta
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart'; // Needed to dispatch event
 
 // Other page imports for BottomNavigationBar
-import 'package:dream_dwell/features/dashbaord/dashboard.dart';
+import 'package:dream_dwell/features/dashbaord/presentation/view/dashboard.dart';
 import 'package:dream_dwell/features/explore/presentation/view/explore_page.dart';
 import 'package:dream_dwell/features/explore/presentation/bloc/explore_bloc.dart';
 import 'package:dream_dwell/view/booking.dart';
@@ -74,22 +75,7 @@ class _HomeViewState extends State<HomeView> {
         ),
       ),
       body: pages[_selectedIndex], // Display the selected page
-      bottomNavigationBar: BottomNavigationBar(
-        elevation: 12,
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF003366),
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.white,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed, // Ensures all items are visible
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite_outlined), label: 'Favourite'),
-          BottomNavigationBarItem(icon: Icon(Icons.book_online), label: 'Booking'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      ),
+      bottomNavigationBar: const NavBar(),
     );
   }
 }

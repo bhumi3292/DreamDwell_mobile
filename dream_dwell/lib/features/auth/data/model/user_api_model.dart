@@ -18,7 +18,6 @@ class UserApiModel extends Equatable {
   final String? confirmPassword;
   final String? profilePicture;
 
-
   const UserApiModel({
     this.userId,
     required this.fullName,
@@ -30,10 +29,16 @@ class UserApiModel extends Equatable {
     this.profilePicture,
   });
 
-
-  factory UserApiModel.fromJson(Map<String, dynamic> json) =>
-      _$UserApiModelFromJson(json);
-
+  factory UserApiModel.fromJson(Map<String, dynamic> json) => UserApiModel(
+    userId: json['_id'] as String?,
+    fullName: json['fullName'] as String,
+    email: json['email'] as String,
+    phoneNumber: json['phoneNumber'] as String?,
+    stakeholder: json['role'] as String?,
+    password: json['password'] as String?,
+    confirmPassword: json['confirmPassword'] as String?,
+    profilePicture: json['profilePicture'] as String?,
+  );
 
   Map<String, dynamic> toJson() => _$UserApiModelToJson(this);
 

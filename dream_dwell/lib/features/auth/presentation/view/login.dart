@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/view/homeView.dart';
 import 'package:dream_dwell/cores/common/snackbar/snackbar.dart';
+import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
+import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart';
+import 'package:dream_dwell/features/profile/presentation/view_model/profile_state.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -56,21 +59,19 @@ class _LoginState extends State<Login> {
         listener: (context, state) {
           // Handle navigation based on state
           if (state.shouldNavigateToHome) {
+            context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const HomeView()),
             );
           }
-          
           if (state.shouldNavigateToRegister) {
             Navigator.pushReplacementNamed(context, '/signup');
           }
-          
-          // Handle success state
-          if (state.isSuccess && !state.isLoading) {
+          // Show login success snackbar only once, when login is successful and not loading
+          if (state.isSuccess && !state.isLoading && !state.shouldNavigateToHome) {
             showMySnackbar(context: context, content: 'Login successful!', isSuccess: true);
           }
-          
           // Handle error state
           if (!state.isLoading && !state.isSuccess && state.error != null) {
             showMySnackbar(

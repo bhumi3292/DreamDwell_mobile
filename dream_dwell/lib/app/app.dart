@@ -8,15 +8,16 @@ import 'package:dream_dwell/features/splash_screen/presentation/view/splash_view
 import 'package:dream_dwell/features/splash_screen/presentation/widgets/theme.dart'; // Assuming this is getApplication()
 import 'package:dream_dwell/features/auth/presentation/view/login.dart';
 import 'package:dream_dwell/features/auth/presentation/view/signup.dart';
-import 'package:dream_dwell/view/forgetPassword.dart'; // Make sure this path is correct
+import 'package:dream_dwell/view/forgetPassword.dart';
 import 'package:dream_dwell/view/homeView.dart'; // Make sure this path is correct
-import 'package:dream_dwell/features/dashbaord/dashboard.dart'; // Make sure this path is correct
+import 'package:dream_dwell/features/dashbaord/presentation/view/dashboard.dart'; // Make sure this path is correct
 import 'package:dream_dwell/features/add_property/presentation/view/add_property_presentation.dart';
 
 // ViewModels
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
+import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart';
 
 
 void main() async {
@@ -39,7 +40,7 @@ class MyApp extends StatelessWidget {
       child: GetMaterialApp(
         title: 'DreamDwell',
         debugShowCheckedModeBanner: false,
-        theme: getApplication(), // This uses the theme from splash_screen/presentation/widgets/theme.dart
+        theme: getApplication(), // This uses the theme from splash_screen/prese ntation/widgets/theme.dart
         initialRoute: '/', // Changed from '/login' to '/' to start with splash screen
         getPages: [
           GetPage(name: '/', page: () => const SplashScreen()),

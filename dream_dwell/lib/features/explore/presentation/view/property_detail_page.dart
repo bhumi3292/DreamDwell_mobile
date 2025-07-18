@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:dream_dwell/features/explore/domain/entity/explore_property_entity.dart';
 import 'package:dream_dwell/cores/utils/image_url_helper.dart';
+import 'package:dream_dwell/features/booking/presentation/widgets/booking_modal.dart';
+import 'package:dream_dwell/features/booking/presentation/widgets/landlord_manage_availability.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
+import 'package:dream_dwell/features/profile/presentation/view_model/profile_state.dart';
+import 'package:dream_dwell/features/add_property/presentation/view/update_property_page.dart';
 
 class PropertyDetailPage extends StatefulWidget {
   final ExplorePropertyEntity property;
@@ -19,21 +25,25 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
     final allMedia = images; // Add videos if you want
 
     return Scaffold(
-      backgroundColor: Color(0xFFE6F0FF),
+      backgroundColor: const Color(0xFFF4F8FB),
       appBar: AppBar(
         title: Text('Property Details'),
-        backgroundColor: Color(0xFF003366),
+        backgroundColor: const Color(0xFF003366),
         foregroundColor: Colors.white,
-        elevation: 0,
+        elevation: 2,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(18)),
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(18.0),
           child: Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            elevation: 6,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            elevation: 10,
+            shadowColor: Colors.blueGrey.withOpacity(0.2),
             child: Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -42,17 +52,17 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                     Column(
                       children: [
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(18),
                           child: Image.network(
                             ImageUrlHelper.constructImageUrl(allMedia[_currentImage]),
-                            height: 200,
+                            height: 220,
                             width: double.infinity,
                             fit: BoxFit.cover,
                           ),
                         ),
                         if (allMedia.length > 1)
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            padding: const EdgeInsets.symmetric(vertical: 10.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: List.generate(
@@ -60,13 +70,13 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                 (index) => GestureDetector(
                                   onTap: () => setState(() => _currentImage = index),
                                   child: Container(
-                                    margin: EdgeInsets.symmetric(horizontal: 4),
-                                    width: 12,
-                                    height: 12,
+                                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                                    width: 14,
+                                    height: 14,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: _currentImage == index
-                                          ? Color(0xFF003366)
+                                          ? const Color(0xFF003366)
                                           : Colors.grey[300],
                                     ),
                                   ),
@@ -76,76 +86,85 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                           ),
                       ],
                     ),
-                  SizedBox(height: 20),
-                  // Title and price
+                  const SizedBox(height: 24),
                   Text(
                     widget.property.title ?? '',
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFF003366)),
+                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF003366)),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     widget.property.location ?? '',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                    style: const TextStyle(fontSize: 18, color: Colors.blueGrey, fontWeight: FontWeight.w500),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Rs. ${widget.property.price?.toStringAsFixed(0) ?? '-'}',
-                    style: TextStyle(fontSize: 22, color: Colors.green[700], fontWeight: FontWeight.bold),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      'Rs. ${widget.property.price?.toStringAsFixed(0) ?? '-'}',
+                      style: const TextStyle(fontSize: 24, color: Colors.green, fontWeight: FontWeight.bold),
+                    ),
                   ),
-                  SizedBox(height: 16),
-                  // Features row
+                  const SizedBox(height: 18),
+                  Divider(thickness: 1.2, color: Colors.blueGrey[100]),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Icon(Icons.king_bed, color: Color(0xFF003366)),
-                      SizedBox(width: 4),
-                      Text('Bedrooms: ${widget.property.bedrooms ?? '-'}'),
-                      SizedBox(width: 16),
+                      const SizedBox(width: 4),
+                      Text('Bedrooms: ${widget.property.bedrooms ?? '-'}', style: const TextStyle(fontWeight: FontWeight.w500)),
+                      const SizedBox(width: 18),
                       Icon(Icons.bathtub, color: Color(0xFF003366)),
-                      SizedBox(width: 4),
-                      Text('Bathrooms: ${widget.property.bathrooms ?? '-'}'),
+                      const SizedBox(width: 4),
+                      Text('Bathrooms: ${widget.property.bathrooms ?? '-'}', style: const TextStyle(fontWeight: FontWeight.w500)),
                     ],
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Icon(Icons.category, color: Color(0xFF003366)),
-                      SizedBox(width: 4),
-                      Text('Category: ${widget.property.categoryName ?? '-'}'),
+                      const SizedBox(width: 4),
+                      Text('Category: ${widget.property.categoryName ?? '-'}', style: const TextStyle(fontWeight: FontWeight.w500)),
                     ],
                   ),
-                  SizedBox(height: 16),
-                  // Description
-                  Text('Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF003366))),
-                  SizedBox(height: 4),
-                  Text(widget.property.description ?? 'No description provided.'),
-                  SizedBox(height: 20),
-                  // Landlord info
-                  Text('Landlord', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF003366))),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 18),
+                  Divider(thickness: 1.2, color: Colors.blueGrey[100]),
+                  const SizedBox(height: 10),
+                  Text('Description', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Color(0xFF003366))),
+                  const SizedBox(height: 6),
+                  Text(widget.property.description ?? 'No description provided.', style: const TextStyle(fontSize: 16, color: Colors.black87, height: 1.5)),
+                  const SizedBox(height: 18),
+                  Divider(thickness: 1.2, color: Colors.blueGrey[100]),
+                  const SizedBox(height: 10),
+                  Text('Landlord', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Color(0xFF003366))),
+                  const SizedBox(height: 6),
                   Row(
                     children: [
                       Icon(Icons.person, color: Color(0xFF003366)),
-                      SizedBox(width: 4),
-                      Text(widget.property.landlordName ?? '-'),
+                      const SizedBox(width: 4),
+                      Text(widget.property.landlordName ?? '-', style: const TextStyle(fontWeight: FontWeight.w500)),
                     ],
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
                       Icon(Icons.phone, color: Color(0xFF003366)),
-                      SizedBox(width: 4),
-                      Text(widget.property.landlordPhone ?? '-'),
+                      const SizedBox(width: 4),
+                      Text(widget.property.landlordPhone ?? '-', style: const TextStyle(fontWeight: FontWeight.w500)),
                     ],
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
                       Icon(Icons.email, color: Color(0xFF003366)),
-                      SizedBox(width: 4),
-                      Text(widget.property.landlordEmail ?? '-'),
+                      const SizedBox(width: 4),
+                      Text(widget.property.landlordEmail ?? '-', style: const TextStyle(fontWeight: FontWeight.w500)),
                     ],
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   // Action buttons
                   Row(
                     children: [
@@ -160,7 +179,17 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                             padding: EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: () {
-                            // TODO: Show booking modal
+                            final profileState = context.read<ProfileViewModel>().state;
+                            final currentUser = profileState.user;
+                            debugPrint('Current userId:  [33m${currentUser?.userId} [0m, Property landlordId:  [33m${widget.property.landlordId} [0m');
+                            final isLandlord = currentUser != null &&
+                              (widget.property.landlordId == currentUser.userId);
+                            showDialog(
+                              context: context,
+                              builder: (context) => isLandlord
+                                ? LandlordManageAvailability(propertyId: widget.property.id ?? '')
+                                : BookingModal(propertyId: widget.property.id ?? ''),
+                            );
                           },
                         ),
                       ),
@@ -181,6 +210,68 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                         ),
                       ),
                     ],
+                  ),
+                  // Show Update and Delete buttons for landlord only
+                  Builder(
+                    builder: (context) {
+                      final profileState = context.read<ProfileViewModel>().state;
+                      final currentUser = profileState.user;
+                      final isLandlord = currentUser != null &&
+                        (widget.property.landlordId == currentUser.userId);
+                      if (!isLandlord) return SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                icon: Icon(Icons.edit),
+                                label: Text('Update'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: EdgeInsets.symmetric(vertical: 14),
+                                ),
+                                onPressed: () {
+                                  // Navigate to UpdatePropertyPage with pre-filled details
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => UpdatePropertyPage(
+                                        propertyId: widget.property.id ?? '',
+                                        initialTitle: widget.property.title ?? '',
+                                        initialLocation: widget.property.location ?? '',
+                                        initialPrice: widget.property.price ?? 0.0,
+                                        initialDescription: widget.property.description ?? '',
+                                        initialBedrooms: widget.property.bedrooms ?? 0,
+                                        initialBathrooms: widget.property.bathrooms ?? 0,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                icon: Icon(Icons.delete),
+                                label: Text('Delete'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: EdgeInsets.symmetric(vertical: 14),
+                                ),
+                                onPressed: () {
+                                  // TODO: Implement delete property action
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                   SizedBox(height: 12),
                   ElevatedButton.icon(

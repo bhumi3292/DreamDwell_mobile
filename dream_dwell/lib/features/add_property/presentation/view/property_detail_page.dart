@@ -283,12 +283,14 @@ class PropertyDetailPage extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   height: 50,
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
+                    icon: Icon(Icons.chat),
+                    label: Text('Chat with Landlord'),
                     onPressed: () {
-                      // TODO: Implement contact functionality
+                      // TODO: Open chat with landlord
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Contact functionality coming soon!'),
+                          content: Text('Chat functionality coming soon!'),
                           backgroundColor: Colors.blue,
                         ),
                       );
@@ -298,13 +300,6 @@ class PropertyDetailPage extends StatelessWidget {
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Contact Landlord',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),

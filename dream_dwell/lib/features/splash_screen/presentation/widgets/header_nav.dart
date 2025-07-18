@@ -15,6 +15,7 @@ class HeaderNav extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('HeaderNav user.stakeholder:  [33m [1m [4m${user?.stakeholder} [0m'); // DEBUG: print role
     return AppBar(
       backgroundColor: const Color(0xFF003366),
       elevation: 0,
@@ -27,22 +28,10 @@ class HeaderNav extends StatelessWidget implements PreferredSizeWidget {
       ),
       centerTitle: true,
       actions: [
-        if (user != null && user!.stakeholder == 'Landlord')
+        if (user?.stakeholder?.trim().toLowerCase() == 'landlord')
           IconButton(
-            icon: const Icon(Icons.add_box, color: Colors.white),
+            icon: const Icon(Icons.add_home_work_outlined, color: Colors.white),
             onPressed: () {
-              // Navigate to AddPropertyScreen
-            },
-          ),
-       // if (user != null && user!.stakeholder == 'Landlord')
-          IconButton(
-            icon: const Icon(
-              Icons.add_home_work_outlined,
-              color: Colors.white,
-              size: 24.0,
-            ),
-            onPressed: () {
-
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const AddPropertyPresentation()),
               );
@@ -53,14 +42,12 @@ class HeaderNav extends StatelessWidget implements PreferredSizeWidget {
         IconButton(
           icon: const Icon(Icons.message, color: Colors.white),
           onPressed: () {
-            // TODO: Implement navigation to a messages/chat screen.
             debugPrint("Messages button pressed");
           },
         ),
         IconButton(
           icon: const Icon(Icons.notifications_none, color: Colors.white),
           onPressed: () {
-            // TODO: Implement navigation to a notifications screen.
             debugPrint("Notifications button pressed");
           },
         ),
