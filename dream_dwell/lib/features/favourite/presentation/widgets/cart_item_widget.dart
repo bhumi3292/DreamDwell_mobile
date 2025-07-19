@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:dream_dwell/features/favourite/domain/entity/cart/cart_item_entity.dart';
 import 'package:dream_dwell/cores/utils/image_url_helper.dart';
+import 'package:dream_dwell/features/explore/presentation/view/property_detail_page.dart';
+import 'package:dream_dwell/features/explore/presentation/utils/property_converter.dart';
 
 class CartItemWidget extends StatelessWidget {
   final CartItemEntity cartItem;
@@ -24,8 +26,13 @@ class CartItemWidget extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
-          // Navigate to property details page
-          // You can implement navigation here
+          final exploreProperty = PropertyConverter.fromPropertyEntity(property);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PropertyDetailPage(property: exploreProperty),
+            ),
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(

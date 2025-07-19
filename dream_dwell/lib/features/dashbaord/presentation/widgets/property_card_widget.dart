@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/features/add_property/data/model/property_model/property_api_model.dart';
 import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
 import 'package:dream_dwell/cores/utils/image_url_helper.dart';
+import 'package:dream_dwell/features/explore/presentation/view/property_detail_page.dart';
 
 class PropertyCardWidget extends StatefulWidget {
   final PropertyApiModel property;

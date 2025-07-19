@@ -5,7 +5,6 @@ import 'package:dream_dwell/features/booking/presentation/widgets/booking_modal.
 import 'package:dream_dwell/features/booking/presentation/widgets/landlord_manage_availability.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
-import 'package:dream_dwell/features/profile/presentation/view_model/profile_state.dart';
 import 'package:dream_dwell/features/add_property/presentation/view/update_property_page.dart';
 
 class PropertyDetailPage extends StatefulWidget {
@@ -19,6 +18,8 @@ class PropertyDetailPage extends StatefulWidget {
 class _PropertyDetailPageState extends State<PropertyDetailPage> {
   int _currentImage = 0;
 
+
+
   @override
   Widget build(BuildContext context) {
     final images = widget.property.images ?? [];
@@ -27,7 +28,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F8FB),
       appBar: AppBar(
-        title: Text('Property Details'),
+        title: const Text('Property Details'),
         backgroundColor: const Color(0xFF003366),
         foregroundColor: Colors.white,
         elevation: 2,
@@ -41,7 +42,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
           child: Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             elevation: 10,
-            shadowColor: Colors.blueGrey.withOpacity(0.2),
+            shadowColor: Colors.blueGrey.withValues(alpha: 0.2),
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
@@ -113,11 +114,11 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Icon(Icons.king_bed, color: Color(0xFF003366)),
+                      const Icon(Icons.king_bed, color: Color(0xFF003366)),
                       const SizedBox(width: 4),
                       Text('Bedrooms: ${widget.property.bedrooms ?? '-'}', style: const TextStyle(fontWeight: FontWeight.w500)),
                       const SizedBox(width: 18),
-                      Icon(Icons.bathtub, color: Color(0xFF003366)),
+                      const Icon(Icons.bathtub, color: Color(0xFF003366)),
                       const SizedBox(width: 4),
                       Text('Bathrooms: ${widget.property.bathrooms ?? '-'}', style: const TextStyle(fontWeight: FontWeight.w500)),
                     ],
@@ -125,7 +126,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Icon(Icons.category, color: Color(0xFF003366)),
+                      const Icon(Icons.category, color: Color(0xFF003366)),
                       const SizedBox(width: 4),
                       Text('Category: ${widget.property.categoryName ?? '-'}', style: const TextStyle(fontWeight: FontWeight.w500)),
                     ],
@@ -133,37 +134,86 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                   const SizedBox(height: 18),
                   Divider(thickness: 1.2, color: Colors.blueGrey[100]),
                   const SizedBox(height: 10),
-                  Text('Description', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Color(0xFF003366))),
+                  const Text('Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Color(0xFF003366))),
                   const SizedBox(height: 6),
                   Text(widget.property.description ?? 'No description provided.', style: const TextStyle(fontSize: 16, color: Colors.black87, height: 1.5)),
                   const SizedBox(height: 18),
                   Divider(thickness: 1.2, color: Colors.blueGrey[100]),
                   const SizedBox(height: 10),
-                  Text('Landlord', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Color(0xFF003366))),
+                  const Text('Landlord', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Color(0xFF003366))),
                   const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(Icons.person, color: Color(0xFF003366)),
-                      const SizedBox(width: 4),
-                      Text(widget.property.landlordName ?? '-', style: const TextStyle(fontWeight: FontWeight.w500)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.phone, color: Color(0xFF003366)),
-                      const SizedBox(width: 4),
-                      Text(widget.property.landlordPhone ?? '-', style: const TextStyle(fontWeight: FontWeight.w500)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.email, color: Color(0xFF003366)),
-                      const SizedBox(width: 4),
-                      Text(widget.property.landlordEmail ?? '-', style: const TextStyle(fontWeight: FontWeight.w500)),
-                    ],
-                  ),
+                  // Check if landlord details are available
+                  if (widget.property.landlordName != null || widget.property.landlordPhone != null || widget.property.landlordEmail != null) ...[
+                    if (widget.property.landlordName != null)
+                      Row(
+                        children: [
+                          const Icon(Icons.person, color: Color(0xFF003366)),
+                          const SizedBox(width: 4),
+                          Text(
+                            widget.property.landlordName!.startsWith('Landlord ID:') 
+                              ? 'Landlord Reference' 
+                              : widget.property.landlordName!,
+                            style: const TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    if (widget.property.landlordName != null) const SizedBox(height: 4),
+                    if (widget.property.landlordPhone != null)
+                      Row(
+                        children: [
+                          const Icon(Icons.phone, color: Color(0xFF003366)),
+                          const SizedBox(width: 4),
+                          Text(widget.property.landlordPhone!, style: const TextStyle(fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                    if (widget.property.landlordPhone != null) const SizedBox(height: 4),
+                    if (widget.property.landlordEmail != null)
+                      Row(
+                        children: [
+                          const Icon(Icons.email, color: Color(0xFF003366)),
+                          const SizedBox(width: 4),
+                          Text(widget.property.landlordEmail!, style: const TextStyle(fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                  ] else ...[
+                                         // Show message when landlord details are not available
+                     Container(
+                       padding: const EdgeInsets.all(12),
+                       decoration: BoxDecoration(
+                         color: Colors.grey[100],
+                         borderRadius: BorderRadius.circular(8),
+                         border: Border.all(color: Colors.grey[300]!),
+                       ),
+                       child: Column(
+                         crossAxisAlignment: CrossAxisAlignment.start,
+                         children: [
+                           Row(
+                             children: [
+                               Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
+                               const SizedBox(width: 8),
+                               Expanded(
+                                 child: Text(
+                                   'Landlord contact information is not available for this property.',
+                                   style: TextStyle(
+                                     color: Colors.grey[600],
+                                     fontSize: 14,
+                                   ),
+                                 ),
+                               ),
+                             ],
+                           ),
+                           const SizedBox(height: 8),
+                           Text(
+                             'You can use the "Book a Visit" button above to schedule a viewing, or contact the landlord through the booking system.',
+                             style: TextStyle(
+                               color: Colors.grey[500],
+                               fontSize: 12,
+                             ),
+                           ),
+                         ],
+                       ),
+                     ),
+                  ],
                   const SizedBox(height: 24),
                   // Action buttons - Primary actions
                   Container(
@@ -173,7 +223,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
+                          color: Colors.grey.withValues(alpha: 0.1),
                           spreadRadius: 1,
                           blurRadius: 10,
                           offset: const Offset(0, 2),
@@ -199,79 +249,56 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                   elevation: 2,
                                 ),
-                                onPressed: () {
-                                  final profileState = context.read<ProfileViewModel>().state;
-                                  final currentUser = profileState.user;
-                                  debugPrint('Current userId: ${currentUser?.userId}, Property landlordId: ${widget.property.landlordId}');
-                                  final isLandlord = currentUser != null &&
-                                    (widget.property.landlordId == currentUser.userId);
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => isLandlord
-                                      ? LandlordManageAvailability(propertyId: widget.property.id ?? '')
-                                      : BookingModal(
-                                          propertyId: widget.property.id ?? '',
-                                          propertyTitle: widget.property.title ?? '',
-                                        ),
-                                  );
-                                },
+                                                                  onPressed: () {
+                                    final profileState = context.read<ProfileViewModel>().state;
+                                    final currentUser = profileState.user;
+                                    debugPrint('Current userId: ${currentUser?.userId}, Property landlordId: ${widget.property.landlordId}');
+                                    final isLandlord = currentUser != null &&
+                                      (widget.property.landlordId == currentUser.userId);
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => isLandlord
+                                        ? LandlordManageAvailability(propertyId: widget.property.id ?? '')
+                                        : BookingModal(
+                                            propertyId: widget.property.id ?? '',
+                                            propertyTitle: widget.property.title ?? '',
+                                          ),
+                                    );
+                                  },
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: ElevatedButton.icon(
-                                icon: const Icon(Icons.chat_bubble_outline, size: 20),
+                                icon: const Icon(Icons.phone, size: 20),
                                 label: const Text(
-                                  'Chat',
+                                  'Contact',
                                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue[600],
+                                  backgroundColor: Colors.green,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                   elevation: 2,
                                 ),
                                 onPressed: () {
-                                  // TODO: Open chat with landlord
+                                  // Add contact functionality here
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Chat feature coming soon!')),
+                                    const SnackBar(
+                                      content: Text('Contact functionality coming soon!'),
+                                      backgroundColor: Colors.blue,
+                                    ),
                                   );
                                 },
                               ),
                             ),
                           ],
                         ),
-                        
-                        const SizedBox(height: 12),
-                        
-                        // Secondary action button
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            icon: const Icon(Icons.payment, size: 20),
-                            label: const Text(
-                              'Make Payment',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green[600],
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              elevation: 2,
-                            ),
-                            onPressed: () {
-                              // TODO: Show payment modal
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Payment feature coming soon!')),
-                              );
-                            },
-                          ),
-                        ),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
                   
                   // Show Update and Delete buttons for landlord only
                   Builder(
@@ -294,7 +321,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Property Management',
                                 style: TextStyle(
                                   fontSize: 18,

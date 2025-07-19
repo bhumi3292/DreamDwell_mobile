@@ -1,18 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dream_dwell/app/constant/api_endpoints.dart';
 import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
-import 'package:dream_dwell/features/profile/presentation/view_model/profile_state.dart';
 import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
 import 'package:dream_dwell/app/service_locator/service_locator.dart';
 import 'package:dream_dwell/features/dashbaord/presentation/view_model/dashboard_view_model.dart';
 import 'package:dream_dwell/features/add_property/data/model/property_model/property_api_model.dart';
 import 'package:dream_dwell/features/dashbaord/presentation/widgets/property_card_widget.dart';
 import 'package:dream_dwell/features/dashbaord/presentation/widgets/horizontal_property_card.dart';
-import 'package:dream_dwell/features/explore/presentation/view/explore_page.dart';
-import 'package:dream_dwell/features/explore/presentation/bloc/explore_bloc.dart';
+import 'package:dream_dwell/features/explore/presentation/view/property_detail_page.dart';
+import 'package:dream_dwell/features/explore/presentation/utils/property_converter.dart';
 
 class DashboardPage extends StatelessWidget {
   final VoidCallback? onSeeAllTap;
@@ -33,13 +31,15 @@ class DashboardPage extends StatelessWidget {
           create: (context) => serviceLocator<CartBloc>(),
         ),
       ],
-      child: const DashboardView(),
+      child: DashboardView(onSeeAllTap: onSeeAllTap),
     );
   }
 }
 
 class DashboardView extends StatelessWidget {
-  const DashboardView({super.key});
+  final VoidCallback? onSeeAllTap;
+  
+  const DashboardView({super.key, this.onSeeAllTap});
 
   @override
   Widget build(BuildContext context) {
@@ -124,18 +124,7 @@ class DashboardView extends StatelessWidget {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 TextButton(
-                  onPressed: () {
-                    // Navigate to Explore page
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => BlocProvider(
-                          create: (context) => serviceLocator<ExploreBloc>(),
-                          child: const ExplorePage(),
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: onSeeAllTap,
                   child: Text(
                     "See All",
                     style: TextStyle(
@@ -152,7 +141,7 @@ class DashboardView extends StatelessWidget {
               height: 210,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: properties.length,
+                itemCount: properties.length > 5 ? 5 : properties.length,
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 itemBuilder: (context, index) {
                   final property = properties[index];
@@ -161,7 +150,13 @@ class DashboardView extends StatelessWidget {
                     child: HorizontalPropertyCard(
                       property: property,
                       onTap: () {
-                        // TODO: Navigate to property details
+                        final exploreProperty = PropertyConverter.fromApiModel(property);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PropertyDetailPage(property: exploreProperty),
+                          ),
+                        );
                       },
                       baseUrl: 'http://10.0.2.2:3001/',
                     ),
@@ -207,7 +202,13 @@ class DashboardView extends StatelessWidget {
                 child: PropertyCardWidget(
                   property: property,
                   onTap: () {
-                    // TODO: Navigate to property details
+                    final exploreProperty = PropertyConverter.fromApiModel(property);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PropertyDetailPage(property: exploreProperty),
+                      ),
+                    );
                   },
                   showFavoriteButton: true,
                   baseUrl: 'http://10.0.2.2:3001/',
