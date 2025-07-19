@@ -15,7 +15,7 @@ import 'package:dream_dwell/features/profile/presentation/view_model/profile_eve
 import 'package:dream_dwell/features/dashbaord/presentation/view/dashboard.dart';
 import 'package:dream_dwell/features/explore/presentation/view/explore_page.dart';
 import 'package:dream_dwell/features/explore/presentation/bloc/explore_bloc.dart';
-import 'package:dream_dwell/view/booking.dart';
+import 'package:dream_dwell/features/booking/presentation/view/booking_page.dart';
 import 'package:dream_dwell/features/profile/presentation/view/profile.dart';
 import 'package:dream_dwell/app/service_locator/service_locator.dart';
 

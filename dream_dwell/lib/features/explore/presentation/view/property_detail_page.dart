@@ -165,52 +165,114 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  // Action buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          icon: Icon(Icons.calendar_today),
-                          label: Text('Book a Visit'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF003366),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            padding: EdgeInsets.symmetric(vertical: 14),
-                          ),
-                          onPressed: () {
-                            final profileState = context.read<ProfileViewModel>().state;
-                            final currentUser = profileState.user;
-                            debugPrint('Current userId:  [33m${currentUser?.userId} [0m, Property landlordId:  [33m${widget.property.landlordId} [0m');
-                            final isLandlord = currentUser != null &&
-                              (widget.property.landlordId == currentUser.userId);
-                            showDialog(
-                              context: context,
-                              builder: (context) => isLandlord
-                                ? LandlordManageAvailability(propertyId: widget.property.id ?? '')
-                                : BookingModal(propertyId: widget.property.id ?? ''),
-                            );
-                          },
+                  // Action buttons - Primary actions
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          icon: Icon(Icons.chat),
-                          label: Text('Chat'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue[700],
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            padding: EdgeInsets.symmetric(vertical: 14),
-                          ),
-                          onPressed: () {
-                            // TODO: Open chat with landlord
-                          },
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        // Primary action buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.calendar_today, size: 20),
+                                label: const Text(
+                                  'Book a Visit',
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF003366),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  elevation: 2,
+                                ),
+                                onPressed: () {
+                                  final profileState = context.read<ProfileViewModel>().state;
+                                  final currentUser = profileState.user;
+                                  debugPrint('Current userId: ${currentUser?.userId}, Property landlordId: ${widget.property.landlordId}');
+                                  final isLandlord = currentUser != null &&
+                                    (widget.property.landlordId == currentUser.userId);
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => isLandlord
+                                      ? LandlordManageAvailability(propertyId: widget.property.id ?? '')
+                                      : BookingModal(
+                                          propertyId: widget.property.id ?? '',
+                                          propertyTitle: widget.property.title ?? '',
+                                        ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.chat_bubble_outline, size: 20),
+                                label: const Text(
+                                  'Chat',
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue[600],
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  elevation: 2,
+                                ),
+                                onPressed: () {
+                                  // TODO: Open chat with landlord
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Chat feature coming soon!')),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                        
+                        const SizedBox(height: 12),
+                        
+                        // Secondary action button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.payment, size: 20),
+                            label: const Text(
+                              'Make Payment',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green[600],
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              elevation: 2,
+                            ),
+                            onPressed: () {
+                              // TODO: Show payment modal
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Payment feature coming soon!')),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  
                   // Show Update and Delete buttons for landlord only
                   Builder(
                     builder: (context) {
@@ -218,73 +280,90 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                       final currentUser = profileState.user;
                       final isLandlord = currentUser != null &&
                         (widget.property.landlordId == currentUser.userId);
-                      if (!isLandlord) return SizedBox.shrink();
+                      if (!isLandlord) return const SizedBox.shrink();
+                      
                       return Padding(
                         padding: const EdgeInsets.only(top: 16.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                icon: Icon(Icons.edit),
-                                label: Text('Update'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orange,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  padding: EdgeInsets.symmetric(vertical: 14),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.orange[50],
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.orange[200]!),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Property Management',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF003366),
                                 ),
-                                onPressed: () {
-                                  // Navigate to UpdatePropertyPage with pre-filled details
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => UpdatePropertyPage(
-                                        propertyId: widget.property.id ?? '',
-                                        initialTitle: widget.property.title ?? '',
-                                        initialLocation: widget.property.location ?? '',
-                                        initialPrice: widget.property.price ?? 0.0,
-                                        initialDescription: widget.property.description ?? '',
-                                        initialBedrooms: widget.property.bedrooms ?? 0,
-                                        initialBathrooms: widget.property.bathrooms ?? 0,
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      icon: const Icon(Icons.edit, size: 18),
+                                      label: const Text(
+                                        'Update Property',
+                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                                       ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.orange[600],
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                      ),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => UpdatePropertyPage(
+                                              propertyId: widget.property.id ?? '',
+                                              initialTitle: widget.property.title ?? '',
+                                              initialLocation: widget.property.location ?? '',
+                                              initialPrice: widget.property.price ?? 0.0,
+                                              initialDescription: widget.property.description ?? '',
+                                              initialBedrooms: widget.property.bedrooms ?? 0,
+                                              initialBathrooms: widget.property.bathrooms ?? 0,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
-                                  );
-                                },
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      icon: const Icon(Icons.delete, size: 18),
+                                      label: const Text(
+                                        'Delete Property',
+                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red[600],
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                      ),
+                                      onPressed: () {
+                                        // TODO: Implement delete property action
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Delete feature coming soon!')),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                icon: Icon(Icons.delete),
-                                label: Text('Delete'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  padding: EdgeInsets.symmetric(vertical: 14),
-                                ),
-                                onPressed: () {
-                                  // TODO: Implement delete property action
-                                },
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       );
-                    },
-                  ),
-                  SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    icon: Icon(Icons.payment),
-                    label: Text('Make Payment'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[700],
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    onPressed: () {
-                      // TODO: Show payment modal
                     },
                   ),
                 ],

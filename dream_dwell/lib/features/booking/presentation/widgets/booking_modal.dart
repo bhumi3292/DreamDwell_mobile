@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:dream_dwell/cores/network/hive_service.dart';
 
 class BookingModal extends StatefulWidget {
   final String propertyId;
+  final String propertyTitle;
   final VoidCallback? onBookingSuccess;
-  const BookingModal({Key? key, required this.propertyId, this.onBookingSuccess}) : super(key: key);
+  
+  const BookingModal({
+    Key? key, 
+    required this.propertyId, 
+    required this.propertyTitle,
+    this.onBookingSuccess
+  }) : super(key: key);
 
   @override
   State<BookingModal> createState() => _BookingModalState();
@@ -19,40 +27,90 @@ class _BookingModalState extends State<BookingModal> {
   bool _loadingSlots = false;
   bool _booking = false;
   String? _error;
+  Map<String, List<String>> _availableSlotsMap = {};
 
   Future<String?> _getToken() async {
     final hive = HiveService();
     return await hive.getToken();
   }
 
+  String _normalizeDate(DateTime date) {
+    final d = DateTime(date.year, date.month, date.day);
+    return DateFormat('yyyy-MM-dd').format(d);
+  }
+
   Future<void> _fetchSlots(DateTime date) async {
     setState(() { _loadingSlots = true; _error = null; });
     try {
-      final formattedDate = DateFormat('yyyy-MM-dd').format(date);
+      final formattedDate = _normalizeDate(date);
       final token = await _getToken();
+      
+      if (token == null || token.isEmpty) {
+        setState(() { 
+          _error = 'Please log in to book a visit.'; 
+          _loadingSlots = false; 
+        });
+        return;
+      }
+
       final response = await Dio().get(
         'http://10.0.2.2:3001/api/calendar/properties/${widget.propertyId}/available-slots',
         queryParameters: {'date': formattedDate},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
+      
       setState(() {
         _availableSlots = List<String>.from(response.data['availableSlots'] ?? []);
+        _availableSlotsMap[formattedDate] = _availableSlots;
         _selectedSlot = null;
       });
     } catch (e) {
-      print('Dio error in _fetchSlots: $e');
-      setState(() { _error = 'Failed to fetch slots.'; });
+      debugPrint('Dio error in _fetchSlots: $e');
+      if (e.toString().contains('403')) {
+        setState(() { _error = 'Access denied. Please check your login status.'; });
+      } else if (e.toString().contains('401')) {
+        setState(() { _error = 'Please log in to book a visit.'; });
+      } else {
+        setState(() { _error = 'Failed to fetch available slots.'; });
+      }
     } finally {
       setState(() { _loadingSlots = false; });
     }
   }
 
+  void _onDateSelected(DateTime selectedDay, DateTime focusedDay) {
+    final formattedDate = _normalizeDate(selectedDay);
+    setState(() {
+      _selectedDate = selectedDay;
+      _selectedSlot = null;
+    });
+    
+    // Check if we already have slots for this date
+    if (_availableSlotsMap.containsKey(formattedDate)) {
+      setState(() {
+        _availableSlots = _availableSlotsMap[formattedDate] ?? [];
+      });
+    } else {
+      _fetchSlots(selectedDay);
+    }
+  }
+
   Future<void> _bookVisit() async {
     if (_selectedDate == null || _selectedSlot == null) return;
+    
     setState(() { _booking = true; _error = null; });
     try {
-      final formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate!);
+      final formattedDate = _normalizeDate(_selectedDate!);
       final token = await _getToken();
+      
+      if (token == null || token.isEmpty) {
+        setState(() { 
+          _error = 'Please log in to book a visit.'; 
+          _booking = false; 
+        });
+        return;
+      }
+
       await Dio().post('http://10.0.2.2:3001/api/calendar/book-visit',
         data: {
           'propertyId': widget.propertyId,
@@ -61,14 +119,24 @@ class _BookingModalState extends State<BookingModal> {
         },
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
+      
       if (widget.onBookingSuccess != null) widget.onBookingSuccess!();
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Booking successful!'), backgroundColor: Colors.green),
+        const SnackBar(
+          content: Text('Visit booked successfully! Awaiting landlord confirmation.'), 
+          backgroundColor: Colors.green
+        ),
       );
     } catch (e) {
-      print('Dio error in _bookVisit: $e');
-      setState(() { _error = 'Failed to book visit.'; });
+      debugPrint('Dio error in _bookVisit: $e');
+      if (e.toString().contains('409')) {
+        setState(() { _error = 'This time slot is already booked. Please choose another.'; });
+      } else if (e.toString().contains('400')) {
+        setState(() { _error = 'Invalid booking request. Please try again.'; });
+      } else {
+        setState(() { _error = 'Failed to book visit. Please try again.'; });
+      }
     } finally {
       setState(() { _booking = false; });
     }
@@ -83,38 +151,130 @@ class _BookingModalState extends State<BookingModal> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Book a Visit', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(
+              'Book a Visit',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF003366))
+            ),
+            Text(
+              widget.propertyTitle,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 16),
-            CalendarDatePicker(
-              initialDate: DateTime.now(),
-              firstDate: DateTime.now(),
-              lastDate: DateTime.now().add(const Duration(days: 60)),
-              onDateChanged: (date) {
-                setState(() { _selectedDate = date; });
-                _fetchSlots(date);
-              },
+            
+            TableCalendar(
+              firstDay: DateTime.now(),
+              lastDay: DateTime.now().add(const Duration(days: 60)),
+              focusedDay: _selectedDate ?? DateTime.now(),
+              selectedDayPredicate: (day) => _selectedDate != null && isSameDay(day, _selectedDate),
+              onDaySelected: _onDateSelected,
+              calendarStyle: CalendarStyle(
+                todayDecoration: BoxDecoration(
+                  color: Colors.blue[100],
+                  shape: BoxShape.circle,
+                ),
+                selectedDecoration: BoxDecoration(
+                  color: Color(0xFF003366),
+                  shape: BoxShape.circle,
+                ),
+                markerDecoration: BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              calendarBuilders: CalendarBuilders(
+                markerBuilder: (context, date, events) {
+                  final formatted = _normalizeDate(date);
+                  if (_availableSlotsMap[formatted] != null && _availableSlotsMap[formatted]!.isNotEmpty) {
+                    return Positioned(
+                      bottom: 1,
+                      child: Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    );
+                  }
+                  return null;
+                },
+              ),
             ),
-            if (_loadingSlots) const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: CircularProgressIndicator(),
-            ),
-            if (_selectedDate != null && !_loadingSlots)
-              _availableSlots.isEmpty
-                ? const Text('No available slots for this date.')
-                : DropdownButton<String>(
-                    value: _selectedSlot,
-                    hint: const Text('Select Time Slot'),
-                    items: _availableSlots.map((slot) => DropdownMenuItem(value: slot, child: Text(slot))).toList(),
-                    onChanged: (val) => setState(() => _selectedSlot = val),
+            
+            if (_loadingSlots) 
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(),
+              )
+            else if (_selectedDate != null)
+              Column(
+                children: [
+                  const SizedBox(height: 16),
+                  Text(
+                    'Available Slots for: ${DateFormat('MMM dd, yyyy').format(_selectedDate!)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-            if (_error != null) Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Text(_error!, style: const TextStyle(color: Colors.red)),
-            ),
+                  const SizedBox(height: 8),
+                  
+                  if (_availableSlots.isEmpty)
+                    const Text(
+                      'No available slots for this date.',
+                      style: TextStyle(color: Colors.grey),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _availableSlots.map((slot) => ChoiceChip(
+                        label: Text(slot),
+                        selected: _selectedSlot == slot,
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedSlot = selected ? slot : null;
+                          });
+                        },
+                        selectedColor: Color(0xFF003366),
+                        labelStyle: TextStyle(
+                          color: _selectedSlot == slot ? Colors.white : Colors.black,
+                        ),
+                      )).toList(),
+                    ),
+                ],
+              ),
+            
+            if (_error != null) 
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+              ),
+            
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _booking || _selectedDate == null || _selectedSlot == null ? null : _bookVisit,
-              child: _booking ? const CircularProgressIndicator(color: Colors.white) : const Text('Confirm Booking'),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _booking || _selectedDate == null || _selectedSlot == null ? null : _bookVisit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF003366),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: _booking 
+                  ? const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        ),
+                        SizedBox(width: 8),
+                        Text('Booking...'),
+                      ],
+                    )
+                  : const Text('Confirm Booking'),
+              ),
             ),
           ],
         ),
