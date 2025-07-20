@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get.dart';
 import 'package:dream_dwell/features/splash_screen/presentation/widgets/header_nav.dart';
 import 'package:dream_dwell/features/dashbaord/presentation/view/dashboard.dart';
 import 'package:dream_dwell/features/explore/presentation/view/explore_page.dart';
@@ -9,15 +10,18 @@ import 'package:dream_dwell/features/booking/presentation/view/booking_page.dart
 import 'package:dream_dwell/features/profile/presentation/view/profile.dart';
 import 'package:dream_dwell/app/service_locator/service_locator.dart';
 import 'package:dream_dwell/features/chatbot/presentation/widget/chatbot_wrapper.dart';
+import 'package:dream_dwell/features/chatbot/domain/use_case/send_chat_query_usecase.dart';
 
-class HomeView extends StatefulWidget {
-  const HomeView({super.key});
+/// Example of how to integrate the chatbot into the HomeView
+/// This shows how to wrap the existing HomeView with the ChatbotWrapper
+class HomeViewWithChatbot extends StatefulWidget {
+  const HomeViewWithChatbot({super.key});
 
   @override
-  State<HomeView> createState() => _HomeViewState();
+  State<HomeViewWithChatbot> createState() => _HomeViewWithChatbotState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class _HomeViewWithChatbotState extends State<HomeViewWithChatbot> {
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
@@ -64,3 +68,50 @@ class _HomeViewState extends State<HomeView> {
   }
 }
 
+/// Example of how to integrate the chatbot into any other page
+class AnyOtherPageWithChatbot extends StatelessWidget {
+  const AnyOtherPageWithChatbot({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChatbotWrapper(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Any Other Page'),
+        ),
+        body: const Center(
+          child: Text('This page has the chatbot integrated!'),
+        ),
+      ),
+    );
+  }
+}
+
+/// Example of how to conditionally show/hide the chatbot
+class ConditionalChatbotPage extends StatelessWidget {
+  final bool showChatbot;
+  
+  const ConditionalChatbotPage({
+    super.key,
+    this.showChatbot = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ChatbotWrapper(
+      showChatbot: showChatbot, // Control whether chatbot is shown
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Conditional Chatbot'),
+        ),
+        body: Center(
+          child: Text(
+            showChatbot 
+                ? 'This page has the chatbot enabled!' 
+                : 'This page has the chatbot disabled!',
+          ),
+        ),
+      ),
+    );
+  }
+} 

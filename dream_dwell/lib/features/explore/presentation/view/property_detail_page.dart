@@ -18,6 +18,90 @@ class PropertyDetailPage extends StatefulWidget {
 class _PropertyDetailPageState extends State<PropertyDetailPage> {
   int _currentImage = 0;
 
+  void _showPaymentDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Payment Options'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Choose your payment method:'),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.account_balance_wallet, color: Colors.purple),
+                      label: const Text('Khalti'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple[50],
+                        foregroundColor: Colors.purple[700],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(color: Colors.purple[300]!),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _processKhaltiPayment();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.payment, color: Colors.green),
+                      label: const Text('eSewa'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green[50],
+                        foregroundColor: Colors.green[700],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(color: Colors.green[300]!),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _processEsewaPayment();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _processKhaltiPayment() {
+    // TODO: Implement Khalti payment integration
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Khalti payment integration coming soon!'),
+        backgroundColor: Colors.purple,
+      ),
+    );
+  }
+
+  void _processEsewaPayment() {
+    // TODO: Implement eSewa payment integration
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('eSewa payment integration coming soon!'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
 
 
   @override
@@ -249,22 +333,22 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                   elevation: 2,
                                 ),
-                                                                  onPressed: () {
-                                    final profileState = context.read<ProfileViewModel>().state;
-                                    final currentUser = profileState.user;
-                                    debugPrint('Current userId: ${currentUser?.userId}, Property landlordId: ${widget.property.landlordId}');
-                                    final isLandlord = currentUser != null &&
-                                      (widget.property.landlordId == currentUser.userId);
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) => isLandlord
-                                        ? LandlordManageAvailability(propertyId: widget.property.id ?? '')
-                                        : BookingModal(
-                                            propertyId: widget.property.id ?? '',
-                                            propertyTitle: widget.property.title ?? '',
-                                          ),
-                                    );
-                                  },
+                                onPressed: () {
+                                  final profileState = context.read<ProfileViewModel>().state;
+                                  final currentUser = profileState.user;
+                                  debugPrint('Current userId: ${currentUser?.userId}, Property landlordId: ${widget.property.landlordId}');
+                                  final isLandlord = currentUser != null &&
+                                    (widget.property.landlordId == currentUser.userId);
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => isLandlord
+                                      ? LandlordManageAvailability(propertyId: widget.property.id ?? '')
+                                      : BookingModal(
+                                          propertyId: widget.property.id ?? '',
+                                          propertyTitle: widget.property.title ?? '',
+                                        ),
+                                  );
+                                },
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -294,6 +378,28 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                               ),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Payment button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.payment, size: 20),
+                            label: const Text(
+                              'Make Payment',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green[600],
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              elevation: 2,
+                            ),
+                            onPressed: () {
+                              _showPaymentDialog(context);
+                            },
+                          ),
                         ),
                       ],
                     ),

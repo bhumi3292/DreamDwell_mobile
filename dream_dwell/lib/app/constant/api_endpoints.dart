@@ -58,4 +58,7 @@ class ApiEndpoints {
   static const String addToCart = "${baseUrl}cart/add"; // POST
   static const String removeFromCart = "${baseUrl}cart/remove/"; // DELETE (append propertyId)
   static const String clearCart = "${baseUrl}cart/clear"; // DELETE
+
+  // ---------- Chatbot ----------
+  static const String sendChatQuery = "${baseUrl}chatbot/query"; // POST
 }
