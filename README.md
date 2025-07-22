@@ -1,9 +1,8 @@
 # DreamDwell - Complete Property Rental Platform
 
-<<<<<<< HEAD
 DreamDwell is a comprehensive property rental platform with  mobile app. The platform connects landlords and tenants for property rentals with features like property listings, booking system, payment integration, and AI-powered chatbot assistance.
 
-=======
+
 DreamDwell is a comprehensive property rental platform with mobile app. The platform connects landlords and tenants for property rentals with features like property listings, booking system, payment integration, and AI-powered chatbot assistance.
 >>>>>>> 58458ee (updates)
 ## 🏗️ Project Structure
