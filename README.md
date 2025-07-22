@@ -1,13 +1,11 @@
 # DreamDwell - Complete Property Rental Platform
 
-DreamDwell is a comprehensive property rental platform with web frontend, mobile app, and backend API. The platform connects landlords and tenants for property rentals with features like property listings, booking system, payment integration, and AI-powered chatbot assistance.
+DreamDwell is a comprehensive property rental platform with  mobile app. The platform connects landlords and tenants for property rentals with features like property listings, booking system, payment integration, and AI-powered chatbot assistance.
 
 ## 🏗️ Project Structure
 
 ```
 DreamDwell_mobile/
-├── dreamdwell_frontend/     # React.js Web Application
-├── dreamdwell_backend/      # Node.js/Express Backend API
 └── dream_dwell/            # Flutter Mobile Application
 ```
 
