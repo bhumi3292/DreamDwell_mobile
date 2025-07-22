@@ -188,36 +188,29 @@ class PropertyRemoteDatasource implements IPropertyDataSource {
   }
 
   @override
-  Future<void> updateProperty(String propertyId, PropertyEntity property, List<String> newImagePaths, List<String> newVideoPaths) async {
-    try {
-      final formData = await _createPropertyFormData(property, newImagePaths, newVideoPaths);
-      
-      final response = await _dio.put(
-        '${ApiEndpoints.updateProperty}$propertyId',
-        data: formData,
-        options: Options(
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        ),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to update property: ${response.statusCode}');
-      }
-    } on DioException catch (e) {
-      print('DioException in updateProperty: ${e.message}');
-      String errorMessage = 'Failed to update property';
-      
-      if (e.response?.data != null && e.response!.data is Map) {
-        final data = e.response!.data as Map;
-        errorMessage = data['message'] ?? errorMessage;
-      }
-      
-      throw Exception(errorMessage);
-    } catch (e) {
-      print('General exception in updateProperty: $e');
-      throw Exception('Failed to update property: $e');
+  Future<void> updateProperty(
+    String propertyId,
+    PropertyEntity property,
+    List<String> newImagePaths,
+    List<String> newVideoPaths,
+    List<String> existingImages,
+    List<String> existingVideos,
+  ) async {
+    final formData = await _createPropertyFormData(property, newImagePaths, newVideoPaths);
+    // Add existing media to formData
+    for (final img in existingImages) {
+      formData.fields.add(MapEntry('existingImages', img));
+    }
+    for (final vid in existingVideos) {
+      formData.fields.add(MapEntry('existingVideos', vid));
+    }
+    final response = await _dio.put(
+      ApiEndpoints.updateProperty(propertyId),
+      data: formData,
+      options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update property: ${response.statusCode}');
     }
   }
 

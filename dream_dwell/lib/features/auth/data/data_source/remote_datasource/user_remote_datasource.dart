@@ -7,12 +7,14 @@ import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
 import 'dart:io';
 
 import 'package:http_parser/http_parser.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserRemoteDatasource implements IUserDataSource {
   final ApiService _apiService;
+  final SharedPreferences _sharedPreferences;
 
-  UserRemoteDatasource({required ApiService apiService})
-      : _apiService = apiService;
+  UserRemoteDatasource({required ApiService apiService, required SharedPreferences sharedPreferences})
+      : _apiService = apiService, _sharedPreferences = sharedPreferences;
 
   @override
   Future<void> registerUser(UserEntity user) async {
@@ -54,8 +56,17 @@ class UserRemoteDatasource implements IUserDataSource {
       );
       if (response.statusCode == 200) {
         final token = response.data['token'];
+        final userId = response.data['user']?['_id'] ;
+        final role = response.data['user']?['stakeholder'] ?? stakeholder;
         if (token == null || (token as String).isEmpty) {
           throw Exception("Login successful but no token was received.");
+        }
+        await _sharedPreferences.setString('token', token);
+        if (userId != null) {
+          await _sharedPreferences.setString('userId', userId);
+        }
+        if (role != null) {
+          await _sharedPreferences.setString('role', role);
         }
         return token;
       } else {

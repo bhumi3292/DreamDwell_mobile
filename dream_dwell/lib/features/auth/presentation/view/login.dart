@@ -178,7 +178,7 @@ class _LoginState extends State<Login> {
                       alignment: Alignment.center,
                       child: TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/forget');
+                          Navigator.pushNamed(context, '/forgot-password');
                         },
                         child: Text(
                           "Forgot Password?",

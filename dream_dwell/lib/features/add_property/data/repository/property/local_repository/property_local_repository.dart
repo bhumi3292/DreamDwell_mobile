@@ -53,9 +53,23 @@ class PropertyLocalRepository implements IPropertyRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateProperty(String propertyId, PropertyEntity property, List<String> newImagePaths, List<String> newVideoPaths) async {
+  Future<Either<Failure, void>> updateProperty(
+    String propertyId,
+    PropertyEntity property,
+    List<String> newImagePaths,
+    List<String> newVideoPaths,
+    List<String> existingImages,
+    List<String> existingVideos,
+  ) async {
     try {
-      await _localDataSource.updateProperty(propertyId, property, newImagePaths, newVideoPaths);
+      await _localDataSource.updateProperty(
+        propertyId,
+        property,
+        newImagePaths,
+        newVideoPaths,
+        existingImages,
+        existingVideos,
+      );
       return const Right(null);
     } catch (e) {
       return Left(LocalDatabaseFailure(message: 'Failed to update property locally: ${e.toString()}'));

@@ -34,9 +34,12 @@ class ApiEndpoints {
   static const String createProperty = "${baseUrl}properties";
   static const String getAllProperties = "${baseUrl}properties"; // GET
   static const String getPropertyById = "${baseUrl}properties/"; // GET by ID (append ID)
-  static const String updateProperty = "${baseUrl}properties/"; // PUT by ID (append ID)
+  // static const String updateProperty = "${baseUrl}properties/"; // PUT by ID (append ID)
   static const String deleteProperty = "${baseUrl}properties/"; // DELETE by ID (append ID)
 
+  static String updateProperty(String id) {
+    return "${baseUrl}properties/$id";
+  }
   // ---------- Category ----------
   static const String createCategory = "${baseUrl}category"; // POST
   static const String getAllCategories = "${baseUrl}category"; // GET

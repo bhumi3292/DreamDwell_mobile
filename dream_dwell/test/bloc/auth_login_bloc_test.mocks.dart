@@ -11,7 +11,19 @@ import 'package:dream_dwell/features/auth/domain/use_case/user_login_usecase.dar
     as _i3;
 import 'package:mockito/mockito.dart' as _i1;
 
-
+// ignore_for_file: type=lint
+// ignore_for_file: avoid_redundant_argument_values
+// ignore_for_file: avoid_setters_without_getters
+// ignore_for_file: comment_references
+// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use_from_same_package
+// ignore_for_file: implementation_imports
+// ignore_for_file: invalid_use_of_visible_for_testing_member
+// ignore_for_file: must_be_immutable
+// ignore_for_file: prefer_const_constructors
+// ignore_for_file: unnecessary_parenthesis
+// ignore_for_file: camel_case_types
+// ignore_for_file: subtype_of_sealed_class
 
 class _FakeEither_0<L, R> extends _i1.SmartFake implements _i2.Either<L, R> {
   _FakeEither_0(

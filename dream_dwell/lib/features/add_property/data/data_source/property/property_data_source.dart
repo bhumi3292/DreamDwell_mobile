@@ -7,6 +7,13 @@ abstract interface class IPropertyDataSource {
   Future<void> addProperty(PropertyEntity property, List<String> imagePaths, List<String> videoPaths);
   Future<List<PropertyEntity>> getProperties();
   Future<PropertyEntity> getPropertyById(String propertyId);
-  Future<void> updateProperty(String propertyId, PropertyEntity property, List<String> newImagePaths, List<String> newVideoPaths);
+  Future<void> updateProperty(
+    String propertyId,
+    PropertyEntity property,
+    List<String> newImagePaths,
+    List<String> newVideoPaths,
+    List<String> existingImages,
+    List<String> existingVideos,
+  );
   Future<void> deleteProperty(String propertyId);
 }

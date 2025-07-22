@@ -4,6 +4,7 @@ import 'package:dream_dwell/cores/network/hive_service.dart';
 import 'package:dream_dwell/features/auth/domain/use_case/user_get_current_usecase.dart';
 import 'package:dream_dwell/features/auth/domain/use_case/update_user_profile_usecase.dart';
 import 'package:dream_dwell/features/profile/domain/use_case/upload_profile_picture_usecase.dart';
+import 'package:dream_dwell/features/profile/domain/use_case/update_profile_usecase.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_state.dart';
 
@@ -11,12 +12,14 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
   final UserGetCurrentUsecase userGetCurrentUsecase;
   final UploadProfilePictureUsecase uploadProfilePictureUsecase;
   final UpdateUserProfileUsecase updateUserProfileUsecase;
+  final UpdateProfileUsecase updateProfileUsecase;
   final HiveService hiveService;
 
   ProfileViewModel({
     required this.userGetCurrentUsecase,
     required this.uploadProfilePictureUsecase,
     required this.updateUserProfileUsecase,
+    required this.updateProfileUsecase,
     required this.hiveService,
   }) : super(const ProfileState.initial()) {
     on<FetchUserProfileEvent>(_onFetchUserProfile);
@@ -152,5 +155,26 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
         print("State emitted successfully"); // Debug print
       },
     );
+  }
+
+  Future<void> _onUpdateProfile(
+      UpdateUserProfileEvent event, Emitter<ProfileState> emit) async {
+    emit(state.copyWith(isLoading: true, errorMessage: null, successMessage: null));
+    try {
+      final updatedUser = await updateProfileUsecase.call(
+        fullName: event.fullName,
+        email: event.email,
+        phoneNumber: event.phoneNumber,
+        currentPassword: event.currentPassword,
+        newPassword: event.newPassword,
+      );
+      emit(state.copyWith(
+        isLoading: false,
+        user: updatedUser,
+        successMessage: 'Profile updated successfully!',
+      ));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+    }
   }
 }

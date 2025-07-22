@@ -19,8 +19,11 @@ import 'package:dream_dwell/features/auth/presentation/view_model/login_view_mod
 import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
 
 // Profile
-import 'package:dream_dwell/features/profile/domain/use_case/upload_profile_picture_usecase.dart';
+import 'package:dream_dwell/features/profile/data/data_source/profile_remote_data_source.dart';
+import 'package:dream_dwell/features/profile/data/repository/profile_repository_impl.dart';
+import 'package:dream_dwell/features/profile/domain/use_case/update_profile_usecase.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
+import 'package:dream_dwell/features/profile/domain/use_case/upload_profile_picture_usecase.dart';
 
 // Property
 import 'package:dream_dwell/features/add_property/data/data_source/property/remote_datasource/property_remote_datasource.dart';
@@ -28,6 +31,8 @@ import 'package:dream_dwell/features/add_property/data/repository/property/remot
 import 'package:dream_dwell/features/add_property/domain/repository/property_repository.dart';
 import 'package:dream_dwell/features/add_property/domain/use_case/property/get_all_properties_usecase.dart';
 import 'package:dream_dwell/features/add_property/domain/use_case/property/add_property_usecase.dart';
+import 'package:dream_dwell/features/add_property/domain/use_case/property/update_property_usecase.dart';
+import 'package:dream_dwell/features/add_property/domain/use_case/property/delete_property_usecase.dart';
 import 'package:dream_dwell/features/add_property/domain/use_case/category/get_all_categories_usecase.dart';
 import 'package:dream_dwell/features/add_property/domain/use_case/category/add_category_usecase.dart';
 import 'package:dream_dwell/features/add_property/presentation/property/view_model/add_property_view_model.dart';
@@ -67,10 +72,22 @@ import 'package:dream_dwell/features/chatbot/data/repository/chatbot_repository_
 import 'package:dream_dwell/features/chatbot/domain/repository/chatbot_repository.dart';
 import 'package:dream_dwell/features/chatbot/domain/use_case/send_chat_query_usecase.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dream_dwell/app/shared_pref/token_shared_prefs.dart';
+
+import 'package:dream_dwell/features/chat/data/data_source/chat_rest_data_source.dart';
+import 'package:dream_dwell/features/chat/data/data_source/chat_socket_data_source.dart';
+import 'package:dream_dwell/features/chat/data/repository/chat_repository.dart';
+import 'package:dream_dwell/features/chat/domain/use_case/chat_usecases.dart';
+import 'package:dream_dwell/features/chat/presentation/bloc/chat_bloc.dart';
+
 
 final serviceLocator = GetIt.instance;
 
 Future<void> initDependencies() async {
+  final sharedPreferences = await SharedPreferences.getInstance();
+  serviceLocator.registerSingleton<SharedPreferences>(sharedPreferences);
+  serviceLocator.registerSingleton<TokenSharedPrefs>(TokenSharedPrefs(sharedPreferences: sharedPreferences));
   await _initHiveService();
   _initApiService();
   _initAuthAndProfileModules();
@@ -78,6 +95,7 @@ Future<void> initDependencies() async {
   _initCartModules();
   _initDashboardModules();
   _initExploreModules();
+  _initChatModules();
   _initChatbotModules();
 }
 
@@ -133,6 +151,18 @@ void _initPropertyModules() {
     ),
   );
   
+  serviceLocator.registerFactory<UpdatePropertyUsecase>(
+    () => UpdatePropertyUsecase(
+      serviceLocator<IPropertyRepository>(),
+    ),
+  );
+  
+  serviceLocator.registerFactory<DeletePropertyUsecase>(
+    () => DeletePropertyUsecase(
+      serviceLocator<IPropertyRepository>(),
+    ),
+  );
+  
   serviceLocator.registerFactory<GetAllCategoriesUsecase>(
     () => GetAllCategoriesUsecase(
       serviceLocator<ICategoryRepository>(),
@@ -149,6 +179,7 @@ void _initPropertyModules() {
   serviceLocator.registerFactory<AddPropertyBloc>(
     () => AddPropertyBloc(
       addPropertyUsecase: serviceLocator<AddPropertyUsecase>(),
+      updatePropertyUsecase: serviceLocator<UpdatePropertyUsecase>(),
       getAllCategoriesUsecase: serviceLocator<GetAllCategoriesUsecase>(),
       hiveService: serviceLocator<HiveService>(),
     ),
@@ -210,7 +241,7 @@ void _initAuthAndProfileModules() {
         () => UserLocalDatasource(hiveService: serviceLocator<HiveService>()),
   );
   serviceLocator.registerFactory<UserRemoteDatasource>(
-        () => UserRemoteDatasource(apiService: serviceLocator<ApiService>()),
+        () => UserRemoteDatasource(apiService: serviceLocator<ApiService>(), sharedPreferences: serviceLocator<SharedPreferences>()),
   );
 
   // --- Repositories ---
@@ -259,7 +290,7 @@ void _initAuthAndProfileModules() {
 
   // --- ViewModels ---
   serviceLocator.registerFactory<LoginViewModel>(
-        () => LoginViewModel(
+    () => LoginViewModel(
       loginUserUseCase: serviceLocator<UserLoginUsecase>(),
     ),
   );
@@ -268,11 +299,21 @@ void _initAuthAndProfileModules() {
         () => RegisterUserViewModel(serviceLocator<UserRegisterUsecase>()),
   );
 
+  serviceLocator.registerFactory<ProfileRemoteDataSource>(
+    () => ProfileRemoteDataSource(apiService: serviceLocator<ApiService>()),
+  );
+  serviceLocator.registerFactory<ProfileRepositoryImpl>(
+    () => ProfileRepositoryImpl(remoteDataSource: serviceLocator<ProfileRemoteDataSource>()),
+  );
+  serviceLocator.registerFactory<UpdateProfileUsecase>(
+    () => UpdateProfileUsecase(repository: serviceLocator<ProfileRepositoryImpl>()),
+  );
   serviceLocator.registerFactory<ProfileViewModel>(
-        () => ProfileViewModel(
+    () => ProfileViewModel(
       userGetCurrentUsecase: serviceLocator<UserGetCurrentUsecase>(),
       uploadProfilePictureUsecase: serviceLocator<UploadProfilePictureUsecase>(),
       updateUserProfileUsecase: serviceLocator<UpdateUserProfileUsecase>(),
+      updateProfileUsecase: serviceLocator<UpdateProfileUsecase>(),
       hiveService: serviceLocator<HiveService>(),
     ),
   );
@@ -336,23 +377,82 @@ void _initExploreModules() {
   );
 }
 
+void _initChatModules() {
+  serviceLocator.registerLazySingleton<ChatRestDataSource>(
+    () => ChatRestDataSource(dio: serviceLocator<Dio>()),
+  );
+  serviceLocator.registerLazySingleton<ChatSocketDataSource>(
+    () => ChatSocketDataSource(),
+  );
+  serviceLocator.registerLazySingleton<ChatRepository>(
+    () => ChatRepository(
+      restDataSource: serviceLocator<ChatRestDataSource>(),
+      socketDataSource: serviceLocator<ChatSocketDataSource>(),
+    ),
+  );
+  serviceLocator.registerFactory<GetMyChatsUsecase>(
+    () => GetMyChatsUsecase(serviceLocator<ChatRepository>()),
+  );
+  serviceLocator.registerFactory<CreateOrGetChatUsecase>(
+    () => CreateOrGetChatUsecase(serviceLocator<ChatRepository>()),
+  );
+  serviceLocator.registerFactory<GetChatByIdUsecase>(
+    () => GetChatByIdUsecase(serviceLocator<ChatRepository>()),
+  );
+  serviceLocator.registerFactory<GetMessagesForChatUsecase>(
+    () => GetMessagesForChatUsecase(serviceLocator<ChatRepository>()),
+  );
+  serviceLocator.registerFactory<SendMessageUsecase>(
+    () => SendMessageUsecase(serviceLocator<ChatRepository>()),
+  );
+  serviceLocator.registerFactory<ListenForNewMessagesUsecase>(
+    () => ListenForNewMessagesUsecase(serviceLocator<ChatRepository>()),
+  );
+  serviceLocator.registerFactory<ConnectSocketUsecase>(
+    () => ConnectSocketUsecase(serviceLocator<ChatRepository>()),
+  );
+  serviceLocator.registerFactory<DisconnectSocketUsecase>(
+    () => DisconnectSocketUsecase(serviceLocator<ChatRepository>()),
+  );
+  serviceLocator.registerFactory<JoinChatUsecase>(
+    () => JoinChatUsecase(serviceLocator<ChatRepository>()),
+  );
+  serviceLocator.registerFactory<ChatBloc>(
+    () => ChatBloc(
+      getMyChatsUsecase: serviceLocator<GetMyChatsUsecase>(),
+      createOrGetChatUsecase: serviceLocator<CreateOrGetChatUsecase>(),
+      getChatByIdUsecase: serviceLocator<GetChatByIdUsecase>(),
+      getMessagesForChatUsecase: serviceLocator<GetMessagesForChatUsecase>(),
+      sendMessageUsecase: serviceLocator<SendMessageUsecase>(),
+      listenForNewMessagesUsecase: serviceLocator<ListenForNewMessagesUsecase>(),
+      connectSocketUsecase: serviceLocator<ConnectSocketUsecase>(),
+      disconnectSocketUsecase: serviceLocator<DisconnectSocketUsecase>(),
+      joinChatUsecase: serviceLocator<JoinChatUsecase>(),
+    ),
+  );
+}
+
 void _initChatbotModules() {
-  // --- Chatbot Data Sources ---
   serviceLocator.registerFactory<ChatbotRemoteDatasource>(
     () => ChatbotRemoteDatasource(dio: serviceLocator<Dio>()),
   );
-
-  // --- Chatbot Repositories ---
   serviceLocator.registerFactory<ChatbotRepository>(
     () => ChatbotRepositoryImpl(
       remoteDataSource: serviceLocator<ChatbotRemoteDatasource>(),
     ),
   );
-
-  // --- Chatbot Usecases ---
   serviceLocator.registerFactory<SendChatQueryUseCase>(
     () => SendChatQueryUseCase(
       repository: serviceLocator<ChatbotRepository>(),
     ),
+  );
+}
+
+void setupServiceLocator() {
+  serviceLocator.registerLazySingleton<UpdatePropertyUsecase>(
+    () => UpdatePropertyUsecase(serviceLocator<IPropertyRepository>()),
+  );
+  serviceLocator.registerLazySingleton<DeletePropertyUsecase>(
+    () => DeletePropertyUsecase(serviceLocator<IPropertyRepository>()),
   );
 }

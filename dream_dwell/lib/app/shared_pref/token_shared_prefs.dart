@@ -29,4 +29,48 @@ class TokenSharedPrefs {
       );
     }
   }
+
+  Future<Either<Failure, void>> saveRole(String role) async {
+    try {
+      await _sharedPreferences.setString('role', role);
+      return Right(null);
+    } catch (e) {
+      return Left(
+        SharedPreferencesFailure(message: 'Failed to save role: $e'),
+      );
+    }
+  }
+
+  Future<Either<Failure, String?>> getRole() async {
+    try {
+      final role = _sharedPreferences.getString('role');
+      return Right(role);
+    } catch (e) {
+      return Left(
+        SharedPreferencesFailure(message: 'Failed to retrieve role: $e'),
+      );
+    }
+  }
+
+  Future<Either<Failure, void>> saveUserId(String userId) async {
+    try {
+      await _sharedPreferences.setString('userId', userId);
+      return Right(null);
+    } catch (e) {
+      return Left(
+        SharedPreferencesFailure(message: 'Failed to save userId: $e'),
+      );
+    }
+  }
+
+  Future<Either<Failure, String?>> getUserId() async {
+    try {
+      final userId = _sharedPreferences.getString('userId');
+      return Right(userId);
+    } catch (e) {
+      return Left(
+        SharedPreferencesFailure(message: 'Failed to retrieve userId: $e'),
+      );
+    }
+  }
 }

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart'; // Import flutter_bloc
 
 // Import your HeaderNav widget
-import 'package:dream_dwell/features/splash_screen/presentation/widgets/header_nav.dart'; // Ensure this path is correct
-import 'package:dream_dwell/features/splash_screen/presentation/widgets/nav_bar.dart';
+import 'package:dream_dwell/features/home/header_nav.dart'; // Ensure this path is correct
+import 'package:dream_dwell/features/home/nav_bar.dart';
 
 // Import your BLoC and State for user profile
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dream_dwell/features/splash_screen/presentation/widgets/header_nav.dart';
+import 'package:dream_dwell/features/home/header_nav.dart';
 import 'package:dream_dwell/features/dashbaord/presentation/view/dashboard.dart';
 import 'package:dream_dwell/features/explore/presentation/view/explore_page.dart';
 import 'package:dream_dwell/features/explore/presentation/bloc/explore_bloc.dart';

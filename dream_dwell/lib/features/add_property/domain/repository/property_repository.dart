@@ -22,8 +22,10 @@ abstract interface class IPropertyRepository {
   // It must match the parameters in your PropertyLocalRepository's updateProperty method.
   Future<Either<Failure, void>> updateProperty(
       String propertyId,
-      PropertyEntity updatedProperty, // Note: You had 'updatedProperty' here, which is fine
-      List<String> newImagePaths, // <--- ADD THIS
-      List<String> newVideoPaths, // <--- ADD THIS
+      PropertyEntity updatedProperty,
+      List<String> newImagePaths,
+      List<String> newVideoPaths,
+      List<String> existingImages,
+      List<String> existingVideos,
       );
 }

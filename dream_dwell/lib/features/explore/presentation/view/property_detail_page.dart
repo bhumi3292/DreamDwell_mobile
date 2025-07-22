@@ -6,6 +6,14 @@ import 'package:dream_dwell/features/booking/presentation/widgets/landlord_manag
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:dream_dwell/features/add_property/presentation/view/update_property_page.dart';
+import 'package:dream_dwell/features/add_property/domain/use_case/property/delete_property_usecase.dart';
+import 'package:get_it/get_it.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_paypal/flutter_paypal.dart';
+import 'package:dream_dwell/features/chat/presentation/page/chat_page.dart';
+import 'package:dream_dwell/app/service_locator/service_locator.dart';
+import 'package:dream_dwell/features/chat/domain/use_case/chat_usecases.dart';
+import 'package:dream_dwell/app/shared_pref/token_shared_prefs.dart';
 
 class PropertyDetailPage extends StatefulWidget {
   final ExplorePropertyEntity property;
@@ -45,7 +53,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                       ),
                       onPressed: () {
                         Navigator.of(context).pop();
-                        _processKhaltiPayment();
+                        // _processKhaltiPayment();
                       },
                     ),
                   ),
@@ -83,14 +91,74 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
     );
   }
 
-  void _processKhaltiPayment() {
-    // TODO: Implement Khalti payment integration
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Khalti payment integration coming soon!'),
-        backgroundColor: Colors.purple,
-      ),
-    );
+  void _processPayPalPayment() {
+    Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (BuildContext context) => UsePaypal(
+            sandboxMode: true,
+            clientId:
+                "AcnpbvL-nqay69eboBK-a2hcQLnkFTQZXbTF0f4UafVwhRYAXe11Z0B3PtFyWCTDH24INY6Cu2U0rhRC",
+            secretKey:
+                "EGZXWncK71BKAfqH7ClPpldekK6kSKvO9yIk0Loz36CkdM7uLC_vuE5mjbGjRhJhBT5BeOYyBB-_p6WW",
+            returnURL: "https://samplesite.com/return",
+            cancelURL: "https://samplesite.com/cancel",
+            transactions: [
+              {
+                "amount": {
+                  "total": widget.property.price.toString(),
+                  "currency": "USD",
+                  "details": {
+                    "subtotal": widget..property.price.toString(),
+                    "shipping": '0',
+                    "shipping_discount": 0,
+                  },
+                },
+                "description": "Payment for course: ${widget.property.title}",
+                "item_list": {
+                  "items": [
+                    {
+                      "name": widget.property.title,
+                      "quantity": 1,
+                      "price": widget.property.price.toString(),
+                      "currency": "USD",
+                    },
+                  ],
+                },
+              },
+            ],
+            note: "Contact us for any questions on your order.",
+            onSuccess: (Map params) async {
+              if (mounted) {
+                // Dispatch payment event on PayPal success
+              }
+            },
+            onError: (error) {
+              if (mounted) {
+                // BlocProvider.of<PaymentBloc>(context).add(
+                //   CreatePayment(
+                //     courseId: widget.courseId,
+                //     amount: widget.amount,
+                //     paymentMethod: 'PayPal',
+                //     status: 'error',
+                //   ),
+                // );
+              }
+            },
+            onCancel: (params) {
+              if (mounted) {
+                // BlocProvider.of<PaymentBloc>(context).add(
+                //   CreatePayment(
+                //     courseId: widget.courseId,
+                //     amount: widget.amount,
+                //     paymentMethod: 'PayPal',
+                //     status: 'cancelled',
+                //   ),
+                // );
+              }
+            },
+          ),
+        ),
+      );
   }
 
   void _processEsewaPayment() {
@@ -101,6 +169,11 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
         backgroundColor: Colors.green,
       ),
     );
+  }
+
+  Future<String?> _getUserIdFromPrefs() async {
+    final result = await serviceLocator<TokenSharedPrefs>().getUserId();
+    return result.fold((failure) => null, (userId) => userId);
   }
 
 
@@ -259,6 +332,73 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                           Text(widget.property.landlordEmail!, style: const TextStyle(fontWeight: FontWeight.w500)),
                         ],
                       ),
+                    // --- Chat with Landlord Button ---
+                    const SizedBox(height: 16),
+                    Center(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
+                        label: const Text(
+                          'Chat with Landlord',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          elevation: 4,
+                        ),
+                        onPressed: () async {
+                          final landlordId = widget.property.landlordId;
+                          final propertyId = widget.property.id;
+                          final userId = await _getUserIdFromPrefs();
+                          if (userId == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Unable to start chat: missing user info.'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          if (landlordId == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Unable to start chat: missing landlord info.'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          if (propertyId == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Unable to start chat: missing property info.'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          final createOrGetChatUsecase = serviceLocator<CreateOrGetChatUsecase>();
+                          final chat = await createOrGetChatUsecase(
+                            otherUserId: landlordId,
+                            propertyId: propertyId,
+                          );
+                          final chatId = chat['_id'] ?? '';
+                          final chatTitle = widget.property.landlordName ?? 'Landlord';
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChatPage(
+                                preselectChatId: chatId,
+                                currentUserId: userId,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ] else ...[
                                          // Show message when landlord details are not available
                      Container(
@@ -366,14 +506,13 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                   elevation: 2,
                                 ),
-                                onPressed: () {
-                                  // Add contact functionality here
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Contact functionality coming soon!'),
-                                      backgroundColor: Colors.blue,
-                                    ),
-                                  );
+                                onPressed: () async {
+                                  final phone =  '9800000000';
+                                  final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: "+9779800000000",
+    );
+    await launchUrl(launchUri);
                                 },
                               ),
                             ),
@@ -397,7 +536,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                               elevation: 2,
                             ),
                             onPressed: () {
-                              _showPaymentDialog(context);
+                             _processPayPalPayment();
                             },
                           ),
                         ),
@@ -463,6 +602,9 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                               initialDescription: widget.property.description ?? '',
                                               initialBedrooms: widget.property.bedrooms ?? 0,
                                               initialBathrooms: widget.property.bathrooms ?? 0,
+                                              initialImages: widget.property.images ?? [],
+                                              initialVideos: widget.property.videos ?? [],
+                                              initialCategoryId: widget.property.categoryId ?? '',
                                             ),
                                           ),
                                         );
@@ -483,10 +625,46 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                         padding: const EdgeInsets.symmetric(vertical: 12),
                                       ),
-                                      onPressed: () {
-                                        // TODO: Implement delete property action
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Delete feature coming soon!')),
+                                      onPressed: () async {
+                                        final scaffoldMessenger = ScaffoldMessenger.of(context);
+                                        final confirm = await showDialog<bool>(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text('Delete Property'),
+                                            content: const Text('Are you sure you want to delete this property? This action cannot be undone.'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.of(context).pop(false),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => Navigator.of(context).pop(true),
+                                                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                        if (confirm != true) return;
+                                        final deleteUsecase = GetIt.I<DeletePropertyUsecase>();
+                                        showDialog(
+                                          context: context,
+                                          barrierDismissible: false,
+                                          builder: (context) => const Center(child: CircularProgressIndicator()),
+                                        );
+                                        final result = await deleteUsecase(widget.property.id ?? '');
+                                        Navigator.of(context).pop(); // Remove loading dialog
+                                        result.fold(
+                                          (failure) {
+                                            scaffoldMessenger.showSnackBar(
+                                              SnackBar(content: Text('Failed to delete property: ${failure.toString()}'), backgroundColor: Colors.red),
+                                            );
+                                          },
+                                          (_) {
+                                            scaffoldMessenger.showSnackBar(
+                                              const SnackBar(content: Text('Property deleted successfully!'), backgroundColor: Colors.green),
+                                            );
+                                            Navigator.of(context).popUntil((route) => route.isFirst); // Go to Explore page (assumes it's the first route)
+                                          },
                                         );
                                       },
                                     ),

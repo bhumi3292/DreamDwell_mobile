@@ -86,14 +86,14 @@ class PropertyRemoteRepository implements IPropertyRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateProperty(String propertyId, PropertyEntity property, List<String> newImagePaths, List<String> newVideoPaths) async {
+  Future<Either<Failure, void>> updateProperty(String propertyId, PropertyEntity property, List<String> newImagePaths, List<String> newVideoPaths, List<String> existingImages, List<String> existingVideos) async {
     try {
-      await _remoteDataSource.updateProperty(propertyId, property, newImagePaths, newVideoPaths);
+      await _remoteDataSource.updateProperty(propertyId, property, newImagePaths, newVideoPaths, existingImages, existingVideos);
       return const Right(null);
     } on DioException catch (e) {
       return Left(_handleDioError(e));
     } catch (e) {
-      return Left(RemoteDatabaseFailure(message: 'Failed to update property remotely: ${e.toString()}'));
+      return Left(RemoteDatabaseFailure(message: 'Failed to update property remotely:  [${e.toString()}'));
     }
   }
 }

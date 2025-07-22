@@ -67,6 +67,7 @@ final initialMessage = ChatMessageEntity(
 ```
 
 ### Conditional Display
+
 ```dart
 ChatbotWrapper(
   showChatbot: someCondition, // true/false

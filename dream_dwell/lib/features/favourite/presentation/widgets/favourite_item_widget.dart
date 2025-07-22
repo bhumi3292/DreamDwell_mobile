@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entity/favourite_item.dart';
-import 'package:dream_dwell/features/add_property/presentation/view/property_detail_page.dart';
+import 'package:dream_dwell/features/explore/domain/entity/explore_property_entity.dart';
+import 'package:dream_dwell/features/explore/presentation/view/property_detail_page.dart';
 
 class FavouriteItemWidget extends StatelessWidget {
   final FavouriteItem item;
@@ -14,7 +15,12 @@ class FavouriteItemWidget extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PropertyDetailPage(propertyId: item.id),
+            builder: (context) => PropertyDetailPage(
+              property: ExplorePropertyEntity(
+                id: item.id,
+                title: item.title,
+              ),
+            ),
           ),
         );
       },

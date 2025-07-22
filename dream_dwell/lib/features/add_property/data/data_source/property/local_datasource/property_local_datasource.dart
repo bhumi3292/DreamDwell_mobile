@@ -61,13 +61,15 @@ class PropertyLocalDatasource implements IPropertyDataSource {
   }
 
   @override
-  Future<void> updateProperty(String propertyId, PropertyEntity property,
-      List<String> newImagePaths, List<String> newVideoPaths) async {
-    try {
-      final updatedPropertyHiveModel = PropertyHiveModel.fromEntity(property);
-      await hiveService.updateProperty(updatedPropertyHiveModel); // Pass the PropertyHiveModel
-    } catch (e) {
-      throw Exception('Failed to update property locally: $e');
-    }
+  Future<void> updateProperty(
+    String propertyId,
+    PropertyEntity property,
+    List<String> newImagePaths,
+    List<String> newVideoPaths,
+    List<String> existingImages,
+    List<String> existingVideos,
+  ) async {
+    final updatedPropertyHiveModel = PropertyHiveModel.fromEntity(property);
+    await hiveService.updateProperty(updatedPropertyHiveModel);
   }
 }
