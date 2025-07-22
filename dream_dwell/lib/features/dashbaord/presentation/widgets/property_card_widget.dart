@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:get_it/get_it.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/features/add_property/data/model/property_model/property_api_model.dart';
-import 'package:dream_dwell/features/add_property/domain/use_case/cart/add_to_cart_usecase.dart';
-import 'package:dream_dwell/features/add_property/domain/use_case/cart/remove_from_cart_usecase.dart';
-import 'package:dream_dwell/features/add_property/domain/entity/cart/cart_entity.dart';
-import 'package:dream_dwell/features/add_property/domain/use_case/cart/get_cart_usecase.dart';
-import 'package:dream_dwell/cores/network/hive_service.dart';
-import 'package:dream_dwell/features/auth/data/model/user_hive_model.dart';
+import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
 import 'package:dream_dwell/cores/utils/image_url_helper.dart';
+<<<<<<< HEAD
 import 'package:get/get.dart';
 import 'package:dream_dwell/features/favourite/presentation/view_model/cart_view_model.dart';
 import 'package:dream_dwell/features/add_property/presentation/view/property_detail_page.dart';
+=======
+import 'package:dream_dwell/features/explore/presentation/view/property_detail_page.dart';
+>>>>>>> sprint5
 
 class PropertyCardWidget extends StatefulWidget {
   final PropertyApiModel property;
@@ -40,11 +39,17 @@ class PropertyCardWidget extends StatefulWidget {
 class _PropertyCardWidgetState extends State<PropertyCardWidget> {
   int _currentImageIndex = 0;
   late PageController _pageController;
+  late CartBloc _cartBloc;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+<<<<<<< HEAD
+=======
+    _cartBloc = context.read<CartBloc>();
+    _checkFavoriteStatus();
+>>>>>>> sprint5
   }
 
   @override
@@ -53,6 +58,37 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
     super.dispose();
   }
 
+<<<<<<< HEAD
+=======
+  Future<void> _checkFavoriteStatus() async {
+    // The cart status will be updated through the bloc listener
+    _cartBloc.add(GetCartEvent());
+  }
+
+  void _toggleFavorite() {
+    if (_isLoading) return;
+
+    print('DEBUG: Heart icon tapped for property: ${widget.property.id} - ${widget.property.title}');
+    print('DEBUG: Current favorite state: $_isFavorite');
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    if (_isFavorite) {
+      // Remove from favorites
+      print('DEBUG: Attempting to remove from favorites');
+      _cartBloc.add(RemoveFromCartEvent(widget.property.id!));
+    } else {
+      // Add to favorites
+      print('DEBUG: Attempting to add to favorites');
+      _cartBloc.add(AddToCartEvent(widget.property.id!));
+    }
+  }
+
+
+
+>>>>>>> sprint5
   String _getImageUrl(String imagePath) {
     print('DEBUG: Processing image path: $imagePath');
     final fullUrl = ImageUrlHelper.constructImageUrl(imagePath, baseUrl: widget.baseUrl);
@@ -199,6 +235,7 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final CartViewModel cartViewModel = Get.find<CartViewModel>();
     return GestureDetector(
       onTap: widget.onTap ?? () {
@@ -323,8 +360,138 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
                     ),
                   );
                 }),
+=======
+    return BlocListener<CartBloc, CartState>(
+      listener: (context, state) {
+        if (state is CartLoaded) {
+          // Check if the current property is in the cart
+          final isInCart = state.cart.items?.any(
+            (item) => item.property.id == widget.property.id
+          ) ?? false;
+          
+          setState(() {
+            _isFavorite = isInCart;
+            _isLoading = false;
+          });
+          
+          // Show success message
+          if (isInCart != widget.isFavorite) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(isInCart ? 'Added to favorites' : 'Removed from favorites'),
+                backgroundColor: Colors.green,
+>>>>>>> sprint5
               ),
-          ],
+            );
+          }
+        } else if (state is CartError) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Card(
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 3,
+          child: Stack(
+            children: [
+              Row(
+                children: [
+                  _buildImageCarousel(),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.property.title,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.property.location,
+                            style: const TextStyle(color: Colors.grey, fontSize: 14),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Price: ${widget.property.price.toStringAsFixed(2)}',
+                            style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.w600, fontSize: 15),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              if (widget.property.bedrooms != null)
+                                Row(
+                                  children: [
+                                    const Icon(Icons.bed, size: 16, color: Colors.grey),
+                                    const SizedBox(width: 2),
+                                    Text('${widget.property.bedrooms}', style: const TextStyle(fontSize: 13)),
+                                    const SizedBox(width: 8),
+                                  ],
+                                ),
+                              if (widget.property.bathrooms != null)
+                                Row(
+                                  children: [
+                                    const Icon(Icons.bathtub, size: 16, color: Colors.grey),
+                                    const SizedBox(width: 2),
+                                    Text('${widget.property.bathrooms}', style: const TextStyle(fontSize: 13)),
+                                  ],
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // Vertical Heart Icon positioned on the right
+              if (widget.showFavoriteButton)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: _toggleFavorite,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+                            )
+                          : Icon(
+                              _isFavorite ? Icons.favorite : Icons.favorite_border,
+                              color: _isFavorite ? Colors.red : Colors.grey,
+                              size: 24,
+                            ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

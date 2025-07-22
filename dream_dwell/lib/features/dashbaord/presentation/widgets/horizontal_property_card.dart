@@ -339,37 +339,13 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Property Image Carousel
-            Stack(
-              children: [
-                _buildImageCarousel(),
-                
-                // Debug: Show current image index
-                if (widget.property.images.length > 1)
-                  Positioned(
-                    top: 4,
-                    left: 4,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        '${_currentImageIndex + 1}/${widget.property.images.length}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+            SizedBox(
+              height: 110, // Fixed height to fit card
+              child: _buildImageCarousel(),
             ),
-            
             // Property Details
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(8.0), // Reduced padding
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

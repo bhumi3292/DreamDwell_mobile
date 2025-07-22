@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 
 class ContactLandlordPage extends StatelessWidget {
+<<<<<<< HEAD
   final String landlordEmail;
   final String landlordPhone;
   const ContactLandlordPage({Key? key, required this.landlordEmail, required this.landlordPhone}) : super(key: key);
+=======
+  const ContactLandlordPage({Key? key}) : super(key: key);
+>>>>>>> sprint5
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< HEAD
       appBar: AppBar(title: const Text('Contact Landlord')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -35,6 +40,13 @@ class ContactLandlordPage extends StatelessWidget {
             ),
           ],
         ),
+=======
+      appBar: AppBar(
+        title: const Text('Contact Landlord'),
+      ),
+      body: const Center(
+        child: Text('Contact Landlord Page'),
+>>>>>>> sprint5
       ),
     );
   }

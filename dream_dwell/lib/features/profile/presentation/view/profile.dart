@@ -1,23 +1,32 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dream_dwell/app/constant/api_endpoints.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
 import 'package:dream_dwell/cores/common/snackbar/snackbar.dart';
 import 'package:image_picker/image_picker.dart'; // For image picking
 import 'dart:io'; // For File
-import 'dart:typed_data'; // For Uint8List
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart'; // For getTemporaryDirectory
+<<<<<<< HEAD
 import 'package:get_it/get_it.dart';
 import 'package:dream_dwell/features/favourite/presentation/view_model/cart_view_model.dart';
 import 'package:get/get.dart';
+=======
+import 'package:sensors_plus/sensors_plus.dart'; // For accelerometer
+import 'dart:async'; // For Timer
+import 'package:flutter/foundation.dart';
+>>>>>>> sprint5
 
 // Imports for your Profile BLoC
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_state.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
+
+// Import CartBloc for favourites count
+import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
+import 'package:dream_dwell/app/service_locator/service_locator.dart';
+import 'edit_profile_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -28,16 +37,67 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker(); // Initialize ImagePicker
+  late CartBloc _cartBloc;
+
+  // Accelerometer variables for global logout
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
+  bool _hasTurnedLeft = false;
+  bool _hasTurnedRight = false;
+  Timer? _resetTimer;
+  static const double _threshold = 7.0; // Sensitivity
+  static const int _resetSeconds = 3;
 
   @override
   void initState() {
     super.initState();
+    _cartBloc = serviceLocator<CartBloc>();
+    _cartBloc.add(GetCartEvent());
+    
     // Fetch user profile on page load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
       // Ensure cart is loaded for correct Favourites count
       GetIt.instance<CartViewModel>().loadCart();
     });
+
+    // Start listening to accelerometer for global logout
+    _accelerometerSubscription = accelerometerEvents.listen((event) {
+      _detectTilt(event.x);
+    });
+  }
+
+  void _detectTilt(double x) {
+    if (!_hasTurnedLeft && x < -_threshold) {
+      _hasTurnedLeft = true;
+      _showGestureFeedback('Left tilt detected!');
+      _resetTimer?.cancel();
+      _resetTimer = Timer(const Duration(seconds: _resetSeconds), _resetGesture);
+      return;
+    }
+    if (_hasTurnedLeft && !_hasTurnedRight && x > _threshold) {
+      _hasTurnedRight = true;
+      _showGestureFeedback('Right tilt detected! Logging out...');
+      _performLogout();
+    }
+  }
+
+  void _showGestureFeedback(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), duration: const Duration(seconds: 1)),
+      );
+    }
+  }
+
+  void _resetGesture() {
+    _hasTurnedLeft = false;
+    _hasTurnedRight = false;
+  }
+
+  void _performLogout() {
+    _resetGesture();
+    _resetTimer?.cancel();
+    context.read<ProfileViewModel>().add(LogoutEvent(context: context));
   }
 
   // --- Image Picker Functionality ---
@@ -272,217 +332,266 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Profile'),
-        centerTitle: true,
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              showMySnackbar(context: context, content: "Edit profile tapped!", isSuccess: true);
-            },
-          ),
-        ],
-      ),
-      body: BlocConsumer<ProfileViewModel, ProfileState>(
+    return BlocProvider.value(
+      value: _cartBloc,
+      child: BlocListener<ProfileViewModel, ProfileState>(
+        listenWhen: (previous, current) => previous.isLogoutSuccess != current.isLogoutSuccess,
         listener: (context, state) {
           if (state.isLogoutSuccess) {
-            if (mounted) {
-              Navigator.of(context).pushReplacementNamed('/login');
-            }
-          }
-          if (state.errorMessage != null && !state.isLoading) {
-            if (mounted) {
-              showMySnackbar(context: context, content: state.errorMessage!, isSuccess: false);
-            }
-          }
-          if (!state.isUploadingImage && state.successMessage != null && state.successMessage!.contains('Profile picture updated')) {
-            if (mounted) {
-              showMySnackbar(
-                context: context,
-                content: 'Profile picture updated successfully!',
-                isSuccess: true,
-              );
-              // The view model will automatically refresh the user data
-            }
+            Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
           }
         },
-        builder: (context, state) {
-          if (state.isLoading && state.user == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state.errorMessage != null && state.user == null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 50),
-                    const SizedBox(height: 10),
-                    Text(
-                      state.errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.red, fontSize: 16),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
-                      },
-                      child: const Text("Retry"),
-                    ),
-                  ],
-                ),
+        child: Scaffold(
+          backgroundColor: Colors.grey[50],
+          appBar: AppBar(
+            title: const Text('Profile'),
+            centerTitle: true,
+            backgroundColor: Theme.of(context).primaryColor,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  showMySnackbar(context: context, content: "Edit profile tapped!", isSuccess: true);
+                },
               ),
-            );
-          }
-          final UserEntity? user = state.user;
-          print(user?.profilePicture);
-
-          if (user == null) {
-            return const Center(
-              child: Text("No profile data available. Please log in."),
-            );
-          }
-
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                // Profile Header Section
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(30),
-                      bottomRight: Radius.circular(30),
+            ],
+          ),
+          body: BlocConsumer<ProfileViewModel, ProfileState>(
+            listener: (context, state) {
+              if (state.errorMessage != null && !state.isLoading) {
+                if (mounted) {
+                  showMySnackbar(context: context, content: state.errorMessage!, isSuccess: false);
+                }
+              }
+              if (!state.isUploadingImage && state.successMessage != null && state.successMessage!.contains('Profile picture updated')) {
+                if (mounted) {
+                  showMySnackbar(
+                    context: context,
+                    content: 'Profile picture updated successfully!',
+                    isSuccess: true,
+                  );
+                  // The view model will automatically refresh the user data
+                }
+              }
+            },
+            builder: (context, state) {
+              print("Profile page - Building with state. User: ${state.user?.fullName}, isLoading: ${state.isLoading}"); // Debug print
+              if (state.isLoading && state.user == null) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (state.errorMessage != null && state.user == null) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 50),
+                        const SizedBox(height: 10),
+                        Text(
+                          state.errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red, fontSize: 16),
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
+                          },
+                          child: const Text("Retry"),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        // Profile Picture
-                        GestureDetector(
-                          onTap: () => _showImagePickerDialog(context),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 4),
-                                ),
-                                child: user.profilePicture != null && user.profilePicture!.isNotEmpty
-                                    ? ClipOval(
-                                        child: CachedNetworkImage(
-                                          imageUrl: "http://10.0.2.2:3001${user.profilePicture}",
-                                          width: 100,
-                                          height: 100,
-                                          fit: BoxFit.cover,
-                                          placeholder: (context, url) => Container(
-                                            width: 100,
-                                            height: 100,
-                                            color: Colors.grey[300],
+                );
+              }
+              final UserEntity? user = state.user;
+              print("Profile page - Current user: ${user?.fullName}, email: ${user?.email}"); // Debug print
+
+              if (user == null) {
+                return const Center(
+                  child: Text("No profile data available. Please log in."),
+                );
+              }
+
+              return SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Profile Header Section
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor,
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(30),
+                          bottomRight: Radius.circular(30),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 20),
+                            // Profile Picture
+                            GestureDetector(
+                              onTap: () => _showImagePickerDialog(context),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 4),
+                                    ),
+                                    child: user.profilePicture != null && user.profilePicture!.isNotEmpty
+                                        ? ClipOval(
+                                            child: CachedNetworkImage(
+                                              imageUrl: "http://10.0.2.2:3001${user.profilePicture}",
+                                              width: 100,
+                                              height: 100,
+                                              fit: BoxFit.cover,
+                                              placeholder: (context, url) => Container(
+                                                width: 100,
+                                                height: 100,
+                                                color: Colors.grey[300],
+                                                child: const Icon(Icons.person, size: 50, color: Colors.white),
+                                              ),
+                                              errorWidget: (context, url, error) => Container(
+                                                width: 100,
+                                                height: 100,
+                                                color: Colors.grey[300],
+                                                child: const Icon(Icons.person, size: 50, color: Colors.white),
+                                              ),
+                                            ),
+                                          )
+                                        : CircleAvatar(
+                                            radius: 50,
+                                            backgroundColor: Colors.grey[300],
                                             child: const Icon(Icons.person, size: 50, color: Colors.white),
                                           ),
-                                          errorWidget: (context, url, error) => Container(
-                                            width: 100,
-                                            height: 100,
-                                            color: Colors.grey[300],
-                                            child: const Icon(Icons.person, size: 50, color: Colors.white),
-                                          ),
-                                        ),
-                                      )
-                                    : CircleAvatar(
-                                        radius: 50,
-                                        backgroundColor: Colors.grey[300],
-                                        child: const Icon(Icons.person, size: 50, color: Colors.white),
+                                  ),
+                                  if (state.isUploadingImage)
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.black.withOpacity(0.5),
                                       ),
+                                      child: const CircularProgressIndicator(color: Colors.white),
+                                    ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.1),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Icon(
+                                        Icons.camera_alt,
+                                        color: Theme.of(context).primaryColor,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              if (state.isUploadingImage)
-                                Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.black.withOpacity(0.5),
-                                  ),
-                                  child: const CircularProgressIndicator(color: Colors.white),
+                            ),
+                            const SizedBox(height: 16),
+                            // User Info
+                            Text(
+                              user.fullName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              user.email,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 16,
+                              ),
+                            ),
+                            if (user.stakeholder != null && user.stakeholder!.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
+                                child: Text(
+                                  user.stakeholder!,
+                                  style: const TextStyle(
                                     color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.camera_alt,
-                                    color: Theme.of(context).primaryColor,
-                                    size: 16,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),
                             ],
-                          ),
+                            const SizedBox(height: 20),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        // User Info
-                        Text(
-                          user.fullName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          user.email,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16,
-                          ),
-                        ),
-                        if (user.stakeholder != null && user.stakeholder!.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+
+                    // Profile Stats Section
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: BlocBuilder<CartBloc, CartState>(
+                              builder: (context, cartState) {
+                                int favouritesCount = 0;
+                                if (cartState is CartLoaded) {
+                                  favouritesCount = cartState.cart.items?.length ?? 0;
+                                }
+                                return _buildStatCard(
+                                  icon: Icons.favorite,
+                                  title: 'Favourites',
+                                  value: favouritesCount.toString(),
+                                  color: Colors.red,
+                                );
+                              },
                             ),
-                            child: Text(
-                              user.stakeholder!,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildStatCard(
+                              icon: Icons.visibility,
+                              title: 'Profile Views',
+                              value: '156',
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildStatCard(
+                              icon: Icons.star,
+                              title: 'Rating',
+                              value: '4.8',
+                              color: Colors.amber,
                             ),
                           ),
                         ],
-                        const SizedBox(height: 20),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
 
+<<<<<<< HEAD
                 // Profile Stats Section
                 Padding(
                   padding: const EdgeInsets.all(20),
@@ -495,137 +604,138 @@ class _ProfilePageState extends State<ProfilePage> {
                           value: GetIt.instance<CartViewModel>().itemCount.toString(),
                           color: Colors.red,
                         )),
+=======
+                    // Menu Options Section
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Account Settings',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                _buildMenuItem(
+                                  icon: Icons.person_outline,
+                                  title: 'Edit Profile',
+                                  subtitle: 'Update your personal information',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => EditProfilePage(user: user),
+                                      ),
+                                    ).then((updated) {
+                                      print("Profile page - Navigation returned with updated: $updated"); // Debug print
+                                      // Refresh user data if profile was updated
+                                      if (updated == true) {
+                                        print("Profile page - Triggering FetchUserProfileEvent"); // Debug print
+                                        context.read<ProfileViewModel>().add(
+                                          FetchUserProfileEvent(context: context),
+                                        );
+                                      }
+                                    });
+                                  },
+                                ),
+                                _buildDivider(),
+                                _buildMenuItem(
+                                  icon: Icons.settings,
+                                  title: 'Settings',
+                                  subtitle: 'App preferences and notifications',
+                                  onTap: () {
+                                    showMySnackbar(context: context, content: "Settings tapped!", isSuccess: true);
+                                  },
+                                ),
+                                _buildDivider(),
+                                _buildMenuItem(
+                                  icon: Icons.payment,
+                                  title: 'Payments',
+                                  subtitle: 'Manage payment methods',
+                                  onTap: () {
+                                    showMySnackbar(context: context, content: "Payments tapped!", isSuccess: true);
+                                  },
+                                ),
+                                _buildDivider(),
+                                _buildMenuItem(
+                                  icon: Icons.receipt_long,
+                                  title: 'Billing Details',
+                                  subtitle: 'View billing history',
+                                  onTap: () {
+                                    showMySnackbar(context: context, content: "Billing Details tapped!", isSuccess: true);
+                                  },
+                                ),
+                                _buildDivider(),
+                                _buildMenuItem(
+                                  icon: Icons.help_outline,
+                                  title: 'Help & Support',
+                                  subtitle: 'Get help and contact support',
+                                  onTap: () {
+                                    showMySnackbar(context: context, content: "Help & Support tapped!", isSuccess: true);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          // REMOVE AccelerometerLogoutWidget and replace with a standard logout ListTile
+                          ListTile(
+                            leading: Icon(Icons.logout, color: Colors.red),
+                            title: Text('Logout', style: TextStyle(color: Colors.red)),
+                            subtitle: Text('Logout from your account'),
+                            onTap: () async {
+                              final shouldLogout = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Confirm Logout'),
+                                  content: const Text('Are you sure you want to logout?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(true),
+                                      child: const Text('Logout'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (shouldLogout == true) {
+                                // Dispatch logout event
+                                context.read<ProfileViewModel>().add(LogoutEvent(context: context));
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 40),
+                        ],
+>>>>>>> sprint5
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildStatCard(
-                          icon: Icons.visibility,
-                          title: 'Profile Views',
-                          value: '156',
-                          color: Colors.blue,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildStatCard(
-                          icon: Icons.star,
-                          title: 'Rating',
-                          value: '4.8',
-                          color: Colors.amber,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-
-                // Menu Options Section
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Account Settings',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            _buildMenuItem(
-                              icon: Icons.person_outline,
-                              title: 'Edit Profile',
-                              subtitle: 'Update your personal information',
-                              onTap: () {
-                                showMySnackbar(context: context, content: "Edit profile tapped!", isSuccess: true);
-                              },
-                            ),
-                            _buildDivider(),
-                            _buildMenuItem(
-                              icon: Icons.settings,
-                              title: 'Settings',
-                              subtitle: 'App preferences and notifications',
-                              onTap: () {
-                                showMySnackbar(context: context, content: "Settings tapped!", isSuccess: true);
-                              },
-                            ),
-                            _buildDivider(),
-                            _buildMenuItem(
-                              icon: Icons.payment,
-                              title: 'Payments',
-                              subtitle: 'Manage payment methods',
-                              onTap: () {
-                                showMySnackbar(context: context, content: "Payments tapped!", isSuccess: true);
-                              },
-                            ),
-                            _buildDivider(),
-                            _buildMenuItem(
-                              icon: Icons.receipt_long,
-                              title: 'Billing Details',
-                              subtitle: 'View billing history',
-                              onTap: () {
-                                showMySnackbar(context: context, content: "Billing Details tapped!", isSuccess: true);
-                              },
-                            ),
-                            _buildDivider(),
-                            _buildMenuItem(
-                              icon: Icons.help_outline,
-                              title: 'Help & Support',
-                              subtitle: 'Get help and contact support',
-                              onTap: () {
-                                showMySnackbar(context: context, content: "Help & Support tapped!", isSuccess: true);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      
-                      // Logout Section
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: _buildMenuItem(
-                          icon: Icons.logout,
-                          title: 'Logout',
-                          subtitle: 'Sign out of your account',
-                          isLogout: true,
-                          onTap: () {
-                            _showLogoutDialog(context);
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -729,31 +839,13 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("Confirm Logout"),
-        content: const Text("Are you sure you want to sign out of your account?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              context.read<ProfileViewModel>().add(LogoutEvent(context: context));
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text("Logout", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
+
+
+  @override
+  void dispose() {
+    _cartBloc.close();
+    _accelerometerSubscription?.cancel();
+    _resetTimer?.cancel();
+    super.dispose();
   }
 }

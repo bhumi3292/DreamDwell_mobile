@@ -114,3 +114,52 @@ class ClearAddPropertyMessageEvent extends AddPropertyEvent {
   @override
   List<Object?> get props => [];
 }
+
+class SubmitUpdatePropertyEvent extends AddPropertyEvent {
+  final String propertyId;
+  final String title;
+  final String location;
+  final String price;
+  final String description;
+  final String bedrooms;
+  final String bathrooms;
+  final String? categoryId;
+  final List<String> newImagePaths;
+  final List<String> newVideoPaths;
+  final List<String> existingImages;
+  final List<String> existingVideos;
+  final BuildContext? context;
+
+  const SubmitUpdatePropertyEvent({
+    required this.propertyId,
+    required this.title,
+    required this.location,
+    required this.price,
+    required this.description,
+    required this.bedrooms,
+    required this.bathrooms,
+    this.categoryId,
+    required this.newImagePaths,
+    required this.newVideoPaths,
+    required this.existingImages,
+    required this.existingVideos,
+    this.context,
+  });
+
+  @override
+  List<Object?> get props => [
+    propertyId,
+    title,
+    location,
+    price,
+    description,
+    bedrooms,
+    bathrooms,
+    categoryId,
+    newImagePaths,
+    newVideoPaths,
+    existingImages,
+    existingVideos,
+    context,
+  ];
+}

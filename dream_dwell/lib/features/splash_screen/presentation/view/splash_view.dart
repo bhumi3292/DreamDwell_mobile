@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -64,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
     if (!mounted) return;
 
-    // Navigate directly to login page without checking authentication
+    // Always navigate to login page after splash
     Navigator.pushReplacementNamed(context, '/login');
   }
 

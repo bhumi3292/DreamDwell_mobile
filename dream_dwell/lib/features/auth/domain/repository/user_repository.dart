@@ -14,4 +14,11 @@ abstract interface class IUserRepository {
 
   Future<Either<Failure, UserEntity>> getCurrentUser();
   Future<Either<Failure, String>> uploadProfilePicture(File imageFile);
+  Future<Either<Failure, UserEntity>> updateUser(
+    String fullName, 
+    String email, 
+    String? phoneNumber,
+    String? currentPassword,
+    String? newPassword,
+  );
 }

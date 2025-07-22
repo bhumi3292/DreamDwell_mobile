@@ -5,14 +5,20 @@ import 'package:dream_dwell/features/auth/domain/repository/user_repository.dart
 import 'package:dream_dwell/features/auth/data/data_source/remote_datasource/user_remote_datasource.dart';
 import 'package:dream_dwell/cores/network/hive_service.dart';
 import 'dart:io';
+import 'package:dream_dwell/cores/network/api_service.dart';
+import 'package:dream_dwell/features/auth/data/model/user_api_model.dart';
+import 'package:dream_dwell/app/constant/api_endpoints.dart';
+import 'package:dio/dio.dart';
 
 class UserRemoteRepository implements IUserRepository {
   final UserRemoteDatasource _dataSource;
   final HiveService _hiveService;
+  final ApiService apiService;
 
   UserRemoteRepository({
     required UserRemoteDatasource dataSource,
     required HiveService hiveService,
+    required this.apiService,
   })  : _dataSource = dataSource,
         _hiveService = hiveService;
 
@@ -66,6 +72,55 @@ class UserRemoteRepository implements IUserRepository {
       }
       // Fallback for any unexpected non-Failure exceptions
       return Left(RemoteDatabaseFailure(message: "Upload profile picture failed: ${e.toString()}"));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> updateUser(
+    String fullName, 
+    String email, 
+    String? phoneNumber,
+    String? currentPassword,
+    String? newPassword,
+  ) async {
+    try {
+      // Prepare the request data
+      final Map<String, dynamic> requestData = {
+        'fullName': fullName,
+        'email': email,
+      };
+      
+      // Add optional fields if provided
+      if (phoneNumber != null && phoneNumber.isNotEmpty) {
+        requestData['phoneNumber'] = phoneNumber;
+      }
+      
+      if (currentPassword != null && currentPassword.isNotEmpty && 
+          newPassword != null && newPassword.isNotEmpty) {
+        requestData['currentPassword'] = currentPassword;
+        requestData['newPassword'] = newPassword;
+      }
+
+      final response = await apiService.dio.put(
+        ApiEndpoints.updateUser,
+        data: requestData,
+      );
+      
+      if (response.statusCode == 200) {
+        final userApiModel = UserApiModel.fromJson(response.data['user']);
+        return Right(userApiModel.toEntity());
+      } else {
+        return Left(ServerFailure(message: 'Failed to update user'));
+      }
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to update user profile';
+      if (e.response?.data != null && e.response!.data is Map) {
+        final data = e.response!.data as Map;
+        errorMessage = data['message'] ?? errorMessage;
+      }
+      return Left(NetworkFailure(message: errorMessage));
+    } catch (e) {
+      return Left(NetworkFailure(message: 'An unexpected error occurred: $e'));
     }
   }
 

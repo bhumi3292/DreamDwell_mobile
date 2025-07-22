@@ -12,10 +12,12 @@ import 'package:dream_dwell/cores/common/snackbar/snackbar.dart'; // Assuming yo
 import 'package:dream_dwell/features/add_property/domain/entity/property/property_entity.dart';
 import 'package:dream_dwell/features/add_property/domain/entity/category/category_entity.dart';
 import 'package:dream_dwell/features/add_property/domain/use_case/property/add_property_usecase.dart';
+import 'package:dream_dwell/features/add_property/domain/use_case/property/update_property_usecase.dart';
 import 'package:dream_dwell/cores/network/hive_service.dart';
 
 class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
   final AddPropertyUsecase _addPropertyUsecase;
+  final UpdatePropertyUsecase _updatePropertyUsecase;
   final GetAllCategoriesUsecase _getAllCategoriesUsecase;
   final HiveService _hiveService;
 
@@ -29,9 +31,11 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
 
   AddPropertyBloc({
     required AddPropertyUsecase addPropertyUsecase,
+    required UpdatePropertyUsecase updatePropertyUsecase,
     required GetAllCategoriesUsecase getAllCategoriesUsecase,
     required HiveService hiveService,
   })  : _addPropertyUsecase = addPropertyUsecase,
+        _updatePropertyUsecase = updatePropertyUsecase,
         _getAllCategoriesUsecase = getAllCategoriesUsecase,
         _hiveService = hiveService,
         super(const AddPropertyInitial()) {
@@ -43,6 +47,7 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
     on<RemoveVideoEvent>(_onRemoveVideo);
     on<NewCategoryAddedEvent>(_onNewCategoryAdded);
     on<SubmitPropertyEvent>(_onSubmitProperty);
+    on<SubmitUpdatePropertyEvent>(_onSubmitUpdateProperty);
     on<ClearAddPropertyMessageEvent>(_onClearAddPropertyMessage);
   }
 
@@ -304,6 +309,147 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
       );
     } catch (e) {
       print('Exception in _onSubmitProperty: $e');
+      emit(state.copyWith(
+        isSubmitting: false,
+        errorMessage: 'An unexpected error occurred: $e',
+      ));
+      if (event.context != null) {
+        showMySnackbar(
+          context: event.context!,
+          content: 'An unexpected error occurred: $e',
+          isSuccess: false,
+        );
+      }
+    }
+  }
+
+  Future<void> _onSubmitUpdateProperty(
+      SubmitUpdatePropertyEvent event,
+      Emitter<AddPropertyState> emit,
+      ) async {
+    emit(state.copyWith(
+      isSubmitting: true,
+      errorMessage: null,
+      successMessage: null,
+    ));
+
+    final validationErrors = <String>[];
+    if (event.title.trim().isEmpty) {
+      validationErrors.add('Property title is required');
+    }
+    if (event.location.trim().isEmpty) {
+      validationErrors.add('Property location is required');
+    }
+    if (event.price.trim().isEmpty) {
+      validationErrors.add('Property price is required');
+    } else {
+      final price = double.tryParse(event.price);
+      if (price == null || price <= 0) {
+        validationErrors.add('Property price must be a valid number greater than 0');
+      }
+    }
+    if (event.description.trim().isEmpty) {
+      validationErrors.add('Property description is required');
+    }
+    if (event.bedrooms.trim().isEmpty) {
+      validationErrors.add('Number of bedrooms is required');
+    } else {
+      final bedrooms = int.tryParse(event.bedrooms);
+      if (bedrooms == null || bedrooms < 0) {
+        validationErrors.add('Bedrooms must be a valid number (0 or more)');
+      }
+    }
+    if (event.bathrooms.trim().isEmpty) {
+      validationErrors.add('Number of bathrooms is required');
+    } else {
+      final bathrooms = int.tryParse(event.bathrooms);
+      if (bathrooms == null || bathrooms < 0) {
+        validationErrors.add('Bathrooms must be a valid number (0 or more)');
+      }
+    }
+    if (event.categoryId == null || event.categoryId!.isEmpty) {
+      validationErrors.add('Property category is required');
+    }
+    if (event.existingImages.isEmpty && event.newImagePaths.isEmpty) {
+      validationErrors.add('At least one property image is required');
+    }
+    if (validationErrors.isNotEmpty) {
+      emit(state.copyWith(
+        isSubmitting: false,
+        errorMessage: validationErrors.join('\n'),
+      ));
+      if (event.context != null) {
+        showMySnackbar(
+          context: event.context!,
+          content: validationErrors.join('\n'),
+          isSuccess: false,
+        );
+      }
+      return;
+    }
+    try {
+      String? userId;
+      try {
+        final currentUser = await _hiveService.getCurrentUser();
+        userId = currentUser?.userId;
+      } catch (e) {
+        print('No authenticated user found, proceeding without user ID');
+      }
+      final property = PropertyEntity(
+        id: event.propertyId,
+        title: event.title.trim(),
+        location: event.location.trim(),
+        price: double.parse(event.price),
+        description: event.description.trim(),
+        bedrooms: int.parse(event.bedrooms),
+        bathrooms: int.parse(event.bathrooms),
+        categoryId: event.categoryId!,
+        landlordId: userId,
+        images: event.existingImages,
+        videos: event.existingVideos,
+      );
+      final result = await _updatePropertyUsecase(
+        event.propertyId,
+        property,
+        event.newImagePaths,
+        event.newVideoPaths,
+        event.existingImages,
+        event.existingVideos,
+      );
+      result.fold(
+        (failure) {
+          emit(state.copyWith(
+            isSubmitting: false,
+            errorMessage: failure.message,
+          ));
+          if (event.context != null) {
+            showMySnackbar(
+              context: event.context!,
+              content: failure.message,
+              isSuccess: false,
+            );
+          }
+        },
+        (_) {
+          emit(AddPropertySubmissionSuccess(
+            successMessage: "Property updated successfully!",
+            categories: List.from(_currentCategories),
+            selectedCategoryId: _selectedCategoryId,
+            selectedImages: List.from(_currentImages),
+            selectedVideos: List.from(_currentVideos),
+            isSubmitting: false,
+          ));
+          if (event.context != null) {
+            showMySnackbar(
+              context: event.context!,
+              content: "Property updated successfully!",
+              isSuccess: true,
+            );
+          }
+        },
+      );
+    } catch (e) {
+      print('Exception in _onSubmitUpdateProperty: $e');
       emit(state.copyWith(
         isSubmitting: false,
         errorMessage: 'An unexpected error occurred: $e',

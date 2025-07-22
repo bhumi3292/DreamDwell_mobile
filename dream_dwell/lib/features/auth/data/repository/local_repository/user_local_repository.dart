@@ -56,4 +56,15 @@ class UserLocalRepository implements IUserRepository {
     // You might return an UnimplementedError or a specific failure.
     return Future.value(Left(LocalDatabaseFailure(message: "Image upload not supported by local repository")));
   }
+
+  @override
+  Future<Either<Failure, UserEntity>> updateUser(
+    String fullName, 
+    String email, 
+    String? phoneNumber,
+    String? currentPassword,
+    String? newPassword,
+  ) async {
+    return Future.error(UnimplementedError('Local updateUser not implemented'));
+  }
 }

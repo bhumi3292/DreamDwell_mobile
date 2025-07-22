@@ -45,7 +45,29 @@ class PropertyApiModel extends Equatable {
   });
 
   // Factory constructor for deserialization from JSON
-  factory PropertyApiModel.fromJson(Map<String, dynamic> json) => _$PropertyApiModelFromJson(json);
+  factory PropertyApiModel.fromJson(Map<String, dynamic> json) {
+    return PropertyApiModel(
+      id: json['_id']?.toString(),
+      images: json['images'] != null ? List<String>.from(json['images']) : [],
+      videos: json['videos'] != null ? List<String>.from(json['videos']) : [],
+      title: json['title']?.toString() ?? '',
+      location: json['location']?.toString() ?? '',
+      bedrooms: json['bedrooms'] is int ? json['bedrooms'] : int.tryParse(json['bedrooms']?.toString() ?? ''),
+      bathrooms: json['bathrooms'] is int ? json['bathrooms'] : int.tryParse(json['bathrooms']?.toString() ?? ''),
+      categoryId: json['categoryId'] is Map<String, dynamic>
+          ? json['categoryId']['_id']?.toString() ?? ''
+          : json['categoryId']?.toString() ?? '',
+      price: json['price'] is double
+          ? json['price']
+          : double.tryParse(json['price']?.toString() ?? '') ?? 0.0,
+      description: json['description']?.toString(),
+      landlordId: json['landlord'] is Map<String, dynamic>
+          ? json['landlord']['_id']?.toString() ?? ''
+          : json['landlord']?.toString() ?? '',
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt']) : null,
+    );
+  }
 
   // Method for serialization to JSON
   Map<String, dynamic> toJson() => _$PropertyApiModelToJson(this);
@@ -99,7 +121,6 @@ class PropertyApiModel extends Equatable {
   @override
   bool get stringify => true;
 
-  // copyWith method for convenient state updates (useful in BLoCs/Cubit)
   PropertyApiModel copyWith({
     String? id,
     List<String>? images,

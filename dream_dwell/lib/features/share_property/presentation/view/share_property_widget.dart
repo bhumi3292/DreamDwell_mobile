@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SharePropertyWidget extends StatelessWidget {
+<<<<<<< HEAD
   final String propertyId;
   const SharePropertyWidget({Key? key, required this.propertyId}) : super(key: key);
 
@@ -15,6 +16,19 @@ class SharePropertyWidget extends StatelessWidget {
           child: const Text('Close'),
         ),
       ],
+=======
+  const SharePropertyWidget({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Share Property'),
+      ),
+      body: const Center(
+        child: Text('Share Property Widget'),
+      ),
+>>>>>>> sprint5
     );
   }
 } 

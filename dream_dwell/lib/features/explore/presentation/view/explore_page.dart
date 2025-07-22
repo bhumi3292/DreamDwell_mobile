@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:dream_dwell/features/add_property/domain/entity/property/property_entity.dart';
 import 'package:dream_dwell/features/add_property/domain/use_case/property/get_all_properties_usecase.dart';
 import 'package:dream_dwell/features/add_property/domain/use_case/cart/add_to_cart_usecase.dart';
@@ -13,6 +14,16 @@ import 'package:dream_dwell/features/explore/data/explore_property_controller.da
 import 'package:dream_dwell/features/explore/data/explore_property_state.dart';
 import '../../../add_property/presentation/view/property_detail_page.dart';
 import 'package:get/get.dart';
+=======
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dream_dwell/features/explore/presentation/bloc/explore_bloc.dart';
+import 'package:dream_dwell/features/explore/presentation/widgets/explore_property_card.dart';
+import 'package:dream_dwell/features/explore/presentation/widgets/explore_search_bar.dart';
+import 'package:dream_dwell/features/explore/presentation/widgets/explore_filter_dialog.dart';
+import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
+import 'package:dream_dwell/app/service_locator/service_locator.dart';
+import 'package:dream_dwell/features/explore/presentation/view/property_detail_page.dart';
+>>>>>>> sprint5
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -22,12 +33,23 @@ class ExplorePage extends StatefulWidget {
 }
 
 class _ExplorePageState extends State<ExplorePage> {
+<<<<<<< HEAD
   late ExplorePropertyController _controller;
   bool _isLoading = false;
+=======
+  late CartBloc _cartBloc;
+  String _searchText = '';
+  String? _selectedCategory;
+  double? _minPrice;
+  double? _maxPrice;
+  int? _minBedrooms;
+  int? _minBathrooms;
+>>>>>>> sprint5
 
   @override
   void initState() {
     super.initState();
+<<<<<<< HEAD
     _controller = ExplorePropertyController(ExplorePropertyViewModel(ExplorePropertyRepository()));
     _initData();
   }
@@ -96,18 +118,31 @@ class _ExplorePageState extends State<ExplorePage> {
         ),
       ),
     );
+=======
+    _cartBloc = serviceLocator<CartBloc>();
+    _cartBloc.add(GetCartEvent());
+    context.read<ExploreBloc>().add(GetPropertiesEvent());
+>>>>>>> sprint5
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+<<<<<<< HEAD
     final state = _controller.state;
+=======
+    
+>>>>>>> sprint5
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
         body: Column(
           children: [
+<<<<<<< HEAD
             // Header
+=======
+            // Header with Search Bar
+>>>>>>> sprint5
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -123,6 +158,7 @@ class _ExplorePageState extends State<ExplorePage> {
               ),
               child: Column(
                 children: [
+<<<<<<< HEAD
                   // Search Bar
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -233,6 +269,168 @@ class _ExplorePageState extends State<ExplorePage> {
                             return _buildPropertyCard(property);
                           },
                         ),
+=======
+                  ExploreSearchBar(
+                    onSearchChanged: (value) {
+                      _searchText = value;
+                      _filterProperties();
+                    },
+                    onFilterPressed: () async {
+                      await _showFilterDialog();
+                    },
+                  ),
+                  // Filter Indicator
+                  if (_hasActiveFilters())
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.filter_list,
+                                  size: 16,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Filters Active',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context).primaryColor,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Spacer(),
+                          TextButton(
+                            onPressed: _clearAllFilters,
+                            child: Text(
+                              'Clear All',
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            
+            // Properties List
+            Expanded(
+              child: BlocBuilder<ExploreBloc, ExploreState>(
+                builder: (context, state) {
+                  if (state is ExploreLoading) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (state is ExploreError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error: ${state.message}',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              context.read<ExploreBloc>().add(GetPropertiesEvent());
+                            },
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else if (state is ExploreLoaded) {
+                    if (state.filteredProperties.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No properties found',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Try adjusting your search or filters',
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: state.filteredProperties.length,
+                      itemBuilder: (context, index) {
+                        final property = state.filteredProperties[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: BlocProvider.value(
+                            value: _cartBloc,
+                            child: ExplorePropertyCard(
+                              property: property,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => PropertyDetailPage(property: property),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }
+                  
+                  return const Center(
+                    child: Text('No data available'),
+                  );
+                },
+              ),
+>>>>>>> sprint5
             ),
           ],
         ),
@@ -240,6 +438,7 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
+<<<<<<< HEAD
   Future<void> _showFilterDialog() async {
     double? maxPrice = _controller.state.maxPrice;
     String? selectedCategory = _controller.state.selectedCategory;
@@ -303,3 +502,60 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 }
+=======
+  void _filterProperties() {
+    context.read<ExploreBloc>().add(
+      FilterPropertiesEvent(
+        searchText: _searchText,
+        categoryId: _selectedCategory,
+        minPrice: _minPrice,
+        maxPrice: _maxPrice,
+        minBedrooms: _minBedrooms,
+        minBathrooms: _minBathrooms,
+      ),
+    );
+  }
+
+  Future<void> _showFilterDialog() async {
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => ExploreFilterDialog(
+        initialMaxPrice: _maxPrice,
+        initialCategory: _selectedCategory,
+        initialMinBedrooms: _minBedrooms,
+        initialMinBathrooms: _minBathrooms,
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _maxPrice = result['maxPrice'];
+        _minPrice = result['minPrice'];
+        _selectedCategory = result['category'];
+        _minBedrooms = result['minBedrooms'];
+        _minBathrooms = result['minBathrooms'];
+      });
+      _filterProperties();
+    }
+  }
+
+  bool _hasActiveFilters() {
+    return _selectedCategory != null ||
+           _minPrice != null ||
+           _maxPrice != null ||
+           _minBedrooms != null ||
+           _minBathrooms != null;
+  }
+
+  void _clearAllFilters() {
+    setState(() {
+      _selectedCategory = null;
+      _minPrice = null;
+      _maxPrice = null;
+      _minBedrooms = null;
+      _minBathrooms = null;
+    });
+    _filterProperties();
+  }
+} 
+>>>>>>> sprint5

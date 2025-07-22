@@ -15,12 +15,16 @@ class UpdatePropertyUsecase {
       PropertyEntity property,
       List<String> newImagePaths,
       List<String> newVideoPaths,
+      List<String> existingImages,
+      List<String> existingVideos,
       ) async {
     return await repository.updateProperty(
       propertyId,
       property,
       newImagePaths,
       newVideoPaths,
+      existingImages,
+      existingVideos,
     );
   }
 }

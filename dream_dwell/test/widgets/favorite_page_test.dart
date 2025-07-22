@@ -1,6 +1,6 @@
+import 'package:dream_dwell/features/favourite/presentation/pages/favourite_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dream_dwell/view/favourite.dart';
 import 'package:dream_dwell/features/add_property/domain/entity/cart/cart_entity.dart';
 import 'package:dream_dwell/features/add_property/domain/entity/property/property_entity.dart';
 
