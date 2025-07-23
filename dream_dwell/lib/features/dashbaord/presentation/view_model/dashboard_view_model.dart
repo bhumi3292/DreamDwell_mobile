@@ -33,18 +33,11 @@ class DashboardLoading extends DashboardState {
 
 class DashboardLoaded extends DashboardState {
   final List<PropertyApiModel> properties;
-  final List<Map<String, dynamic>> landlordAvatars;
-  final List<String> bigImageUrls;
-  final List<PropertyApiModel> topProperties;
 
-  const DashboardLoaded(this.properties, {
-    required this.landlordAvatars,
-    required this.bigImageUrls,
-    required this.topProperties,
-  });
+  const DashboardLoaded(this.properties);
 
   @override
-  List<Object?> get props => [properties, landlordAvatars, bigImageUrls, topProperties];
+  List<Object?> get props => [properties];
 }
 
 class DashboardError extends DashboardState {
@@ -76,32 +69,7 @@ class DashboardViewModel extends Bloc<DashboardEvent, DashboardState> {
 
     result.fold(
       (failure) => emit(DashboardError(failure.message)),
-      (properties) {
-        // Compute landlord avatars (unique by email)
-        final uniqueLandlords = <String, Map<String, dynamic>>{};
-        for (final p in properties) {
-          final landlord = p.landlord;
-          if (landlord != null && landlord['email'] != null) {
-            uniqueLandlords[landlord['email']] = landlord;
-          }
-        }
-        final landlordAvatars = uniqueLandlords.values.toList();
-        // Compute big image URLs (first image of each property)
-        final bigImageUrls = properties.map((p) {
-          if (p.images.isNotEmpty) {
-            return p.images[0].startsWith('http') ? p.images[0] : 'http://10.0.2.2:3001/${p.images[0]}';
-          }
-          return '';
-        }).toList();
-        // Top 5 properties
-        final topProperties = properties.length > 5 ? properties.sublist(0, 5) : properties;
-        emit(DashboardLoaded(
-          properties,
-          landlordAvatars: landlordAvatars,
-          bigImageUrls: bigImageUrls,
-          topProperties: topProperties,
-        ));
-      },
+      (properties) => emit(DashboardLoaded(properties)),
     );
   }
 

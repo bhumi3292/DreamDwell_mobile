@@ -1,21 +1,4 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-
-class BookingPage extends StatelessWidget {
-  final String propertyId;
-  const BookingPage({Key? key, required this.propertyId}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Book Property')),
-      body: Center(
-        child: Text('Booking form for property: $propertyId'),
-      ),
-    );
-  }
-} 
-=======
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
@@ -729,4 +712,3 @@ class _BookingPageState extends State<BookingPage> {
     );
   }
 }
->>>>>>> sprint5

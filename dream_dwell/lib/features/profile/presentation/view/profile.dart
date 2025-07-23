@@ -6,17 +6,11 @@ import 'package:dream_dwell/cores/common/snackbar/snackbar.dart';
 import 'package:image_picker/image_picker.dart'; // For image picking
 import 'dart:io'; // For File
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:image/image.dart' as img;
+import 'package:image/image.dart' as img; // For image processing
 import 'package:path_provider/path_provider.dart'; // For getTemporaryDirectory
-<<<<<<< HEAD
-import 'package:get_it/get_it.dart';
-import 'package:dream_dwell/features/favourite/presentation/view_model/cart_view_model.dart';
-import 'package:get/get.dart';
-=======
 import 'package:sensors_plus/sensors_plus.dart'; // For accelerometer
 import 'dart:async'; // For Timer
 import 'package:flutter/foundation.dart';
->>>>>>> sprint5
 
 // Imports for your Profile BLoC
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart';
@@ -56,8 +50,6 @@ class _ProfilePageState extends State<ProfilePage> {
     // Fetch user profile on page load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
-      // Ensure cart is loaded for correct Favourites count
-      GetIt.instance<CartViewModel>().loadCart();
     });
 
     // Start listening to accelerometer for global logout
@@ -591,20 +583,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
 
-<<<<<<< HEAD
-                // Profile Stats Section
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Obx(() => _buildStatCard(
-                          icon: Icons.favorite,
-                          title: 'Favourites',
-                          value: GetIt.instance<CartViewModel>().itemCount.toString(),
-                          color: Colors.red,
-                        )),
-=======
                     // Menu Options Section
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -727,7 +705,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           const SizedBox(height: 40),
                         ],
->>>>>>> sprint5
                       ),
                     ),
                   ],

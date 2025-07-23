@@ -4,13 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/features/add_property/data/model/property_model/property_api_model.dart';
 import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
 import 'package:dream_dwell/cores/utils/image_url_helper.dart';
-<<<<<<< HEAD
-import 'package:get/get.dart';
-import 'package:dream_dwell/features/favourite/presentation/view_model/cart_view_model.dart';
-import 'package:dream_dwell/features/add_property/presentation/view/property_detail_page.dart';
-=======
 import 'package:dream_dwell/features/explore/presentation/view/property_detail_page.dart';
->>>>>>> sprint5
 
 class PropertyCardWidget extends StatefulWidget {
   final PropertyApiModel property;
@@ -19,7 +13,6 @@ class PropertyCardWidget extends StatefulWidget {
   final bool showRemoveButton;
   final bool isFavorite;
   final String? baseUrl;
-  final VoidCallback? onRemove;
 
   const PropertyCardWidget({
     super.key,
@@ -29,7 +22,6 @@ class PropertyCardWidget extends StatefulWidget {
     this.showRemoveButton = false,
     this.isFavorite = false,
     this.baseUrl,
-    this.onRemove,
   });
 
   @override
@@ -37,6 +29,8 @@ class PropertyCardWidget extends StatefulWidget {
 }
 
 class _PropertyCardWidgetState extends State<PropertyCardWidget> {
+  bool _isLoading = false;
+  bool _isFavorite = false;
   int _currentImageIndex = 0;
   late PageController _pageController;
   late CartBloc _cartBloc;
@@ -44,12 +38,10 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
   @override
   void initState() {
     super.initState();
+    _isFavorite = widget.isFavorite;
     _pageController = PageController();
-<<<<<<< HEAD
-=======
     _cartBloc = context.read<CartBloc>();
     _checkFavoriteStatus();
->>>>>>> sprint5
   }
 
   @override
@@ -58,8 +50,6 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
     super.dispose();
   }
 
-<<<<<<< HEAD
-=======
   Future<void> _checkFavoriteStatus() async {
     // The cart status will be updated through the bloc listener
     _cartBloc.add(GetCartEvent());
@@ -88,7 +78,6 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
 
 
 
->>>>>>> sprint5
   String _getImageUrl(String imagePath) {
     print('DEBUG: Processing image path: $imagePath');
     final fullUrl = ImageUrlHelper.constructImageUrl(imagePath, baseUrl: widget.baseUrl);
@@ -235,132 +224,6 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
-    final CartViewModel cartViewModel = Get.find<CartViewModel>();
-    return GestureDetector(
-      onTap: widget.onTap ?? () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => PropertyDetailPage(
-              propertyId: widget.property.id ?? '',
-              baseUrl: widget.baseUrl,
-            ),
-          ),
-        );
-      },
-      child: Card(
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 3,
-        child: Stack(
-          children: [
-            Row(
-              children: [
-                _buildImageCarousel(),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.property.title,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.property.location,
-                          style: const TextStyle(color: Colors.grey, fontSize: 14),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Price: ${widget.property.price.toStringAsFixed(2)}',
-                          style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.w600, fontSize: 15),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            if (widget.property.bedrooms != null)
-                              Row(
-                                children: [
-                                  const Icon(Icons.bed, size: 16, color: Colors.grey),
-                                  const SizedBox(width: 2),
-                                  Text('${widget.property.bedrooms}', style: const TextStyle(fontSize: 13)),
-                                  const SizedBox(width: 8),
-                                ],
-                              ),
-                            if (widget.property.bathrooms != null)
-                              Row(
-                                children: [
-                                  const Icon(Icons.bathtub, size: 16, color: Colors.grey),
-                                  const SizedBox(width: 2),
-                                  Text('${widget.property.bathrooms}', style: const TextStyle(fontSize: 13)),
-                                ],
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        if (widget.showRemoveButton && widget.onRemove != null)
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.red),
-                              tooltip: 'Remove from cart',
-                              onPressed: widget.onRemove,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            // Vertical Heart Icon positioned on the right
-            if (widget.showFavoriteButton)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Obx(() {
-                  final isFavorite = cartViewModel.isInCart(widget.property.id ?? '');
-                  final isLoading = cartViewModel.isLoading;
-                  return GestureDetector(
-                    onTap: isLoading
-                        ? null
-                        : () async {
-                            if (isFavorite) {
-                              await cartViewModel.removeFromCart(widget.property.id ?? '');
-                            } else {
-                              await cartViewModel.addToCart(widget.property.id ?? '');
-                            }
-                          },
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
-                            )
-                          : Icon(
-                              isFavorite ? Icons.favorite : Icons.favorite_border,
-                              color: isFavorite ? Colors.red : Colors.grey,
-                              size: 24,
-                            ),
-                    ),
-                  );
-                }),
-=======
     return BlocListener<CartBloc, CartState>(
       listener: (context, state) {
         if (state is CartLoaded) {
@@ -380,7 +243,6 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
               SnackBar(
                 content: Text(isInCart ? 'Added to favorites' : 'Removed from favorites'),
                 backgroundColor: Colors.green,
->>>>>>> sprint5
               ),
             );
           }

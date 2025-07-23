@@ -1,15 +1,4 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-import 'package:get/get.dart';
-import 'package:get_it/get_it.dart';
-import 'package:dream_dwell/features/splash_screen/presentation/widgets/header_nav.dart';
-import 'package:dream_dwell/features/dashbaord/dashboard.dart';
-import 'package:dream_dwell/features/explore/presentation/view/explore_page.dart';
-import 'package:dream_dwell/view/favourite.dart';
-import 'package:dream_dwell/view/booking.dart';
-import 'package:dream_dwell/features/profile/presentation/view/profile.dart';
-import 'package:dream_dwell/features/favourite/presentation/view_model/cart_view_model.dart';
-=======
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/features/home/header_nav.dart';
 import 'package:dream_dwell/features/dashbaord/presentation/view/dashboard.dart';
@@ -20,7 +9,6 @@ import 'package:dream_dwell/features/booking/presentation/view/booking_page.dart
 import 'package:dream_dwell/features/profile/presentation/view/profile.dart';
 import 'package:dream_dwell/app/service_locator/service_locator.dart';
 import 'package:dream_dwell/features/chatbot/presentation/widget/chatbot_wrapper.dart';
->>>>>>> sprint5
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -31,14 +19,6 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   int _selectedIndex = 0;
-  late CartViewModel _cartViewModel;
-
-  @override
-  void initState() {
-    super.initState();
-    _cartViewModel = GetIt.instance<CartViewModel>();
-    Get.put(_cartViewModel);
-  }
 
   void _onItemTapped(int index) {
     setState(() {
