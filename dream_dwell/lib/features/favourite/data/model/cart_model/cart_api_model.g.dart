@@ -32,8 +32,17 @@ Map<String, dynamic> _$CartApiModelToJson(CartApiModel instance) =>
 CartItemApiModel _$CartItemApiModelFromJson(Map<String, dynamic> json) =>
     CartItemApiModel(
       id: json['_id'] as String?,
-      property:
-          PropertyApiModel.fromJson(json['property'] as Map<String, dynamic>),
+      property: json['property'] == null
+          ? PropertyApiModel(
+              id: '',
+              images: [],
+              title: 'Unknown',
+              location: '',
+              categoryId: '',
+              price: 0.0,
+              landlordId: '',
+            )
+          : PropertyApiModel.fromJson(json['property'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$CartItemApiModelToJson(CartItemApiModel instance) =>

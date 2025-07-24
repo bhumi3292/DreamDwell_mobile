@@ -58,24 +58,36 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // Wrap HeaderNav in a PreferredSize widget with a BlocBuilder
-      // This allows HeaderNav to rebuild when the ProfileState changes (e.g., user data loaded)
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: BlocBuilder<ProfileViewModel, ProfileState>(
-          builder: (context, state) {
-            // Debug: Print state information
-            debugPrint("ProfileState - isLoading: ${state.isLoading}, user: ${state.user?.email}, stakeholder: ${state.user?.stakeholder}");
-            
-            // Pass the user entity from the ProfileState to the HeaderNav.
-            // The HeaderNav will then use this user object to decide whether to show the icon.
-            return HeaderNav(user: state.user);
-          },
-        ),
+    final List<Widget> pages = [
+      DashboardPage(onSeeAllTap: () => _onItemTapped(1)),
+      BlocProvider(
+        create: (context) => serviceLocator<ExploreBloc>(),
+        child: const ExplorePage(),
       ),
-      body: pages[_selectedIndex], // Display the selected page
-      bottomNavigationBar: const NavBar(),
+      const FavouritePage(),
+      const BookingPage(),
+      const ProfilePage(),
+    ];
+
+    return Scaffold(
+      appBar: const HeaderNav(),
+      body: pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        elevation: 12,
+        currentIndex: _selectedIndex,
+        selectedItemColor: const Color(0xFF003366),
+        unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.white,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite_outlined), label: 'Favourite'),
+          BottomNavigationBarItem(icon: Icon(Icons.book_online), label: 'Booking'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
     );
   }
 }

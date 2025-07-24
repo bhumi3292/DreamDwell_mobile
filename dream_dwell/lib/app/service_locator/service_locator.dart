@@ -66,11 +66,11 @@ import 'package:dream_dwell/features/explore/domain/repository/explore_repositor
 import 'package:dream_dwell/features/explore/domain/use_case/get_all_properties_usecase.dart';
 import 'package:dream_dwell/features/explore/presentation/bloc/explore_bloc.dart';
 
-// Chatbot
-import 'package:dream_dwell/features/chatbot/data/data_source/remote_datasource/chatbot_remote_datasource.dart';
-import 'package:dream_dwell/features/chatbot/data/repository/chatbot_repository_impl.dart';
-import 'package:dream_dwell/features/chatbot/domain/repository/chatbot_repository.dart';
-import 'package:dream_dwell/features/chatbot/domain/use_case/send_chat_query_usecase.dart';
+// // Chatbot
+// import 'package:dream_dwell/features/chatbot/data/data_source/remote_datasource/chatbot_remote_datasource.dart';
+// import 'package:dream_dwell/features/chatbot/data/repository/chatbot_repository_impl.dart';
+// import 'package:dream_dwell/features/chatbot/domain/repository/chatbot_repository.dart';
+// import 'package:dream_dwell/features/chatbot/domain/use_case/send_chat_query_usecase.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dream_dwell/app/shared_pref/token_shared_prefs.dart';
@@ -96,7 +96,7 @@ Future<void> initDependencies() async {
   _initDashboardModules();
   _initExploreModules();
   _initChatModules();
-  _initChatbotModules();
+  //_initChatbotModules();
 }
 
 Future<void> _initHiveService() async {
@@ -432,21 +432,6 @@ void _initChatModules() {
   );
 }
 
-void _initChatbotModules() {
-  serviceLocator.registerFactory<ChatbotRemoteDatasource>(
-    () => ChatbotRemoteDatasource(dio: serviceLocator<Dio>()),
-  );
-  serviceLocator.registerFactory<ChatbotRepository>(
-    () => ChatbotRepositoryImpl(
-      remoteDataSource: serviceLocator<ChatbotRemoteDatasource>(),
-    ),
-  );
-  serviceLocator.registerFactory<SendChatQueryUseCase>(
-    () => SendChatQueryUseCase(
-      repository: serviceLocator<ChatbotRepository>(),
-    ),
-  );
-}
 
 void setupServiceLocator() {
   serviceLocator.registerLazySingleton<UpdatePropertyUsecase>(

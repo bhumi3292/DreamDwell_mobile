@@ -21,6 +21,10 @@ import 'package:dream_dwell/features/profile/presentation/view_model/profile_vie
 import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
 import 'package:dream_dwell/app/service_locator/service_locator.dart';
 import 'edit_profile_page.dart';
+// Add import for HelpSupportPage
+import 'package:dream_dwell/features/profile/presentation/view/help_support_page.dart';
+// Add import for SettingPage
+import 'package:dream_dwell/features/profile/presentation/view/setting_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -342,12 +346,12 @@ class _ProfilePageState extends State<ProfilePage> {
             foregroundColor: Colors.white,
             elevation: 0,
             actions: [
-              IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () {
-                  showMySnackbar(context: context, content: "Edit profile tapped!", isSuccess: true);
-                },
-              ),
+              // IconButton(
+              //   icon: const Icon(Icons.edit),
+              //   onPressed: () {
+              //     showMySnackbar(context: context, content: "Edit profile tapped!", isSuccess: true);
+              //   },
+              // ),
             ],
           ),
           body: BlocConsumer<ProfileViewModel, ProfileState>(
@@ -639,7 +643,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                   title: 'Settings',
                                   subtitle: 'App preferences and notifications',
                                   onTap: () {
-                                    showMySnackbar(context: context, content: "Settings tapped!", isSuccess: true);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const SettingPage(),
+                                      ),
+                                    );
                                   },
                                 ),
                                 _buildDivider(),
@@ -666,7 +675,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                   title: 'Help & Support',
                                   subtitle: 'Get help and contact support',
                                   onTap: () {
-                                    showMySnackbar(context: context, content: "Help & Support tapped!", isSuccess: true);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const HelpSupportPage(),
+                                      ),
+                                    );
                                   },
                                 ),
                               ],

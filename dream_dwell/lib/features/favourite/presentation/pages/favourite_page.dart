@@ -99,7 +99,7 @@ class _FavouritePageState extends State<FavouritePage> {
             }
 
             if (state is CartLoaded) {
-              final items = state.cart.items ?? [];
+              final items = (state.cart.items ?? []).where((item) => item.property != null).toList();
               
               if (items.isEmpty) {
                 return Center(

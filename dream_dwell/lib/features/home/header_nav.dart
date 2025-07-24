@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart'; // Import UserEntity
 import 'package:dream_dwell/features/add_property/presentation/view/add_property_presentation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dream_dwell/features/chat/presentation/page/chat_page.dart';
+import 'package:dream_dwell/app/shared_pref/token_shared_prefs.dart';
+import 'package:dream_dwell/app/service_locator/service_locator.dart';
 
 
 class HeaderNav extends StatefulWidget implements PreferredSizeWidget {
@@ -64,8 +67,24 @@ class _HeaderNavState extends State<HeaderNav> {
           ),
         IconButton(
           icon: const Icon(Icons.message, color: Colors.white),
-          onPressed: () {
-            debugPrint("Messages button pressed");
+          onPressed: () async {
+            // Get userId from shared preferences
+            final result = await serviceLocator<TokenSharedPrefs>().getUserId();
+            final userId = result.fold((failure) => null, (userId) => userId);
+            if (userId != null && mounted) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ChatPage(currentUserId: userId),
+                ),
+              );
+            } else {
+              // Optionally show a snackbar or dialog if userId is not available
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Unable to open chats: user not found.')),
+                );
+              }
+            }
           },
         ),
         IconButton(

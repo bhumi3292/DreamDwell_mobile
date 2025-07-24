@@ -15,6 +15,7 @@ import 'package:dream_dwell/features/dashbaord/presentation/view/dashboard.dart'
 import 'package:dream_dwell/features/add_property/presentation/view/add_property_presentation.dart';
 import 'package:dream_dwell/features/auth/presentation/view/forgot_password_page.dart';
 import 'package:dream_dwell/features/auth/presentation/view/reset_password_page.dart';
+import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
 
 // ViewModels
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
@@ -66,35 +67,38 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (_) => serviceLocator<LoginViewModel>()),
-        BlocProvider(create: (_) => serviceLocator<RegisterUserViewModel>()),
-        BlocProvider(create: (_) => serviceLocator<ProfileViewModel>()),
-      ],
-      child: GetMaterialApp(
-        title: 'DreamDwell',
-        debugShowCheckedModeBanner: false,
-        theme: getApplication(),
-        initialRoute: '/',
-        getPages: [
-          GetPage(name: '/', page: () => const SplashScreen()),
-          GetPage(name: '/login', page: () => const Login()),
-          GetPage(name: '/signup', page: () => const Signup()),
-          GetPage(name: '/forget', page: () => const ForgetPassword()),
-          GetPage(name: '/forgot-password', page: () => const ForgotPasswordPage()),
-          GetPage(
-            name: '/reset-password',
-            page: () {
-              final token = Get.parameters['token'] ?? '';
-              return ResetPasswordPage(token: token);
-            },
-          ),
-          GetPage(name: '/dashboard', page: () => const DashboardPage()),
-          GetPage(name: '/home', page: () => const HomeView()),
-          GetPage(name: '/profile', page: () => const ProfilePage()),
-          GetPage(name: '/add-property', page: () => const AddPropertyPresentation()),
+    return BlocProvider<CartBloc>(
+      create: (_) => serviceLocator<CartBloc>(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => serviceLocator<LoginViewModel>()),
+          BlocProvider(create: (_) => serviceLocator<RegisterUserViewModel>()),
+          BlocProvider(create: (_) => serviceLocator<ProfileViewModel>()),
         ],
+        child: GetMaterialApp(
+          title: 'DreamDwell',
+          debugShowCheckedModeBanner: false,
+          theme: getApplication(),
+          initialRoute: '/',
+          getPages: [
+            GetPage(name: '/', page: () => const SplashScreen()),
+            GetPage(name: '/login', page: () => const Login()),
+            GetPage(name: '/signup', page: () => const Signup()),
+            GetPage(name: '/forget', page: () => const ForgetPassword()),
+            GetPage(name: '/forgot-password', page: () => const ForgotPasswordPage()),
+            GetPage(
+              name: '/reset-password',
+              page: () {
+                final token = Get.parameters['token'] ?? '';
+                return ResetPasswordPage(token: token);
+              },
+            ),
+            GetPage(name: '/dashboard', page: () => const DashboardPage()),
+            GetPage(name: '/home', page: () => const HomeView()),
+            GetPage(name: '/profile', page: () => const ProfilePage()),
+            GetPage(name: '/add-property', page: () => const AddPropertyPresentation()),
+          ],
+        ),
       ),
     );
   }
