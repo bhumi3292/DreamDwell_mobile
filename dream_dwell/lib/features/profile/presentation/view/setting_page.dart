@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:dream_dwell/features/profile/presentation/view/edit_profile_page.dart';
-import 'package:dream_dwell/features/auth/domain/entity/user_entity.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
-import 'package:dream_dwell/features/profile/presentation/view_model/profile_state.dart';
 
 class SettingPage extends StatefulWidget {
-  const SettingPage({Key? key}) : super(key: key);
+  const SettingPage({super.key});
 
   @override
   State<SettingPage> createState() => _SettingPageState();

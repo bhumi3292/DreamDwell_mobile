@@ -80,7 +80,7 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                               return Stack(
                                 children: [
                                   // Image or Video Thumbnail
-                                  Container(
+                                  SizedBox(
                                     width: double.infinity,
                                     height: double.infinity,
                                     child: isVideo

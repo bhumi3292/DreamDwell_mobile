@@ -20,6 +20,7 @@ import 'package:dream_dwell/features/profile/presentation/view_model/profile_vie
 // Import CartBloc for favourites count
 import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
 import 'package:dream_dwell/app/service_locator/service_locator.dart';
+import '../../../../app/constant/api_endpoints.dart';
 import 'edit_profile_page.dart';
 // Add import for HelpSupportPage
 import 'package:dream_dwell/features/profile/presentation/view/help_support_page.dart';
@@ -317,8 +318,13 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final user = context.read<ProfileViewModel>().state.user;
       if (user?.profilePicture != null && user!.profilePicture!.isNotEmpty) {
-        final imageUrl = "http://192.168.1.6:3001${user.profilePicture}";
+        // Corrected line for imageUrl
+        final imageUrl = '${ApiEndpoints.localNetworkAddress}${user.profilePicture}';
+
         await DefaultCacheManager().removeFile(imageUrl);
+        print('Cleared cache for image: $imageUrl'); // Added for debugging
+      } else {
+        print('No profile picture found for user or path is empty. Cache not cleared.');
       }
     } catch (e) {
       print('Error clearing image cache: $e');
@@ -346,12 +352,7 @@ class _ProfilePageState extends State<ProfilePage> {
             foregroundColor: Colors.white,
             elevation: 0,
             actions: [
-              // IconButton(
-              //   icon: const Icon(Icons.edit),
-              //   onPressed: () {
-              //     showMySnackbar(context: context, content: "Edit profile tapped!", isSuccess: true);
-              //   },
-              // ),
+
             ],
           ),
           body: BlocConsumer<ProfileViewModel, ProfileState>(
@@ -444,7 +445,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     child: user.profilePicture != null && user.profilePicture!.isNotEmpty
                                         ? ClipOval(
                                             child: CachedNetworkImage(
-                                              imageUrl: "http://10.0.2.2:3001${user.profilePicture}",
+                                              imageUrl: '${ApiEndpoints.localNetworkAddress}${user.profilePicture}',
                                               width: 100,
                                               height: 100,
                                               fit: BoxFit.cover,

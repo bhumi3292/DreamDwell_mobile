@@ -3,8 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dream_dwell/features/add_property/data/model/property_model/property_api_model.dart';
 import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart';
-import 'package:dream_dwell/cores/utils/image_url_helper.dart';
-import 'package:dream_dwell/features/explore/presentation/view/property_detail_page.dart';
+import 'package:dream_dwell/cores/utils/image_url_helper.dart'; // Make sure this path is correct
 
 class PropertyCardWidget extends StatefulWidget {
   final PropertyApiModel property;
@@ -12,7 +11,7 @@ class PropertyCardWidget extends StatefulWidget {
   final bool showFavoriteButton;
   final bool showRemoveButton;
   final bool isFavorite;
-  final String? baseUrl;
+  // Removed final String? baseUrl; // <--- REMOVED THIS LINE
 
   const PropertyCardWidget({
     super.key,
@@ -21,7 +20,7 @@ class PropertyCardWidget extends StatefulWidget {
     this.showFavoriteButton = true,
     this.showRemoveButton = false,
     this.isFavorite = false,
-    this.baseUrl,
+    // Removed this.baseUrl, // <--- REMOVED THIS LINE from constructor
   });
 
   @override
@@ -76,11 +75,10 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
     }
   }
 
-
-
   String _getImageUrl(String imagePath) {
     print('DEBUG: Processing image path: $imagePath');
-    final fullUrl = ImageUrlHelper.constructImageUrl(imagePath, baseUrl: widget.baseUrl);
+    // CORRECTED LINE 83: Removed 'baseUrl: widget.baseUrl'
+    final fullUrl = ImageUrlHelper.constructImageUrl(imagePath);
     print('DEBUG: Constructed full URL: $fullUrl');
     return fullUrl;
   }
@@ -89,7 +87,7 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
     print('DEBUG: Building image carousel for property: ${widget.property.title}');
     print('DEBUG: Number of images: ${widget.property.images.length}');
     print('DEBUG: Images: ${widget.property.images}');
-    
+
     if (widget.property.images.isEmpty) {
       print('DEBUG: No images available, showing placeholder');
       return Container(
@@ -123,7 +121,7 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
             itemBuilder: (context, index) {
               final imageUrl = _getImageUrl(widget.property.images[index]);
               print('DEBUG: Loading image $index: $imageUrl');
-              
+
               return ClipRRect(
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
@@ -149,15 +147,18 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
                   },
                   errorWidget: (context, url, error) {
                     print('DEBUG: Error loading image: $url, Error: $error');
-                    
-                    // Try alternative URL formats if the first one fails
+
+                    // These alternative URLs will still use a hardcoded IP.
+                    // If your ImageUrlHelper is set up correctly with ApiEndpoints,
+                    // these hardcoded attempts should ideally not be needed.
+                    // They are here as a fallback/debug measure.
                     final originalPath = widget.property.images[index];
                     final alternativeUrls = [
                       'http://10.0.2.2:3001/uploads/$originalPath',
                       'http://10.0.2.2:3001/images/$originalPath',
                       'http://10.0.2.2:3001/static/$originalPath',
                     ];
-                    
+
                     return Container(
                       width: 100,
                       height: 100,
@@ -192,7 +193,7 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
               );
             },
           ),
-          
+
           // Image indicators (only show if there are multiple images)
           if (widget.property.images.length > 1)
             Positioned(
@@ -203,14 +204,14 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
                   widget.property.images.length,
-                  (index) => Container(
+                      (index) => Container(
                     width: 6,
                     height: 6,
                     margin: const EdgeInsets.symmetric(horizontal: 2),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _currentImageIndex == index 
-                          ? Colors.white 
+                      color: _currentImageIndex == index
+                          ? Colors.white
                           : Colors.white.withOpacity(0.5),
                     ),
                   ),
@@ -229,23 +230,30 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
         if (state is CartLoaded) {
           // Check if the current property is in the cart
           final isInCart = state.cart.items?.any(
-            (item) => item.property.id == widget.property.id
+                (item) => item.property.id == widget.property.id,
           ) ?? false;
-          
-          setState(() {
-            _isFavorite = isInCart;
-            _isLoading = false;
-          });
-          
-          // Show success message
-          if (isInCart != widget.isFavorite) {
+
+          // Only update if the favorite status actually changed to avoid unnecessary rebuilds and snackbars
+          if (_isFavorite != isInCart) {
+            setState(() {
+              _isFavorite = isInCart;
+              _isLoading = false; // Stop loading indicator after state is updated
+            });
+
+            // Show success message only if status changed due to an action
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(isInCart ? 'Added to favorites' : 'Removed from favorites'),
                 backgroundColor: Colors.green,
               ),
             );
+          } else {
+            // If status didn't change but loading was true, just set loading to false
+            setState(() {
+              _isLoading = false;
+            });
           }
+
         } else if (state is CartError) {
           setState(() {
             _isLoading = false;
@@ -256,6 +264,9 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
               backgroundColor: Colors.red,
             ),
           );
+        } else if (state is CartLoading) {
+          // You might want to show a loading indicator on the favorite button
+          // This is already handled by the _isLoading variable
         }
       },
       child: GestureDetector(
@@ -340,15 +351,15 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
                       ),
                       child: _isLoading
                           ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
-                            )
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+                      )
                           : Icon(
-                              _isFavorite ? Icons.favorite : Icons.favorite_border,
-                              color: _isFavorite ? Colors.red : Colors.grey,
-                              size: 24,
-                            ),
+                        _isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: _isFavorite ? Colors.red : Colors.grey,
+                        size: 24,
+                      ),
                     ),
                   ),
                 ),
@@ -358,4 +369,4 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
       ),
     );
   }
-} 
+}

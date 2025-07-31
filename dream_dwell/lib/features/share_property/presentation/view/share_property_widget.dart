@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SharePropertyWidget extends StatelessWidget {
-  const SharePropertyWidget({Key? key}) : super(key: key);
+  const SharePropertyWidget({super.key});
 
   @override
   Widget build(BuildContext context) {

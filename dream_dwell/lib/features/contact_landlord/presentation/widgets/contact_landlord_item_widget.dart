@@ -3,7 +3,7 @@ import '../../domain/entity/contact_landlord_item.dart';
 
 class ContactLandlordItemWidget extends StatelessWidget {
   final ContactLandlordItem item;
-  const ContactLandlordItemWidget({Key? key, required this.item}) : super(key: key);
+  const ContactLandlordItemWidget({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {

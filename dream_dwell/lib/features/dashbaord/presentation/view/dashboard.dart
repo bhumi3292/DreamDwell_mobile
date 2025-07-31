@@ -11,6 +11,8 @@ import 'package:dream_dwell/features/dashbaord/presentation/widgets/property_car
 import 'package:dream_dwell/features/dashbaord/presentation/widgets/horizontal_property_card.dart';
 import 'package:dream_dwell/features/explore/presentation/view/property_detail_page.dart';
 import 'package:dream_dwell/features/explore/presentation/utils/property_converter.dart';
+import 'package:dream_dwell/cores/utils/image_url_helper.dart'; // Import ImageUrlHelper here
+
 
 class DashboardPage extends StatelessWidget {
   final VoidCallback? onSeeAllTap;
@@ -38,41 +40,41 @@ class DashboardPage extends StatelessWidget {
 
 class DashboardView extends StatelessWidget {
   final VoidCallback? onSeeAllTap;
-  
+
   const DashboardView({super.key, this.onSeeAllTap});
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF6F8FA),
-        body: BlocBuilder<DashboardViewModel, DashboardState>(
-          builder: (context, state) {
-            if (state is DashboardLoading) {
+        child: Scaffold(
+          backgroundColor: const Color(0xFFF6F8FA),
+          body: BlocBuilder<DashboardViewModel, DashboardState>(
+            builder: (context, state) {
+              if (state is DashboardLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is DashboardError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Error: ${state.message}'),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          context.read<DashboardViewModel>().loadProperties();
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
+              } else if (state is DashboardLoaded) {
+                return _buildDashboardContent(context, state.properties);
+              }
               return const Center(child: CircularProgressIndicator());
-            } else if (state is DashboardError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Error: ${state.message}'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<DashboardViewModel>().loadProperties();
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              );
-            } else if (state is DashboardLoaded) {
-              return _buildDashboardContent(context, state.properties);
-            }
-            return const Center(child: CircularProgressIndicator());
-          },
-        ),
-      ),
+            },
+          ),
+        )
     );
   }
 
@@ -91,7 +93,8 @@ class DashboardView extends StatelessWidget {
                 CircleAvatar(
                   radius: 32,
                   backgroundImage: user?.profilePicture != null && user!.profilePicture!.isNotEmpty
-                      ? CachedNetworkImageProvider("http://10.0.2.2:3001${user.profilePicture}")
+                  // Use ImageUrlHelper here! It's designed for this.
+                      ? CachedNetworkImageProvider(ImageUrlHelper.constructImageUrl(user.profilePicture!))
                       : const AssetImage('assets/images/fb.png') as ImageProvider,
                 ),
                 const SizedBox(width: 16),
@@ -158,7 +161,9 @@ class DashboardView extends StatelessWidget {
                           ),
                         );
                       },
-                      baseUrl: 'http://10.0.2.2:3001/',
+                      // REMOVED baseUrl: ApiEndpoints.imageUrl
+                      // HorizontalPropertyCard no longer needs baseUrl in its constructor
+                      // and ImageUrlHelper already uses ApiEndpoints internally.
                     ),
                   );
                 },
@@ -171,16 +176,15 @@ class DashboardView extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                "https://thumbs.dreamstime.com/z/commercial-real-estate-banner-blue-colors-hands-smartphone-buildings-skyscrapers-cityscape-property-searching-app-concept-186877789.jpg",
+              // It's generally better to use ImageUrlHelper for this too if it's from your backend
+              // For now, keeping it as is since it's a direct external URL.
+              child: CachedNetworkImage( // Changed to CachedNetworkImage for consistency
+                imageUrl: "https://thumbs.dreamstime.com/z/commercial-real-estate-banner-blue-colors-hands-smartphone-buildings-skyscrapers-cityscape-property-searching-app-concept-186877789.jpg",
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: 140,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return const Center(child: CircularProgressIndicator());
-                },
-                errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+                placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                errorWidget: (context, error, stackTrace) => const Icon(Icons.error),
               ),
             ),
           ),
@@ -194,26 +198,27 @@ class DashboardView extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
-          // Replaced ListView.builder with Column to avoid sliver/nested scroll issues
           Column(
-            children: properties.map((property) => 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: PropertyCardWidget(
-                  property: property,
-                  onTap: () {
-                    final exploreProperty = PropertyConverter.fromApiModel(property);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PropertyDetailPage(property: exploreProperty),
-                      ),
-                    );
-                  },
-                  showFavoriteButton: true,
-                  baseUrl: 'http://10.0.2.2:3001/',
-                ),
-              )
+            children: properties.map((property) =>
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: PropertyCardWidget(
+                    property: property,
+                    onTap: () {
+                      final exploreProperty = PropertyConverter.fromApiModel(property);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PropertyDetailPage(property: exploreProperty),
+                        ),
+                      );
+                    },
+                    showFavoriteButton: true,
+                    // REMOVED baseUrl: ApiEndpoints.imageUrl
+                    // PropertyCardWidget no longer needs baseUrl in its constructor
+                    // and ImageUrlHelper already uses ApiEndpoints internally.
+                  ),
+                )
             ).toList(),
           ),
           const SizedBox(height: 24),

@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   final String token;
-  const ResetPasswordPage({Key? key, required this.token}) : super(key: key);
+  const ResetPasswordPage({super.key, required this.token});
 
   @override
   State<ResetPasswordPage> createState() => _ResetPasswordPageState();

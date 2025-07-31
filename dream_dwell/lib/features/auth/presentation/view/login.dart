@@ -7,7 +7,8 @@ import 'package:dream_dwell/view/homeView.dart';
 import 'package:dream_dwell/cores/common/snackbar/snackbar.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart';
-import 'package:dream_dwell/features/profile/presentation/view_model/profile_state.dart';
+import 'package:proximity_sensor/proximity_sensor.dart';
+import 'dart:async';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -21,8 +22,35 @@ class _LoginState extends State<Login> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? selectedStakeholder;
-  final List<String> stakeholders = ['Landlord', 'Tenant']; // Corrected roles
+  final List<String> stakeholders = ['Landlord', 'Tenant'];
   bool _passwordVisible = false;
+
+  StreamSubscription<dynamic>? _proximitySubscription;
+  bool _isProximityLoginTriggered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _proximitySubscription = ProximitySensor.events.listen((int event) {
+      if (event > 0 && !_isProximityLoginTriggered) {
+
+          _handleLogin();
+          // Reset after a short delay to allow for next login
+          Future.delayed(const Duration(seconds: 2), () {
+            _isProximityLoginTriggered = false;
+          });
+
+      } else if (event == 0) {
+        _isProximityLoginTriggered = false;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _proximitySubscription?.cancel();
+    super.dispose();
+  }
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {

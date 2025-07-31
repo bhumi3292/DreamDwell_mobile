@@ -1,13 +1,12 @@
 import 'package:dream_dwell/features/explore/presentation/view/property_detail_page.dart';
 import 'package:flutter/material.dart';
 import '../../domain/entity/explore_item.dart';
-import 'package:dream_dwell/features/explore/presentation/view/property_detail_page.dart';
 
 import '../../domain/entity/explore_property_entity.dart';
 
 class ExploreItemWidget extends StatelessWidget {
   final ExploreItem item;
-  const ExploreItemWidget({Key? key, required this.item}) : super(key: key);
+  const ExploreItemWidget({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {

@@ -5,7 +5,7 @@ import 'package:dream_dwell/features/explore/presentation/view/property_detail_p
 
 class FavouriteItemWidget extends StatelessWidget {
   final FavouriteItem item;
-  const FavouriteItemWidget({Key? key, required this.item}) : super(key: key);
+  const FavouriteItemWidget({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {

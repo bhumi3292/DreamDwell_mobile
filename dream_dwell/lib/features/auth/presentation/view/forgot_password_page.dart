@@ -3,7 +3,7 @@ import '../../data/data_source/remote_datasource/auth_remote_datasource.dart';
 import 'package:dio/dio.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
-  const ForgotPasswordPage({Key? key}) : super(key: key);
+  const ForgotPasswordPage({super.key});
 
   @override
   State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();

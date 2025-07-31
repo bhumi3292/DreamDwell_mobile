@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dream_dwell/features/add_property/data/model/property_model/property_api_model.dart';
 
+import '../../../../app/constant/api_endpoints.dart';
+
 class FavouritePropertyCard extends StatefulWidget {
   final PropertyApiModel property;
   final VoidCallback? onTap;
   final VoidCallback? onRemove;
 
   const FavouritePropertyCard({
-    Key? key,
+    super.key,
     required this.property,
     this.onTap,
     this.onRemove,
-  }) : super(key: key);
+  });
 
   @override
   State<FavouritePropertyCard> createState() => _FavouritePropertyCardState();
@@ -33,9 +35,9 @@ class _FavouritePropertyCardState extends State<FavouritePropertyCard> {
     _pageController.dispose();
     super.dispose();
   }
-
   String _getImageUrl(String imagePath) {
-    return 'http://10.0.2.2:3001/$imagePath';
+    // Use ApiEndpoints.localNetworkAddress for the base URL
+    return '${ApiEndpoints.localNetworkAddress}/$imagePath';
   }
 
   Widget _buildImageCarousel() {

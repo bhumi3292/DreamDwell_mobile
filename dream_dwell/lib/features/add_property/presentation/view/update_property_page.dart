@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:dream_dwell/app/constant/api_endpoints.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:dream_dwell/features/add_property/domain/entity/property/property_entity.dart';
-import 'package:dream_dwell/features/add_property/domain/use_case/property/update_property_usecase.dart';
 import 'package:dream_dwell/app/service_locator/service_locator.dart';
 import 'package:dream_dwell/features/add_property/domain/entity/category/category_entity.dart';
 import 'package:dream_dwell/features/add_property/domain/use_case/category/get_all_categories_usecase.dart';
@@ -27,7 +25,7 @@ class UpdatePropertyPage extends StatefulWidget {
   // Add more fields as needed
 
   const UpdatePropertyPage({
-    Key? key,
+    super.key,
     required this.propertyId,
     required this.initialTitle,
     required this.initialLocation,
@@ -38,7 +36,7 @@ class UpdatePropertyPage extends StatefulWidget {
     this.initialImages = const [],
     this.initialVideos = const [],
     required this.initialCategoryId,
-  }) : super(key: key);
+  });
 
   @override
   State<UpdatePropertyPage> createState() => _UpdatePropertyPageState();
@@ -137,13 +135,11 @@ class _UpdatePropertyPageState extends State<UpdatePropertyPage> {
   }
 
   Future<void> _pickImages() async {
-    final List<XFile>? pickedFiles = await _picker.pickMultiImage();
-    if (pickedFiles != null) {
-      setState(() {
-        _selectedImages.addAll(pickedFiles.map((x) => File(x.path)));
-      });
+    final List<XFile> pickedFiles = await _picker.pickMultiImage();
+    setState(() {
+      _selectedImages.addAll(pickedFiles.map((x) => File(x.path)));
+    });
     }
-  }
 
   Future<void> _pickVideos() async {
     final XFile? pickedFile = await _picker.pickVideo(source: ImageSource.gallery);

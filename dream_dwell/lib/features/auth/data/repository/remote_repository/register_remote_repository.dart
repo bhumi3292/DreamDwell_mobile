@@ -64,9 +64,7 @@ class UserRemoteRepository implements IUserRepository {
       final newUrl = await _dataSource.uploadProfilePicture(imageFile);
       return Right(newUrl); // Returns the URL on success
     } catch (e) {
-      // This catch block will properly handle the RemoteDatabaseFailure
-      // that is thrown by UserRemoteDatasourceImpl on error.
-      // The 'e' here will be an instance of RemoteDatabaseFailure.
+
       if (e is Failure) { // Check if it's one of your defined Failure types
         return Left(e); // Return the specific failure
       }

@@ -5,7 +5,7 @@ import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart'
 import 'package:dream_dwell/features/favourite/presentation/widgets/cart_item_widget.dart';
 
 class FavouritePage extends StatefulWidget {
-  const FavouritePage({Key? key}) : super(key: key);
+  const FavouritePage({super.key});
 
   @override
   State<FavouritePage> createState() => _FavouritePageState();

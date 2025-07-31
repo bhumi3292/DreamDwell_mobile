@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dream_dwell/features/explore/domain/entity/explore_property_entity.dart';
-import 'package:dream_dwell/cores/utils/image_url_helper.dart';
+import 'package:dream_dwell/cores/utils/image_url_helper.dart'; // Ensure this file uses ApiEndpoints
 import 'package:dream_dwell/features/booking/presentation/widgets/booking_modal.dart';
 import 'package:dream_dwell/features/booking/presentation/widgets/landlord_manage_availability.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,7 +17,7 @@ import 'package:dream_dwell/app/shared_pref/token_shared_prefs.dart';
 
 class PropertyDetailPage extends StatefulWidget {
   final ExplorePropertyEntity property;
-  const PropertyDetailPage({Key? key, required this.property}) : super(key: key);
+  const PropertyDetailPage({super.key, required this.property});
 
   @override
   State<PropertyDetailPage> createState() => _PropertyDetailPageState();
@@ -53,7 +53,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                       ),
                       onPressed: () {
                         Navigator.of(context).pop();
-                        // _processKhaltiPayment();
+                        // _processKhaltiPayment(); // Uncomment if you implement Khalti
                       },
                     ),
                   ),
@@ -92,73 +92,78 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
   }
 
   void _processPayPalPayment() {
+    // Ensure price is converted to a string only once and is valid
+    final String totalPrice = widget.property.price?.toStringAsFixed(2) ?? '0.00';
+
     Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (BuildContext context) => UsePaypal(
-            sandboxMode: true,
-            clientId:
-                "AcnpbvL-nqay69eboBK-a2hcQLnkFTQZXbTF0f4UafVwhRYAXe11Z0B3PtFyWCTDH24INY6Cu2U0rhRC",
-            secretKey:
-                "EGZXWncK71BKAfqH7ClPpldekK6kSKvO9yIk0Loz36CkdM7uLC_vuE5mjbGjRhJhBT5BeOYyBB-_p6WW",
-            returnURL: "https://samplesite.com/return",
-            cancelURL: "https://samplesite.com/cancel",
-            transactions: [
-              {
-                "amount": {
-                  "total": widget.property.price.toString(),
-                  "currency": "USD",
-                  "details": {
-                    "subtotal": widget..property.price.toString(),
-                    "shipping": '0',
-                    "shipping_discount": 0,
-                  },
-                },
-                "description": "Payment for course: ${widget.property.title}",
-                "item_list": {
-                  "items": [
-                    {
-                      "name": widget.property.title,
-                      "quantity": 1,
-                      "price": widget.property.price.toString(),
-                      "currency": "USD",
-                    },
-                  ],
+      MaterialPageRoute(
+        builder: (BuildContext context) => UsePaypal(
+          sandboxMode: true,
+          clientId:
+          "AcnpbvL-nqay69eboBK-a2hcQLnkFTQZXbTF0f4UafVwhRYAXe11Z0B3PtFyWCTDH24INY6Cu2U0rhRC",
+          secretKey:
+          "EGZXWncK71BKAfqH7ClPpldekK6kSKvO9yIk0Loz36CkdM7uLC_vuE5mjbGjRhJhBT5BeOYyBB-_p6WW",
+          returnURL: "https://samplesite.com/return",
+          cancelURL: "https://samplesite.com/cancel",
+          transactions: [
+            {
+              "amount": {
+                "total": totalPrice, // Use the pre-converted string
+                "currency": "USD",
+                "details": {
+                  "subtotal": totalPrice, // Use the pre-converted string
+                  "shipping": '0',
+                  "shipping_discount": 0,
                 },
               },
-            ],
-            note: "Contact us for any questions on your order.",
-            onSuccess: (Map params) async {
-              if (mounted) {
-                // Dispatch payment event on PayPal success
-              }
+              "description": "Payment for property: ${widget.property.title}",
+              "item_list": {
+                "items": [
+                  {
+                    "name": widget.property.title,
+                    "quantity": 1,
+                    "price": totalPrice, // Use the pre-converted string
+                    "currency": "USD",
+                  },
+                ],
+              },
             },
-            onError: (error) {
-              if (mounted) {
-                // BlocProvider.of<PaymentBloc>(context).add(
-                //   CreatePayment(
-                //     courseId: widget.courseId,
-                //     amount: widget.amount,
-                //     paymentMethod: 'PayPal',
-                //     status: 'error',
-                //   ),
-                // );
-              }
-            },
-            onCancel: (params) {
-              if (mounted) {
-                // BlocProvider.of<PaymentBloc>(context).add(
-                //   CreatePayment(
-                //     courseId: widget.courseId,
-                //     amount: widget.amount,
-                //     paymentMethod: 'PayPal',
-                //     status: 'cancelled',
-                //   ),
-                // );
-              }
-            },
-          ),
+          ],
+          note: "Contact us for any questions on your order.",
+          onSuccess: (Map params) async {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('PayPal payment successful!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+              // Dispatch payment event or handle success logic here
+            }
+          },
+          onError: (error) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('PayPal payment failed: $error'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+          onCancel: (params) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('PayPal payment cancelled.'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+          },
         ),
-      );
+      ),
+    );
   }
 
   void _processEsewaPayment() {
@@ -199,7 +204,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
           child: Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             elevation: 10,
-            shadowColor: Colors.blueGrey.withValues(alpha: 0.2),
+            shadowColor: Colors.blueGrey.withOpacity(0.2), // <--- Corrected
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
@@ -212,10 +217,31 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(18),
                           child: Image.network(
-                            ImageUrlHelper.constructImageUrl(allMedia[_currentImage]),
+                            ImageUrlHelper.constructImageUrl(allMedia[_currentImage]), // Ensure this uses ApiEndpoints internally
                             height: 220,
                             width: double.infinity,
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              height: 220,
+                              width: double.infinity,
+                              color: Colors.grey[200],
+                              child: Icon(Icons.broken_image, color: Colors.grey[400], size: 50),
+                            ),
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                height: 220,
+                                width: double.infinity,
+                                color: Colors.grey[100],
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                        : null,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                         if (allMedia.length > 1)
@@ -225,7 +251,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: List.generate(
                                 allMedia.length,
-                                (index) => GestureDetector(
+                                    (index) => GestureDetector(
                                   onTap: () => setState(() => _currentImage = index),
                                   child: Container(
                                     margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -307,9 +333,9 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                           const Icon(Icons.person, color: Color(0xFF003366)),
                           const SizedBox(width: 4),
                           Text(
-                            widget.property.landlordName!.startsWith('Landlord ID:') 
-                              ? 'Landlord Reference' 
-                              : widget.property.landlordName!,
+                            (widget.property.landlordName?.startsWith('Landlord ID:') ?? false)
+                                ? 'Landlord Reference'
+                                : widget.property.landlordName!,
                             style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
                         ],
@@ -356,7 +382,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                           if (userId == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Unable to start chat: missing user info.'),
+                                content: Text('Unable to start chat: missing user info. Please log in.'),
                                 backgroundColor: Colors.red,
                               ),
                             );
@@ -380,63 +406,100 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                             );
                             return;
                           }
-                          final createOrGetChatUsecase = serviceLocator<CreateOrGetChatUsecase>();
-                          final chat = await createOrGetChatUsecase(
-                            otherUserId: landlordId,
-                            propertyId: propertyId,
-                          );
-                          final chatId = chat['_id'] ?? '';
-                          final chatTitle = widget.property.landlordName ?? 'Landlord';
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ChatPage(
-                                preselectChatId: chatId,
-                                currentUserId: userId,
+                          // Prevent user from chatting with themselves
+                          if (userId == landlordId) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('You cannot chat with yourself.'),
+                                backgroundColor: Colors.orange,
                               ),
+                            );
+                            return;
+                          }
+
+                          // Show a loading indicator
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Row(
+                                children: [
+                                  CircularProgressIndicator(color: Colors.white),
+                                  SizedBox(width: 16),
+                                  Text('Starting chat...'),
+                                ],
+                              ),
+                              duration: Duration(seconds: 5), // Keep it showing for a while
                             ),
                           );
+
+                          try {
+                            final createOrGetChatUsecase = serviceLocator<CreateOrGetChatUsecase>();
+                            final chat = await createOrGetChatUsecase(
+                              otherUserId: landlordId,
+                              propertyId: propertyId,
+                            );
+                            final chatId = chat['_id'] ?? '';
+                            // No need for chatTitle here, as ChatPage might determine it.
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ChatPage(
+                                  preselectChatId: chatId,
+                                  currentUserId: userId,
+                                ),
+                              ),
+                            );
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Hide loading
+                          } catch (e) {
+                            debugPrint('Error starting chat: $e');
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Hide loading
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to start chat: ${e.toString()}'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         },
                       ),
                     ),
                   ] else ...[
-                                         // Show message when landlord details are not available
-                     Container(
-                       padding: const EdgeInsets.all(12),
-                       decoration: BoxDecoration(
-                         color: Colors.grey[100],
-                         borderRadius: BorderRadius.circular(8),
-                         border: Border.all(color: Colors.grey[300]!),
-                       ),
-                       child: Column(
-                         crossAxisAlignment: CrossAxisAlignment.start,
-                         children: [
-                           Row(
-                             children: [
-                               Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
-                               const SizedBox(width: 8),
-                               Expanded(
-                                 child: Text(
-                                   'Landlord contact information is not available for this property.',
-                                   style: TextStyle(
-                                     color: Colors.grey[600],
-                                     fontSize: 14,
-                                   ),
-                                 ),
-                               ),
-                             ],
-                           ),
-                           const SizedBox(height: 8),
-                           Text(
-                             'You can use the "Book a Visit" button above to schedule a viewing, or contact the landlord through the booking system.',
-                             style: TextStyle(
-                               color: Colors.grey[500],
-                               fontSize: 12,
-                             ),
-                           ),
-                         ],
-                       ),
-                     ),
+                    // Show message when landlord details are not available
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Landlord contact information is not available for this property.',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'You can use the "Book a Visit" button above to schedule a viewing, or contact the landlord through the booking system.',
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                   const SizedBox(height: 24),
                   // Action buttons - Primary actions
@@ -447,7 +510,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withValues(alpha: 0.1),
+                          color: Colors.grey.withOpacity(0.1), // <--- Corrected
                           spreadRadius: 1,
                           blurRadius: 10,
                           offset: const Offset(0, 2),
@@ -478,15 +541,26 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                   final currentUser = profileState.user;
                                   debugPrint('Current userId: ${currentUser?.userId}, Property landlordId: ${widget.property.landlordId}');
                                   final isLandlord = currentUser != null &&
-                                    (widget.property.landlordId == currentUser.userId);
+                                      (widget.property.landlordId == currentUser.userId);
+
+                                  if (currentUser == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Please log in to book a visit.'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+
                                   showDialog(
                                     context: context,
                                     builder: (context) => isLandlord
-                                      ? LandlordManageAvailability(propertyId: widget.property.id ?? '')
-                                      : BookingModal(
-                                          propertyId: widget.property.id ?? '',
-                                          propertyTitle: widget.property.title ?? '',
-                                        ),
+                                        ? LandlordManageAvailability(propertyId: widget.property.id ?? '')
+                                        : BookingModal(
+                                      propertyId: widget.property.id ?? '',
+                                      propertyTitle: widget.property.title ?? '',
+                                    ),
                                   );
                                 },
                               ),
@@ -507,12 +581,32 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                   elevation: 2,
                                 ),
                                 onPressed: () async {
-                                  final phone =  '9800000000';
+                                  final phone = widget.property.landlordPhone; // Use actual landlord phone
+                                  if (phone == null || phone.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Landlord phone number not available.'),
+                                        backgroundColor: Colors.orange,
+                                      ),
+                                    );
+                                    return;
+                                  }
                                   final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: "+9779800000000",
-    );
-    await launchUrl(launchUri);
+                                    scheme: 'tel',
+                                    path: phone, // Use the actual landlord's phone number
+                                  );
+                                  if (await canLaunchUrl(launchUri)) {
+                                    await launchUrl(launchUri);
+                                  } else {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Could not launch phone dialer for $phone'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
                                 },
                               ),
                             ),
@@ -536,7 +630,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                               elevation: 2,
                             ),
                             onPressed: () {
-                             _processPayPalPayment();
+                              _processPayPalPayment();
                             },
                           ),
                         ),
@@ -544,16 +638,16 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Show Update and Delete buttons for landlord only
                   Builder(
                     builder: (context) {
                       final profileState = context.read<ProfileViewModel>().state;
                       final currentUser = profileState.user;
                       final isLandlord = currentUser != null &&
-                        (widget.property.landlordId == currentUser.userId);
+                          (widget.property.landlordId == currentUser.userId);
                       if (!isLandlord) return const SizedBox.shrink();
-                      
+
                       return Padding(
                         padding: const EdgeInsets.only(top: 16.0),
                         child: Container(
@@ -654,16 +748,17 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                         final result = await deleteUsecase(widget.property.id ?? '');
                                         Navigator.of(context).pop(); // Remove loading dialog
                                         result.fold(
-                                          (failure) {
+                                              (failure) {
                                             scaffoldMessenger.showSnackBar(
                                               SnackBar(content: Text('Failed to delete property: ${failure.toString()}'), backgroundColor: Colors.red),
                                             );
                                           },
-                                          (_) {
+                                              (_) {
                                             scaffoldMessenger.showSnackBar(
                                               const SnackBar(content: Text('Property deleted successfully!'), backgroundColor: Colors.green),
                                             );
-                                            Navigator.of(context).popUntil((route) => route.isFirst); // Go to Explore page (assumes it's the first route)
+                                            // Go back one page (to ExplorePage)
+                                            Navigator.of(context).pop();
                                           },
                                         );
                                       },
@@ -685,4 +780,4 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
       ),
     );
   }
-} 
+}

@@ -5,6 +5,10 @@ import 'package:dream_dwell/features/profile/presentation/view_model/profile_vie
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_state.dart';
 import 'package:dream_dwell/cores/common/snackbar/snackbar.dart';
+// Make sure this import exists and points to your ImageUrlHelper file
+// If you don't have one, you should create it as discussed previously.
+import 'package:dream_dwell/cores/utils/image_url_helper.dart';
+
 
 class EditProfilePage extends StatefulWidget {
   final UserEntity user;
@@ -26,7 +30,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _currentPasswordController;
   late TextEditingController _newPasswordController;
   late TextEditingController _confirmPasswordController;
-  
+
   bool _isLoading = false;
   bool _obscureCurrentPassword = true;
   bool _obscureNewPassword = true;
@@ -71,7 +75,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             builder: (context, state) {
               return TextButton(
                 onPressed: state.isLoading ? null : _saveChanges,
-                child: Text(
+                child: const Text( // Changed to const
                   'Save',
                   style: TextStyle(
                     color: Colors.white,
@@ -107,12 +111,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
         },
         builder: (context, state) {
           _isLoading = state.isLoading;
-          
+
           // Update controllers if user data has changed
-          if (state.user != null && 
-              (state.user!.fullName != widget.user.fullName || 
-               state.user!.email != widget.user.email ||
-               state.user!.phoneNumber != widget.user.phoneNumber)) {
+          if (state.user != null &&
+              (_fullNameController.text != state.user!.fullName ||
+                  _emailController.text != state.user!.email ||
+                  _phoneController.text != (state.user!.phoneNumber ?? ''))) {
             print("Edit profile page - Updating controllers with new data: ${state.user!.fullName}"); // Debug print
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
@@ -124,7 +128,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               }
             });
           }
-          
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Form(
@@ -139,13 +143,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         CircleAvatar(
                           radius: 50,
                           backgroundColor: Colors.grey[300],
+                          // Corrected line 143: Use ImageUrlHelper for consistent URL construction
+                          // This ensures you use the base URL from ApiEndpoints.imageUrl
                           backgroundImage: (state.user?.profilePicture != null && state.user!.profilePicture!.isNotEmpty)
-                              ? NetworkImage("http://10.0.2.2:3001${state.user!.profilePicture}")
+                              ? NetworkImage(ImageUrlHelper.constructImageUrl(state.user!.profilePicture))
                               : (widget.user.profilePicture != null && widget.user.profilePicture!.isNotEmpty)
-                                  ? NetworkImage("http://10.0.2.2:3001${widget.user.profilePicture}")
-                                  : null,
+                              ? NetworkImage(ImageUrlHelper.constructImageUrl(widget.user.profilePicture))
+                              : null,
                           child: (state.user?.profilePicture == null || state.user!.profilePicture!.isEmpty) &&
-                                 (widget.user.profilePicture == null || widget.user.profilePicture!.isEmpty)
+                              (widget.user.profilePicture == null || widget.user.profilePicture!.isEmpty)
                               ? const Icon(Icons.person, size: 50, color: Colors.grey)
                               : null,
                         ),
@@ -170,13 +176,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Personal Information Section
                   _buildSectionTitle('Personal Information'),
                   const SizedBox(height: 16),
-                  
+
                   // Full Name
                   _buildTextField(
                     controller: _fullNameController,
@@ -192,9 +198,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       return null;
                     },
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Email
                   _buildTextField(
                     controller: _emailController,
@@ -211,9 +217,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       return null;
                     },
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Phone Number
                   _buildTextField(
                     controller: _phoneController,
@@ -229,13 +235,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       return null;
                     },
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Change Password Section
                   _buildSectionTitle('Change Password'),
                   const SizedBox(height: 8),
-                  
+
                   Text(
                     'Leave password fields empty if you don\'t want to change your password',
                     style: TextStyle(
@@ -243,9 +249,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       color: Colors.grey[600],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Current Password
                   _buildTextField(
                     controller: _currentPasswordController,
@@ -274,9 +280,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       return null;
                     },
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // New Password
                   _buildTextField(
                     controller: _newPasswordController,
@@ -298,7 +304,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         if (value.length < 6) {
                           return 'New password must be at least 6 characters';
                         }
-                        if (_confirmPasswordController.text.isNotEmpty && 
+                        if (_confirmPasswordController.text.isNotEmpty &&
                             value != _confirmPasswordController.text) {
                           return 'New passwords do not match';
                         }
@@ -306,9 +312,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       return null;
                     },
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Confirm New Password
                   _buildTextField(
                     controller: _confirmPasswordController,
@@ -337,9 +343,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       return null;
                     },
                   ),
-                  
+
                   const SizedBox(height: 40),
-                  
+
                   // Save Button
                   SizedBox(
                     width: double.infinity,
@@ -354,24 +360,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                       child: _isLoading
                           ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
                           : const Text(
-                              'Save Changes',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                        'Save Changes',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20),
                 ],
               ),
@@ -487,4 +493,4 @@ class _EditProfilePageState extends State<EditProfilePage> {
       );
     }
   }
-} 
+}

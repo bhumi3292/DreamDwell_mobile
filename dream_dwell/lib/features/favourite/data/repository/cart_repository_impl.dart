@@ -1,5 +1,4 @@
 import 'package:dream_dwell/features/favourite/data/datasource/cart_api_service.dart';
-import 'package:dream_dwell/features/favourite/data/model/cart_model/cart_api_model.dart';
 import 'package:dream_dwell/features/favourite/domain/entity/cart/cart_entity.dart';
 import 'package:dream_dwell/features/favourite/domain/repository/cart_repository.dart';
 

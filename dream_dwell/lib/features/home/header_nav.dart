@@ -42,7 +42,7 @@ class _HeaderNavState extends State<HeaderNav> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('HeaderNav user.stakeholder:  \u001b[33m \u001b[1m \u001b[4m${_role} \u001b[0m'); // DEBUG: print role
+    debugPrint('HeaderNav user.stakeholder:  \u001b[33m \u001b[1m \u001b[4m$_role \u001b[0m'); // DEBUG: print role
     return AppBar(
       backgroundColor: const Color(0xFF003366),
       elevation: 0,

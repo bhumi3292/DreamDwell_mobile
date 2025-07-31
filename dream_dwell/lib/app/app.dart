@@ -21,7 +21,6 @@ import 'package:dream_dwell/features/favourite/presentation/bloc/cart_bloc.dart'
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
 import 'package:dream_dwell/features/profile/presentation/view_model/profile_view_model.dart';
-import 'package:dream_dwell/features/profile/presentation/view_model/profile_event.dart';
 
 
 void main() async {

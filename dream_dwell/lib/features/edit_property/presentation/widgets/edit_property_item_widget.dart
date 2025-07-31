@@ -3,7 +3,7 @@ import '../../domain/entity/edit_property_item.dart';
 
 class EditPropertyItemWidget extends StatelessWidget {
   final EditPropertyItem item;
-  const EditPropertyItemWidget({Key? key, required this.item}) : super(key: key);
+  const EditPropertyItemWidget({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {

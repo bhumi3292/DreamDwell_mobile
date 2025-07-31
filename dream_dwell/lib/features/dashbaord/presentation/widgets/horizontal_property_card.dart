@@ -5,20 +5,20 @@ import 'package:dream_dwell/features/add_property/data/model/property_model/prop
 import 'package:dream_dwell/features/add_property/domain/use_case/cart/add_to_cart_usecase.dart';
 import 'package:dream_dwell/features/add_property/domain/use_case/cart/remove_from_cart_usecase.dart';
 import 'package:dream_dwell/features/add_property/domain/use_case/cart/get_cart_usecase.dart';
-import 'package:dream_dwell/features/add_property/domain/entity/cart/cart_entity.dart';
-import 'package:dream_dwell/cores/utils/image_url_helper.dart';
-import 'package:dream_dwell/cores/network/hive_service.dart';
+import 'package:dream_dwell/cores/utils/image_url_helper.dart'; // Ensure this import is correct
+// Keep if you use Hive elsewhere
 
 class HorizontalPropertyCard extends StatefulWidget {
   final PropertyApiModel property;
   final VoidCallback? onTap;
-  final String? baseUrl;
+  // Removed final String? baseUrl;
+  // As ImageUrlHelper no longer needs it directly passed, it relies on ApiEndpoints.
 
   const HorizontalPropertyCard({
     super.key,
     required this.property,
     this.onTap,
-    this.baseUrl,
+    // Removed this.baseUrl from constructor
   });
 
   @override
@@ -49,15 +49,15 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
       // Check if the property is in the cart (favorites)
       final getCartUsecase = GetIt.instance<GetCartUsecase>();
       final result = await getCartUsecase();
-      
+
       result.fold(
-        (failure) {
+            (failure) {
           // If we can't check, assume not favorite
           setState(() {
             _isFavorite = false;
           });
         },
-        (cart) {
+            (cart) {
           final isInCart = cart.items?.any((item) => item.property?.id == widget.property.id) ?? false;
           setState(() {
             _isFavorite = isInCart;
@@ -91,9 +91,9 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
         print('DEBUG: Attempting to remove from favorites (horizontal)');
         final removeUsecase = GetIt.instance<RemoveFromCartUsecase>();
         final result = await removeUsecase(RemoveFromCartParams(propertyId: widget.property.id ?? ''));
-        
+
         result.fold(
-          (failure) {
+              (failure) {
             print('DEBUG: Remove from favorites failed (horizontal): ${failure.message}');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -102,7 +102,7 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
               ),
             );
           },
-          (_) {
+              (_) {
             print('DEBUG: Successfully removed from favorites (horizontal)');
             setState(() {
               _isFavorite = false;
@@ -120,9 +120,9 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
         print('DEBUG: Attempting to add to favorites (horizontal)');
         final addUsecase = GetIt.instance<AddToCartUsecase>();
         final result = await addUsecase(AddToCartParams(propertyId: widget.property.id ?? ''));
-        
+
         result.fold(
-          (failure) {
+              (failure) {
             print('DEBUG: Add to favorites failed (horizontal): ${failure.message}');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -131,7 +131,7 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
               ),
             );
           },
-          (_) {
+              (_) {
             print('DEBUG: Successfully added to favorites (horizontal)');
             setState(() {
               _isFavorite = true;
@@ -160,9 +160,11 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
     }
   }
 
+  // Corrected _getImageUrl method - removed 'baseUrl' parameter
   String _getImageUrl(String imagePath) {
     print('DEBUG: Processing image path: $imagePath');
-    final fullUrl = ImageUrlHelper.constructImageUrl(imagePath, baseUrl: widget.baseUrl);
+    // Calling ImageUrlHelper.constructImageUrl without the 'baseUrl' parameter
+    final fullUrl = ImageUrlHelper.constructImageUrl(imagePath);
     print('DEBUG: Constructed full URL: $fullUrl');
     return fullUrl;
   }
@@ -171,12 +173,12 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
     print('DEBUG: Building horizontal image carousel for property: ${widget.property.title}');
     print('DEBUG: Number of images: ${widget.property.images.length}');
     print('DEBUG: Images: ${widget.property.images}');
-    
+
     if (widget.property.images.isEmpty) {
       print('DEBUG: No images available, showing placeholder');
       return Container(
         width: 200,
-        height: 120,
+        height: 120, // Consistent height
         color: Colors.grey[300],
         child: const Icon(Icons.home, size: 40, color: Colors.grey),
       );
@@ -184,7 +186,7 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
 
     return SizedBox(
       width: 200,
-      height: 120,
+      height: 120, // Consistent height
       child: Stack(
         children: [
           // Image PageView
@@ -199,7 +201,7 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
             itemBuilder: (context, index) {
               final imageUrl = _getImageUrl(widget.property.images[index]);
               print('DEBUG: Loading horizontal image $index: $imageUrl');
-              
+
               return ClipRRect(
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
@@ -208,15 +210,15 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
                 child: CachedNetworkImage(
                   imageUrl: imageUrl,
                   width: 200,
-                  height: 120,
+                  height: 120, // Consistent height
                   fit: BoxFit.cover,
                   memCacheWidth: 400, // Optimize memory usage
-                  memCacheHeight: 240,
+                  memCacheHeight: 240, // Should be roughly 2x of actual height for better quality
                   placeholder: (context, url) {
                     print('DEBUG: Loading horizontal placeholder for: $url');
                     return Container(
                       width: 200,
-                      height: 120,
+                      height: 120, // Consistent height
                       color: Colors.grey[200],
                       child: const Center(
                         child: CircularProgressIndicator(strokeWidth: 2),
@@ -227,7 +229,7 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
                     print('DEBUG: Error loading horizontal image: $url, Error: $error');
                     return Container(
                       width: 200,
-                      height: 120,
+                      height: 120, // Consistent height
                       color: Colors.grey[300],
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -249,7 +251,7 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
               );
             },
           ),
-          
+
           // Image indicators (only show if there are multiple images)
           if (widget.property.images.length > 1)
             Positioned(
@@ -260,21 +262,21 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
                   widget.property.images.length,
-                  (index) => Container(
+                      (index) => Container(
                     width: 6,
                     height: 6,
                     margin: const EdgeInsets.symmetric(horizontal: 2),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _currentImageIndex == index 
-                          ? Colors.white 
+                      color: _currentImageIndex == index
+                          ? Colors.white
                           : Colors.white.withOpacity(0.5),
                     ),
                   ),
                 ),
               ),
             ),
-          
+
           // Favorite Button
           Positioned(
             top: 8,
@@ -296,15 +298,15 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
                 ),
                 child: _isLoading
                     ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
-                      )
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+                )
                     : Icon(
-                        _isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: _isFavorite ? Colors.red : Colors.grey,
-                        size: 24,
-                      ),
+                  _isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: _isFavorite ? Colors.red : Colors.grey,
+                  size: 24,
+                ),
               ),
             ),
           ),
@@ -337,7 +339,7 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
           children: [
             // Property Image Carousel
             SizedBox(
-              height: 110, // Fixed height to fit card
+              height: 120, // Adjusted to match the image height in _buildImageCarousel
               child: _buildImageCarousel(),
             ),
             // Property Details
@@ -400,4 +402,4 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
       ),
     );
   }
-} 
+}

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class EditPropertyPage extends StatelessWidget {
-  const EditPropertyPage({Key? key}) : super(key: key);
+  const EditPropertyPage({super.key});
 
   @override
   Widget build(BuildContext context) {

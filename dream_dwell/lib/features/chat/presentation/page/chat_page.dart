@@ -6,10 +6,12 @@ import 'package:dream_dwell/app/service_locator/service_locator.dart';
 import 'package:dream_dwell/app/shared_pref/token_shared_prefs.dart';
 import 'package:dream_dwell/features/chat/data/repository/chat_repository.dart';
 
+import '../../../../app/constant/api_endpoints.dart';
+
 class ChatPage extends StatefulWidget {
   final String? preselectChatId;
   final String currentUserId;
-  const ChatPage({Key? key, this.preselectChatId, required this.currentUserId}) : super(key: key);
+  const ChatPage({super.key, this.preselectChatId, required this.currentUserId});
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -28,7 +30,7 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _connectSocketAndLoadChats() async {
     // TODO: Replace with your actual backend IP and port
-    const socketUrl = 'http://10.0.2.2:3001'; // Use LAN IP for real device
+    final socketUrl = ApiEndpoints.localNetworkAddress;
     final tokenResult = await serviceLocator<TokenSharedPrefs>().getToken();
     final token = tokenResult.fold((failure) => '', (token) => token ?? '');
     print('[DEBUG] Dispatching ConnectSocketEvent with $socketUrl');
@@ -98,7 +100,7 @@ class _ChatPageState extends State<ChatPage> {
 class _ChatList extends StatelessWidget {
   final void Function(String chatId) onChatSelect;
   final String currentUserId;
-  const _ChatList({Key? key, required this.onChatSelect, required this.currentUserId}) : super(key: key);
+  const _ChatList({required this.onChatSelect, required this.currentUserId});
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +190,7 @@ class _ChatView extends StatelessWidget {
   final String chatId;
   final String currentUserId;
   final ChatBloc chatBloc;
-  const _ChatView({Key? key, required this.chatId, required this.currentUserId, required this.chatBloc}) : super(key: key);
+  const _ChatView({required this.chatId, required this.currentUserId, required this.chatBloc});
 
   @override
   Widget build(BuildContext context) {
@@ -344,7 +346,7 @@ class _ChatInput extends StatefulWidget {
   final String chatId;
   final String currentUserId;
   final ChatBloc chatBloc;
-  const _ChatInput({Key? key, required this.chatId, required this.currentUserId, required this.chatBloc}) : super(key: key);
+  const _ChatInput({required this.chatId, required this.currentUserId, required this.chatBloc});
 
   @override
   State<_ChatInput> createState() => _ChatInputState();

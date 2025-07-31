@@ -9,6 +9,9 @@ import 'package:dream_dwell/features/profile/presentation/view_model/profile_sta
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
 import 'package:dream_dwell/features/auth/presentation/view_model/login_view_model/login_state.dart';
 
+// Import your ApiEndpoints file
+import '../../../../app/constant/api_endpoints.dart';
+
 class BookingPage extends StatefulWidget {
   const BookingPage({super.key});
 
@@ -32,27 +35,25 @@ class _BookingPageState extends State<BookingPage> {
 
   Future<void> _loadUserInfo() async {
     final profileState = context.read<ProfileViewModel>().state;
-    
+
     debugPrint('BookingPage - Profile state loading: ${profileState.isLoading}');
     debugPrint('BookingPage - Profile state user: ${profileState.user?.email}');
     debugPrint('BookingPage - Profile state user role: ${profileState.user?.stakeholder}');
-    
-    // Wait for profile to be loaded
+
     if (profileState.isLoading) {
       setState(() {
         _isLoading = true;
         _error = null;
       });
-      return;
     }
-    
+
     final user = profileState.user;
-    
+
     if (user != null) {
       debugPrint('BookingPage - Setting user role: ${user.stakeholder}');
-              setState(() {
-          _userRole = user.stakeholder;
-        });
+      setState(() {
+        _userRole = user.stakeholder;
+      });
       await _fetchBookings();
     } else {
       debugPrint('BookingPage - No user found, showing login error');
@@ -81,23 +82,24 @@ class _BookingPageState extends State<BookingPage> {
       final token = await _getToken();
       if (token == null || token.isEmpty) {
         debugPrint('BookingPage - No token found');
-        setState(() { 
-          _error = 'Please log in to view your bookings.'; 
-          _isLoading = false; 
+        setState(() {
+          _error = 'Please log in to view your bookings.';
+          _isLoading = false;
         });
         return;
       }
 
       String endpoint;
+      print(_userRole);
       if (_userRole == 'Tenant') {
-        endpoint = 'http://10.0.2.2:3001/api/calendar/tenant/bookings';
+        endpoint = '${ApiEndpoints.baseUrl}calendar/tenant/bookings';
       } else if (_userRole == 'Landlord') {
-        endpoint = 'http://10.0.2.2:3001/api/calendar/landlord/bookings';
+        endpoint = '${ApiEndpoints.baseUrl}calendar/landlord/bookings';
       } else {
         debugPrint('BookingPage - Invalid user role: $_userRole');
-        setState(() { 
-          _error = 'Invalid user role.'; 
-          _isLoading = false; 
+        setState(() {
+          _error = 'Invalid user role.';
+          _isLoading = false;
         });
         return;
       }
@@ -127,10 +129,17 @@ class _BookingPageState extends State<BookingPage> {
       }
     } catch (e) {
       debugPrint('BookingPage - Error fetching bookings: $e');
-      setState(() {
-        _error = 'Failed to load bookings. Please try again.';
-        _isLoading = false;
-      });
+      if (e is DioException) {
+        setState(() {
+          _error = 'Failed to load bookings. ${e.response?.data['message'] ?? e.message}';
+        });
+      } else {
+        setState(() {
+          _error = 'Failed to load bookings. Please try again.';
+        });
+      }
+    } finally {
+      setState(() { _isLoading = false; });
     }
   }
 
@@ -157,10 +166,15 @@ class _BookingPageState extends State<BookingPage> {
 
     try {
       final token = await _getToken();
-      if (token == null) return;
+      if (token == null || token.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please log in to cancel booking.'), backgroundColor: Colors.red),
+        );
+        return;
+      }
 
       await Dio().delete(
-        'http://10.0.2.2:3001/api/calendar/bookings/$bookingId',
+        '${ApiEndpoints.baseUrl}calendar/bookings/$bookingId',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
@@ -174,8 +188,12 @@ class _BookingPageState extends State<BookingPage> {
     } catch (e) {
       debugPrint('Error cancelling booking: $e');
       if (mounted) {
+        String errorMessage = 'Failed to cancel booking.';
+        if (e is DioException) {
+          errorMessage = e.response?.data['message'] ?? e.message ?? errorMessage;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to cancel booking.'), backgroundColor: Colors.red),
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
         );
       }
     }
@@ -205,10 +223,15 @@ class _BookingPageState extends State<BookingPage> {
 
     try {
       final token = await _getToken();
-      if (token == null) return;
+      if (token == null || token.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please log in to update booking status.'), backgroundColor: Colors.red),
+        );
+        return;
+      }
 
       await Dio().put(
-        'http://10.0.2.2:3001/api/calendar/bookings/$bookingId/status',
+        '${ApiEndpoints.baseUrl}calendar/bookings/$bookingId/status',
         data: {'status': status},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
@@ -223,8 +246,12 @@ class _BookingPageState extends State<BookingPage> {
     } catch (e) {
       debugPrint('Error updating booking status: $e');
       if (mounted) {
+        String errorMessage = 'Failed to update booking status.';
+        if (e is DioException) {
+          errorMessage = e.response?.data['message'] ?? e.message ?? errorMessage;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update booking status.'), backgroundColor: Colors.red),
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
         );
       }
     }
@@ -269,10 +296,11 @@ class _BookingPageState extends State<BookingPage> {
     final timeSlot = booking['timeSlot'] ?? '';
     final bookingId = booking['_id'] ?? '';
 
-    // Get property image
+    // Get property image using ImageUrlHelper
     String? imageUrl;
     if (property['images'] != null && (property['images'] as List).isNotEmpty) {
       final imagePath = property['images'][0];
+      // CORRECTED LINE: Removed ApiEndpoints.imageUrl as a second argument
       imageUrl = ImageUrlHelper.constructImageUrl(imagePath);
     }
 
@@ -293,7 +321,7 @@ class _BookingPageState extends State<BookingPage> {
             // Property header with image
             Row(
               children: [
-                if (imageUrl != null)
+                if (imageUrl != null && imageUrl.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
@@ -357,9 +385,9 @@ class _BookingPageState extends State<BookingPage> {
                   children: [
                     Icon(Icons.calendar_today, size: 18, color: Colors.blue.shade500),
                     const SizedBox(width: 8),
-                    Text(
+                    const Text(
                       'Date: ',
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                     Text(
                       DateFormat('MMM dd, yyyy').format(DateTime.parse(date)),
@@ -372,9 +400,9 @@ class _BookingPageState extends State<BookingPage> {
                   children: [
                     Icon(Icons.access_time, size: 18, color: Colors.blue.shade500),
                     const SizedBox(width: 8),
-                    Text(
+                    const Text(
                       'Time: ',
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                     Text(
                       timeSlot,
@@ -390,9 +418,9 @@ class _BookingPageState extends State<BookingPage> {
                     children: [
                       Icon(Icons.person, size: 18, color: Colors.purple.shade500),
                       const SizedBox(width: 8),
-                      Text(
+                      const Text(
                         'Booked by: ',
-                        style: const TextStyle(fontSize: 14, color: Colors.grey),
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
                       Expanded(
                         child: Text(
@@ -411,9 +439,9 @@ class _BookingPageState extends State<BookingPage> {
                     children: [
                       Icon(Icons.person, size: 18, color: Colors.purple.shade500),
                       const SizedBox(width: 8),
-                      Text(
+                      const Text(
                         'Property Owner: ',
-                        style: const TextStyle(fontSize: 14, color: Colors.grey),
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
                       Expanded(
                         child: Text(
@@ -430,9 +458,9 @@ class _BookingPageState extends State<BookingPage> {
                   children: [
                     Icon(Icons.info, size: 18, color: Colors.grey.shade500),
                     const SizedBox(width: 8),
-                    Text(
+                    const Text(
                       'Status: ',
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -533,26 +561,22 @@ class _BookingPageState extends State<BookingPage> {
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
-        // Listen to login success events
         BlocListener<LoginViewModel, LoginState>(
           listener: (context, loginState) {
             debugPrint('BookingPage - Login state: ${loginState.isSuccess}, shouldNavigate: ${loginState.shouldNavigateToHome}');
-            
-            // Only reload when login is successful and navigation is triggered
+
             if (loginState.isSuccess && loginState.shouldNavigateToHome && _userRole == null) {
               debugPrint('BookingPage - Login successful, reloading user info');
               _loadUserInfo();
             }
           },
         ),
-        // Listen to profile state changes for logout
         BlocListener<ProfileViewModel, ProfileState>(
           listener: (context, profileState) {
             debugPrint('BookingPage - Profile state loading: ${profileState.isLoading}');
             debugPrint('BookingPage - Profile state user: ${profileState.user?.email}');
             debugPrint('BookingPage - Current user role: $_userRole');
-            
-            // Only handle logout events (user changes from not null to null)
+
             if (!profileState.isLoading && profileState.user == null && _userRole != null) {
               debugPrint('BookingPage - User logged out, clearing data');
               setState(() {
@@ -590,7 +614,7 @@ class _BookingPageState extends State<BookingPage> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.1),
+                color: Colors.grey.withOpacity(0.1), // Corrected withValues to withOpacity
                 spreadRadius: 1,
                 blurRadius: 10,
                 offset: const Offset(0, 2),
@@ -599,114 +623,117 @@ class _BookingPageState extends State<BookingPage> {
           ),
           child: _isLoading
               ? const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(color: Color(0xFF003366)),
-                      SizedBox(height: 16),
-                      Text('Loading bookings...', style: TextStyle(fontSize: 16)),
-                    ],
-                  ),
-                )
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(color: Color(0xFF003366)),
+                SizedBox(height: 16),
+                Text('Loading bookings...', style: TextStyle(fontSize: 16)),
+              ],
+            ),
+          )
               : _error != null
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
-                          const SizedBox(height: 16),
-                          Text(
-                            _error!,
-                            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _fetchBookings,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    )
-                  : _bookings.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.info_outline, size: 64, color: Colors.grey.shade400),
-                              const SizedBox(height: 16),
-                              Text(
-                                _userRole == 'Landlord' 
-                                    ? 'No bookings have been made for your properties yet.'
-                                    : 'You have no scheduled visits.',
-                                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-                                textAlign: TextAlign.center,
-                              ),
-                              if (_userRole == 'Tenant') ...[
-                                const SizedBox(height: 24),
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE3F2FD),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: const Color(0xFF90CAF9)),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      const Text(
-                                        'Ready to schedule a visit?',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF003366),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      const Text(
-                                        'Browse properties in the Explore section and book a visit to see them in person!',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      ElevatedButton.icon(
-                                        onPressed: () {
-                                          // Navigate to explore page
-                                          Navigator.pushNamed(context, '/home');
-                                        },
-                                        icon: const Icon(Icons.explore),
-                                        label: const Text('Explore Properties'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFF003366),
-                                          foregroundColor: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: _fetchBookings,
-                          child: ListView.builder(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            itemCount: _bookings.length,
-                            itemBuilder: (context, index) => _buildBookingCard(_bookings[_bookings.length - 1 - index]),
+              ? Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red, fontSize: 16)),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: _loadUserInfo, // Retry fetching info
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF003366),
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+              : _bookings.isEmpty
+              ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.info_outline, size: 64, color: Colors.grey.shade400),
+                const SizedBox(height: 16),
+                Text(
+                  _userRole == 'Landlord'
+                      ? 'No bookings have been made for your properties yet.'
+                      : 'You have no scheduled visits.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                  textAlign: TextAlign.center,
+                ),
+                if (_userRole == 'Tenant') ...[
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE3F2FD),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF90CAF9)),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Ready to schedule a visit?',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF003366),
                           ),
                         ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Browse properties in the Explore section and book a visit to see them in person!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            // Navigate to explore page
+                            Navigator.pushNamed(context, '/home');
+                          },
+                          icon: const Icon(Icons.explore),
+                          label: const Text('Explore Properties'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF003366),
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          )
+              : RefreshIndicator(
+            onRefresh: _fetchBookings,
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: _bookings.length,
+              // Displaying in reverse order to show newest first
+              itemBuilder: (context, index) => _buildBookingCard(_bookings[_bookings.length - 1 - index]),
+            ),
+          ),
         ),
         floatingActionButton: _userRole == 'Tenant' && _bookings.isNotEmpty
             ? FloatingActionButton.extended(
-                onPressed: () {
-                  // Navigate to explore page
-                  Navigator.pushNamed(context, '/home');
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('Book More'),
-                backgroundColor: const Color(0xFF003366),
-                foregroundColor: Colors.white,
-              )
+          onPressed: () {
+            // Navigate to explore page
+            Navigator.pushNamed(context, '/home');
+          },
+          icon: const Icon(Icons.add),
+          label: const Text('Book More'),
+          backgroundColor: const Color(0xFF003366),
+          foregroundColor: Colors.white,
+        )
             : null,
       ),
     );

@@ -54,6 +54,7 @@ class UserRemoteDatasource implements IUserDataSource {
           "stakeholder": stakeholder,
         },
       );
+      print('DEBUG: Login response: ${response.data}');
       if (response.statusCode == 200) {
         final token = response.data['token'];
         final userId = response.data['user']?['_id'] ;
@@ -61,18 +62,13 @@ class UserRemoteDatasource implements IUserDataSource {
         if (token == null || (token as String).isEmpty) {
           throw Exception("Login successful but no token was received.");
         }
-        await _sharedPreferences.setString('token', token);
-        if (userId != null) {
-          await _sharedPreferences.setString('userId', userId);
-        }
-        if (role != null) {
-          await _sharedPreferences.setString('role', role);
-        }
         return token;
       } else {
+        print(response.statusCode);
         throw Exception("Login failed: ${response.statusCode} ${response.statusMessage}");
       }
     } on DioException catch (e) {
+      print("error:$e");
       throw Exception('Failed to login: ${e.error}');
     } catch (e) {
       throw Exception('An unexpected error occurred: $e');

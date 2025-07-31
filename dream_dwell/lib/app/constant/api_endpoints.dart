@@ -4,19 +4,20 @@ class ApiEndpoints {
   static const Duration connectionTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 
+  // Network addresses for different environments
   static const String androidEmulatorAddress = "http://10.0.2.2:3001";
   static const String iosSimulatorAddress = "http://localhost:3001";
-  static const String localNetworkAddress = "http://172.25.0.125:3001"; // Updated to correct IP address
 
-  // Choose one of these options:
-  // Option 1: Use network IP address (for physical devices or network testing)
-  static const String serverAddress = androidEmulatorAddress;
+  static const String realDeviceAddress = "http://192.168.1.5:3001"; // Update this IP
   
-  // Option 2: Use Android emulator address (for Android emulator testing)
-  // static const String serverAddress = androidEmulatorAddress;
+  static const String localNetworkAddress = realDeviceAddress;
+
+
+  static const String serverAddress = localNetworkAddress;
+
 
   static const String baseUrl = "$serverAddress/api/";
-  static const String imageUrl = "$serverAddress";
+  static const String imageUrl = serverAddress;
 
   // ---------- Auth ----------
   static const String register = "${baseUrl}auth/register";
@@ -34,12 +35,12 @@ class ApiEndpoints {
   static const String createProperty = "${baseUrl}properties";
   static const String getAllProperties = "${baseUrl}properties"; // GET
   static const String getPropertyById = "${baseUrl}properties/"; // GET by ID (append ID)
-  // static const String updateProperty = "${baseUrl}properties/"; // PUT by ID (append ID)
   static const String deleteProperty = "${baseUrl}properties/"; // DELETE by ID (append ID)
 
   static String updateProperty(String id) {
     return "${baseUrl}properties/$id";
   }
+
   // ---------- Category ----------
   static const String createCategory = "${baseUrl}category"; // POST
   static const String getAllCategories = "${baseUrl}category"; // GET
@@ -64,4 +65,16 @@ class ApiEndpoints {
 
   // ---------- Chatbot ----------
   static const String sendChatQuery = "${baseUrl}chatbot/query"; // POST
+
+  // --- Calendar/Booking Endpoints ---
+  static String getAvailableSlots(String propertyId) => "${baseUrl}calendar/properties/$propertyId/available-slots";
+  static const String bookVisit = "${baseUrl}calendar/book-visit";
+  static const String manageAvailabilities = "${baseUrl}calendar/availabilities"; // POST to create/update
+  static const String getLandlordAvailabilities = "${baseUrl}calendar/landlord/availabilities";
+  static String deleteAvailabilityById(String availabilityId) => "${baseUrl}calendar/availabilities/$availabilityId";
+
+  static const String getTenantBookings = "${baseUrl}calendar/tenant/bookings";
+  static const String getLandlordBookings = "${baseUrl}calendar/landlord/bookings";
+  static String updateBookingStatus(String bookingId) => "${baseUrl}calendar/bookings/$bookingId/status";
+  static String deleteBookingById(String bookingId) => "${baseUrl}calendar/bookings/$bookingId";
 }
